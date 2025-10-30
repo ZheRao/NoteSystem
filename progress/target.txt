@@ -1,0 +1,56 @@
+
+Year 1
+
+    - Q1 - Environments, Packaging & CLI Proficiency 
+
+        -- importance: critical foundation for everything I'll do next: reproducible pipelines, Docker images, Spark jobs, and CI/CD automation
+
+        -- month 1 - Python environments, dependency management, reproducibility 
+
+            --- outcome: you can create, freeze, and recreate isolated dev environments and control versions across systems
+
+            --- week 1 - Foundations 
+
+                ---- read: Real Python: Virtual Environment Primer -
+                        -> https://realpython.com/python-virtual-environments-a-primer/
+                
+                ---- learn: what are 
+                        -> environments, 
+                        -> PATH, 
+                        -> dependency isolation, 
+                        -> 'sys.path', 
+                        -> site-packages
+
+                ---- practice 
+                        -> create venvs via 'venv' and 'conda create'
+                        -> install specific versions ('pip install pandas==2.2.3')
+                        -> export 'requirements.txt' / 'environment.yml' 
+
+        -- month 2 - packaging & distribution (setup.py / pyproject.toml / wheels / entry-points)
+
+            --- outcome: you can package your code as an installable library or CLI tool (pip install .) and understand modern packaging standards (PEP 517/518)
+        
+        -- month 3 - Linux + CLI mastery & Bash automation 
+
+            --- outcome: you can navigate Linux confidently, automate tasks, and deploy/test your packaged project on a clean machine (or Docker)
+
+        -- Q1-end checkpoints 
+
+            --- have a packaged project 
+                ---- deployable on a different machine (or Docker container) by installing it and running its command-line entry point successfully
+
+            --- able to navigate and operate in a Linux environment 
+                ---- can write and run a Bash script for a basic task (e.g., a script that pings a server or processes a log file)
+            
+            --- aim to complete a Linux CLI challenge or use a site like OverTheWire to test Bash skills
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1189 @@
+
+- PART I: shell basics 
+
+    -- importnat syntax 
+
+        --- options and arguments 
+
+            ---- command -short_option_name arguments --long_options_name arguments
+                    short option names can be chained together, e.g., ls -lt : change to long format output, and sort the result by the file's modification time  
+
+    -- system information 
+        --- date & time
+            ---- date : display current time and date 
+            ---- cal : displays a calendar of the current month 
+        --- space & memory 
+            ---- df : current amount of free space on disk drives 
+            ---- free : dispaly the amount of free memory 
+    
+    -- (single) file system tree 
+    
+        --- pwd : display the current working directory
+
+        --- cd : change directory 
+            ---- cd /user/bin : absolute pathname 
+            ---- cd .. : relative pathname (change to the parent directory)
+                cd ./bin : change to bin directory inside current working directory (./ is implied, so usually just need to type cd bin)
+            
+            ---- shortcuts  
+                    cd : change working directory to home directory 
+                    cd - : change working directory to the previous working directory 
+                    cd ~user_name : change working directory to the home directory of user_name 
+        
+        --- ls : list files and directories 
+            ---- ls ~ /usr : list both the home directory (with ~) and the /usr directory 
+            ---- ls -l : change the output format (the long format) for more details 
+            ---- ls -lt --reverse : sort the result by the file's modification time, and reverse the order
+            ---- common options for ls 
+                    Option Long option          Description
+                    -a      --all               List all files, even those with names that begin with a
+                                                        period, which are normally not listed (that is, hidden).
+                    -A      --almost-all        Like the -a option except it does not list . (current directory)
+                                                        and .. (parent directory).
+                    -d      --directory         Ordinarily, if a directory is specified, ls will list the
+                                                        contents of the directory, not the directory itself. Use this
+                                                        option in conjunction with the -l option to see details
+                                                        about the directory rather than its contents.
+                    -F      --classify          This option will append an indicator character to the
+                                                        end of each listed name. For example, it will append a
+                                                        forward slash (/) if the name is a directory.
+                    -h      --human-readable    In long format listings, display file sizes in humanreadable
+                                                        format rather than in bytes.
+                    -l                          Display results in long format.
+                    -r      --reverse           Display the results in reverse order. Normally, ls displays
+                                                        its results in ascending alphabetical order.
+                    -S                          Sort results by file size.
+                    -t                          Sort by modification time.
+            
+            ---- exmple of long format display  
+                    -rw-r--r--              1                   root                root                3576296         2017-04-03 11:05        Experience ubuntu.ogg
+                    access rights to file   # of hard links     name-file_owner     name-group_owner    size in bytes   time-last_modification  file_name
+
+        --- file file_name : display file's type  
+
+        --- less file_name : program that can view text files. why we want to view those files? configuration files 
+            ---- commands 
+                    page up or b                        Scroll back one page
+                    page down or                        space Scroll forward one page
+                    Up arrow                            Scroll up one line
+                    Down arrow                          Scroll down one line
+                    G                                   Move to the end of the text file
+                    1G or g                             Move to the beginning of the text file
+                    /characters                         Search forward to the next occurrence of characters
+                    n                                   Search for the next occurrence of the previous search
+                    h                                   Display help screen
+                    q                                   Quit less
+
+        --- common directories 
+                    /                   The root directory, where everything begins.
+                    /bin                Contains binaries (programs) that must be present for the system to
+                                        boot and run.
+                    /boot               Contains the Linux kernel, initial RAM disk image (for drivers needed
+                                        at boot time), and the boot loader. Interesting files include /boot/
+                                        grub/grub.conf, or menu.lst, which is used to configure the boot
+                                        loader, and /boot/vmlinuz (or something similar), the Linux kernel.
+                    /dev                This is a special directory that contains device nodes. “Everything is a
+                                        file” also applies to devices. Here is where the kernel maintains a list
+                                        of all the devices it understands.
+                    /etc                The /etc directory contains all the system-wide configuration files. It
+                                        also contains a collection of shell scripts that start each of the system
+                                        services at boot time. Everything in this directory should be readable
+                                        text. While everything in /etc is interesting, here are some all-time
+                                        favorites: /etc/crontab, a file that defines when automated jobs will
+                                        run; /etc/fstab, a table of storage devices and their associated mount
+                                        points; and /etc/passwd, a list of the user accounts.
+                    /home               In normal configurations, each user is given a directory in /home.
+                                        Ordinary users can write files only in their home directories. This limitation
+                                        protects the system from errant user activity.
+                    /lib                Contains shared library files used by the core system programs.
+                                        These are similar to dynamic link libraries (DLLs) in Windows.
+                    /lost+found         Each formatted partition or device using a Linux file system, such as
+                                        ext3, will have this directory. It is used in the case of a partial recovery
+                                        from a file system corruption event. Unless something really bad
+                                        has happened to your system, this directory will remain empty.
+                    /media              On modern Linux systems, the /media directory will contain the
+                                        mount points for removable media such as USB drives, CD-ROMs,
+                                        and so on, that are mounted automatically at insertion.
+                    /mnt                On older Linux systems, the /mnt directory contains mount points for
+                                        removable devices that have been mounted manually.
+                    /opt                The /opt directory is used to install “optional” software. This is mainly
+                                        used to hold commercial software products that might be installed on
+                                        the system.
+                    /proc               The /proc directory is special. It’s not a real file system in the sense of
+                                        files stored on your hard drive. Rather, it is a virtual file system maintained
+                                        by the Linux kernel. The “files” it contains are peepholes into
+                                        the kernel itself. The files are readable and will give you a picture of
+                                        how the kernel sees your computer.
+                    /root               This is the home directory for the root account.
+                    /sbin               This directory contains “system” binaries. These are programs
+                                        that perform vital system tasks that are generally reserved for the
+                                        superuser.
+                    /tmp                The /tmp directory is intended for the storage of temporary, transient
+                                        files created by various programs. Some configurations cause this
+                                        directory to be emptied each time the system is rebooted.
+                    /usr                The /usr directory tree is likely the largest one on a Linux system. It
+                                        contains all the programs and support files used by regular users.
+                    /usr/bin            /usr/bin contains the executable programs installed by your Linux
+                                        distribution. It is not uncommon for this directory to hold thousands of
+                                        programs.
+                    /usr/lib            The shared libraries for the programs in /usr/bin.
+                    /usr/local          The /usr/local tree is where programs that are not included with
+                                        your distribution but are intended for system-wide use are installed.
+                                        Programs compiled from source code are normally installed in /usr/
+                                        local/bin. On a newly installed Linux system, this tree exists, but it will
+                                        be empty until the system administrator puts something in it.
+                    /usr/sbin           Contains more system administration programs.
+                    /usr/share          /usr/share contains all the shared data used by programs in /usr/bin.
+                                        This includes things such as default configuration files, icons, screen
+                                        backgrounds, sound files, and so on.
+                    /usr/share/doc      Most packages installed on the system will include some kind of
+                                        documentation. In /usr/share/doc, we will find documentation files
+                                        organized by package.
+                    /var                With the exception of /tmp and /home, the directories we have
+                                        looked at so far remain relatively static; that is, their contents don’t
+                                        change. The /var directory tree is where data that is likely to change
+                                        is stored. Various databases, spool files, user mail, and so forth, are
+                                        located here.
+                    /var/log            /var/log contains log files, records of various system activity. These
+                                        are important and should be monitored from time to time. The most
+                                        useful ones are /var/log/messages and /var/log/syslog. Note that
+                                        for security reasons on some systems, you must be the superuser to
+                                        view log files.
+        
+        --- links 
+            ---- symbolic/soft link : file referenced by multiple names 
+                    e.g., lrwxrwxrwx 1 root root 11 2018-08-11 07:34 libc.so.6 -> libc-2.6.so
+                            programs looking for libc.so.6 will get the file libc-2.6.so
+            ---- hard link : allows files to have multiple names in a different way 
+    
+    -- manipulating files and directories 
+
+        --- wildcards: special characters that can help you rapidly specify groups of filenames
+
+                *                                   Matches any characters
+                ?                                   Matches any single character
+                [characters]                        Matches any character that is a member of the set characters
+                [!characters]                       Matches any character that is not a member of the set characters
+                [[:class:]]                         Matches any character that is a member of the specified class
+                [:alnum:]                           Matches any alphanumeric character
+                [:alpha:]                           Matches any alphabetic character
+                [:digit:]                           Matches any numeral
+                [:lower:]                           Matches any lowercase letter
+                [:upper:]                           Matches any uppercase letter
+            
+            ---- examples 
+                
+                *                           All files
+                g*                          Any file beginning with g
+                b*.txt                      Any file beginning with b followed by any characters and ending with .txt
+                Data???                     Any file beginning with Data followed by exactly three characters
+                [abc]*                      Any file beginning with either an a, a b, or a c
+                BACKUP.[0-9][0-9][0-9]      Any file beginning with BACKUP. followed by exactly three numerals
+                [[:upper:]]*                Any file beginning with an uppercase letter
+                [![:digit:]]*               Any file not beginning with a numeral
+                *[[:lower:]123]             Any file ending with a lowercase letter or the numerals 1, 2, or 3
+        
+        --- mkdir dir1 dir2 dir3 ... : make new directories 
+
+        --- cp: copy files 
+
+            ---- cp item1 item2 : copies the single file or directory item1, to the file or directory item2 
+
+            ---- cp item... directory : copies multiple items (either files or directories) into a directory 
+
+            ---- common options 
+
+                    -a, --archive           Copy the files and directories and all of their attributes, including ownerships and permissions. Normally, copies take on the default
+                                                attributes of the user performing the copy. We’ll take a look at file permissions in Chapter 9.
+                    -i, --interactive       Before overwriting an existing file, prompt the user for confirmation. If this option is not specified, cp will silently (meaning there
+                                                will be no warning) overwrite files.
+                    -r, --recursive         Recursively copy directories and their contents. This option (or the -a option) is required when copying directories.
+                    -u, --update            When copying files from one directory to another, only copy files that either don’t exist or are newer than the existing corresponding
+                                                files in the destination directory. This is useful when copying large numbers of files as it skips files that don’t need to be copied.
+                    -v, --verbose           Display informative messages as the copy is performed.
+            
+            ---- examples 
+
+                    cp file1 file2                  Copy file1 to file2. If file2 exists, it is overwritten with the contents of file1. If file2 does not exist, it is created.
+                    cp -i file1 file2               Same as previous command, except that if file2 exists, the user is prompted before it is overwritten.
+                    cp file1 file2 dir1             Copy file1 and file2 into directory dir1. The directory dir1 must already exist.
+                    cp dir1/* dir2                  Using a wildcard, copy all the files in dir1 into dir2. The directory dir2 must already exist.
+                    cp -r dir1 dir2                 Copy the contents of directory dir1 to directory dir2. If directory dir2 does not exist, it is created and, after the copy, 
+                                                        will contain the same contents as directory dir1. If directory dir2 does exist, then directory dir1 (and its contents) 
+                                                        will be copied into dir2.
+        
+        --- mv : move and rename files 
+
+            ---- mv item1 item2 : move or rename the file or directory item1 to item2 
+
+            ---- mv item... directory : move one or more items from one directory to another 
+
+            ---- options 
+
+                    -i, --interactive       Before overwriting an existing file, prompt the user for confirmation. If this option is not specified, mv will silently overwrite files.
+                    -u, --update            When moving files from one directory to another, only move files that either don’t exist or are newer than the existing corresponding
+                                                files in the destination directory.
+                    -v, --verbose           Display informative messages as the move is performed.
+            
+            ---- examples 
+
+                    mv file1 file2          Move file1 to file2. If file2 exists, it is overwritten with the contents of file1. If file2 does not exist, 
+                                                it is created. In either case, file1 ceases to exist.
+                    mv -i file1 file2       Same as the previous command, except that if file2 exists, the user is prompted before it is overwritten.
+                    mv file1 file2 dir1     Move file1 and file2 into directory dir1. The directory dir1 must already exist.
+                    mv dir1 dir2            If directory dir2 does not exist, create directory dir2 and move the contents of directory dir1 into dir2 and delete directory dir1.
+                                                If directory dir2 does exist, move directory dir1 (and its contents) into directory dir2.
+        
+        --- rm : remove files and directories 
+
+            ---- rm item... : item is one or more files or directories, note: delete with rm, it's gone for good 
+                                good practice: before rm with wildcards, use ls to examine if the files are intended to be deleted, then change ls with rm
+
+            ---- options 
+
+                    -i, --interactive       Before deleting an existing file, prompt the user for confirmation. If this option is not specified, rm will silently delete files.
+                    -r, --recursive         Recursively delete directories. This means that if a directory being deleted has subdirectories, delete them too. To delete a
+                                                directory, this option must be specified.
+                    -f, --force             Ignore nonexistent files and do not prompt. This overrides the --interactive option.
+                    -v, --verbose           Display informative messages as the deletion is performed.
+            
+            ---- examples 
+                    rm file1        Delete file1 silently.
+                    rm -i           file1 Same as the previous command, except that the user is prompted for confirmation before the deletion is performed.
+                    rm -r           file1 dir1 Delete file1 and dir1 and its contents.
+                    rm -rf          file1 dir1 Same as the previous command, except that if either file1 or dir1 does not exist, rm will continue silently.
+        
+        --- ln : create either hard or symbolic links 
+
+            ---- ln file link : creates a hard link 
+                    -> by default, every file has a single hard link that gives the file its name 
+                    -> when we create a hard link, we create an additional directory entry for a file.
+                    -> hard links have two importnat limitations: 1. cannot reference a file outside its own file system (not on the same disk partition) 2. cannot reference a directory
+                    -> a hard link is indistinguishable for the file itself. there's no special indiciation of the link 
+                    -> modern practice prefers symbolic links
+                    -> to see whether two differnt file names are pointing at the same file, use ls -i and check whether the first number is the same 
+
+
+            ---- ln -s item (actual_file) link (link_name) : creates a symbolic link, where item is either a file or a directory 
+                    -> created to overcome limitations of hard links 
+                    -> it creates a special type of file that contains a text pointer to the referenced file or directory (like Windows Shortcut)
+                    -> if you write something to the symbolic link, reference file is written to 
+                    -> when delete a symbolic link, only the link is deleted, not the file. 
+                    -> if the file is deleted before the symbolic link, the link will just point at nothing, broken links are displayed in red with ls 
+                    -> when creating a symbolic link, you can either use absolute pathnames, or relative path names.
+            
+            ---- examples : hard link
+                    file structure
+                        └── dir1 
+                        └── dir2
+                        └── fun 
+                    
+                    -> ln fun fun-hard
+                    -> ln fun dir1/fun-hard
+                    -> ln fun dir2/fun-hard
+                    -> there are now 4 instances of the same file, running 'ls -li' returns 
+                        12353539 drwxrwxr-x 2 me me 4096 2018-01-14 16:17 dir1
+                        12353540 drwxrwxr-x 2 me me 4096 2018-01-14 16:17 dir2
+                        12353538 -rw-r--r-- 4 me me 1650 2018-01-10 16:33 fun
+                        12353538 -rw-r--r-- 4 me me 1650 2018-01-10 16:33 fun-hard
+            
+            ---- examples : symbolic links 
+
+                    -> ln -s fun fun-sym
+                    -> ln -s ../fun dir1/fun-sym
+                    -> ln -s ../fun dir2/fun-sym
+                    -> note that here uses relative location, relatively to inside dir1, fun is in the directory above it, if we run 'ls -l dir1'
+                        -rw-r--r-- 4 me me 1650 2018-01-10 16:33 fun-hard
+                        lrwxrwxrwx 1 me me 6 2018-01-15 15:17 fun-sym -> ../fun
+                    -> and we can also reference directory: ln -s dir1 dir1-sym and run 'ls -l' returns 
+                        drwxrwxr-x 2 me me 4096 2018-01-15 15:17 dir1
+                        lrwxrwxrwx 1 me me 4 2018-01-16 14:45 dir1-sym -> dir1
+                        drwxrwxr-x 2 me me 4096 2018-01-15 15:17 dir2
+                        -rw-r--r-- 4 me me 1650 2018-01-10 16:33 fun
+                        -rw-r--r-- 4 me me 1650 2018-01-10 16:33 fun-hard
+                        lrwxrwxrwx 1 me me 3 2018-01-15 15:15 fun-sym -> fun
+    
+    -- working with commands 
+
+        --- help : get help for shell builtins
+
+            ---- help cd 
+                    cd: cd [-L|[-P [-e]] [-@]] [dir]
+                        Change the shell working directory.
+                        ...
+                        Options:
+                    
+                    -> note that cd [-L|[-P[-e]]] [dir] means cd may be followed by either -L or a -P, and if -P is specified, -e may also be used 
+            
+            ---- '--help' : display usgage information
+                    -> many executable programs support a --help option that displays a description of the command's supported syntax and options.
+                    -> e.g., mkdir --help 
+                        Usage: mkdir [OPTION] DIRECTORY...
+                        Create the DIRECTORY(ies), if they do not already exist.
+                            -Z, --context=CONTEXT (SELinux) ...
+        
+        --- man : display a program's manual page 
+
+            ---- man can be used to dispaly manual pages for commands 
+                    -> man ls 
+                    -> it uses 'less' to display the manual page 
+            
+            ---- man can also be used to display system administration commands, programming interfaces, file formats, and more, below lists sections that it can display 
+                    1   User commands
+                    2   Programming interfaces for kernel system calls
+                    3   Programming interfaces to the C library
+                    4   Special files such as device nodes and drivers
+                    5   File formats
+                    6   Games and amusements such as screen savers
+                    7   Miscellaneous
+                    8   System administration commands
+                
+                -> syntax: man section search_term
+                -> man 5 passwd : this will display the man page describing the file format of the /etc/passwd file 
+    
+        --- apropos : display appropriate commands 
+
+            ---- it is possible to search the list of man pages for possible matches based on a search term 
+
+            ---- apropos partition 
+                    addpart (8)             - simple wrapper around the 'add partition' ioctl
+                    all-swaps (7)           - event signalling that all swap partitions have been ac...
+                    cfdisk (8)              - display or manipulate disk partition table
+                    cgdisk (8)              - Curses-based GUID partition table (GPT) manipulator
+                    delpart (8)             - simple wrapper around the 'del partition' ioctl
+                    fdisk (8)               - manipulate disk partition table
+                    fixparts (8)            - MBR partition table repair utility
+                    gdisk (8)               - Interactive GUID partition table (GPT) manipulator
+                    mpartition (1)          - partition an MSDOS hard disk
+                    partprobe (8)           - inform the OS of partition table changes
+                    partx (8)               - tell the Linux kernel about the presence and numbering...
+                    resizepart (8)          - simple wrapper around the 'resize partition' ioctl
+                    sfdisk (8)              - partition table manipulator for Linux
+                    sgdisk (8)              - Command-line GUID partition table (GPT) manipulator fo..
+                
+                -> first field is the name of the man page, second field shows the section 
+                -> 'man -k' performs the same function as 'apropos'
+        
+        --- whatis : display one-line manual page descriptions 
+
+            ---- whatis ls 
+                 ls (1)       list directory contents
+        
+        --- info : display a program's info entry 
+
+            ---- the info program reads info files, which are tree structured into individual nodes, each ontaining a single topic 
+
+            ---- infor files contain hyperlinks that can move you from node to node 
+
+            ---- many software packages installed have documentation files residing in the /usr/share/doc directory 
+        
+        --- alias : creating commands with alias
+
+            ---- it's possible to chain command together with ;
+                    -> cd /user; ls; cd -
+                        bin games include lib local sbin share src
+                        /home/me
+                        [me@linuxbox ~]$
+            
+            ---- type : we can find out whether a name is already being used for alias with 'type'
+                    -> type test 
+                        test is a shell builtin
+                        it's already been used 
+                    
+                    -> type foo 
+                        bash: type: foo: not found
+                        we can use this one as alias 
+            
+            ---- alias : create alias with structure : alias name='string'
+                    -> alias foo='cd /user; ls; cd -'
+                    -> foo 
+                        bin games include lib local sbin share src
+                        /home/me
+                        [me@linuxbox ~]$
+                    -> type foo 
+                        foo is aliased to `cd /usr; ls; cd -'
+            
+            ---- unalias : remove an alias 
+
+            ---- alias: see all the aliases defined in the environment with 'alias' without arguments 
+                    -> alias 
+                        alias l.='ls -d .* --color=tty'
+                        alias ll='ls -l --color=tty'
+                        alias ls='ls --color=tty'
+            
+            ---- alias vanish when shell session ends, but we can add aliases to the files that establish the environment
+    
+    -- I/O redirection : redirecting the input and output of commands 
+
+        --- stdin, stdout, stderr : standard input, output, and error 
+
+            ---- programs produce outputs of two kinds 
+                    -> program's results, i.e., data the program is deisnged to produce 
+                        results are sent to a special file called standard output (stdout)
+                    -> status and error message, tells us how the program is getting along 
+                        status messages are sent to another file called standard error (stderr)
+                    -> by default, those two files are linked to the screen and bot saved into a disk file 
+            
+            ---- many programs take input from a facility called standard input (stdin)
+                    -> this is attached to the keyboard 
+            
+            ---- I/O redirection allows us to change where output goes and where input comes from.
+        
+        --- redirecting standard output : > , >> , 2> , &> , &>> 
+
+            ---- > : ls -l /usr/bin > ls-output.txt (create or overwrite output file)
+                    -> create a listing of the /user/bin directory and sent the results to the file 'ls-output.txt'
+                    -> it cannot redirect error messages, so if /user/bin doesn't exist, nothing will be written in 'ls-output.txt'
+        
+            ---- >> : (create or append output file)
+
+            ---- 2> : ls -l /bin/usr 2> ls-error.txt
+                    -> file descriptor for standard error 
+
+            ---- &> : ls -l /bin/usr &> ls-output.txt
+                    -> redirect both output and error to the file 'ls-output.txt'
+                    -> use &>> for append 
+        
+        --- disposing output 
+
+            ---- ls -l /bin/usr 2> /dev/null
+                    -> /dev/null is a system device often referred to as a bit bucket, which accepts input and does nothing with it
+        
+        --- cat: redirecting standard input
+
+            ---- cat : reads one or more files and copies them to standard output 
+                -> cat ls-output.txt
+                    --> analogous to the 'type' command. Display files without paging.
+                -> cat movie.mpeg.0* > movie.mpeg : 
+                    --> we can merge multiple files and store them into a single file with 
+                -> 'cat' without arguments reads from standard input (keyboard)
+                    --> it copies standard input to standard output 
+                    --> after typing CTRL+D (EOF), it will output whatever we typed
+                -> cat > lazy_dog.txt
+                    --> redircting keyboard input into a txt file 
+        
+        --- |, filters : pipelines, the standard output of one command can be piped into the standard input of another
+
+                ---- ls -l /usr/bin | less
+                    -> less accepts standard input 
+                    -> we can use less to display, page by page, the output of any command that sends its results to standard output 
+                
+                ---- filters 
+                    -> sort : ls /bin /usr/bin | sort | less
+                        --> this makes a combined list of all the executable programs in /bin and /usr/bin, put them in sorted order and view the rsults 
+                        --> by including 'sort', it produces a single, sorted list 
+        
+                    -> uniq : ls /bin /usr/bin | sort | uniq | less
+                        --> unique accepts a sorted list of data from standard input or a single filename argument, and remove duplicated items 
+                        --> use 'uniq -d' to see the list of duplicates instead 
+                    
+                    -> wc: wc ls-output.txt
+                        7902 64566 503634 ls-output.txt
+                        --> print lines, words, and bytes contained in ls-output.txt 
+                        --> if execute without arguments, it accepts standard input 
+                        --> '-l' option limits its output to report only lines 
+                        --> to see the number of items we have in our sorted list, we can do this 
+                            ---> [me@linuxbox ~]$ ls /bin /usr/bin | sort | uniq | wc -l
+                                    2728
+                    
+                    -> grep pattern filename : ls /bin /usr/bin | sort | uniq | grep zip
+                        --> find all the files in our list of programs that had the word 'zip' embedded in the name.
+                        --> '-i' : ignore case 
+                        --> '-v' : print only those lines that do not match the pattern 
+                    
+                    -> head/tail : head -n 5 ls-output.txt
+                        --> default print first/last 10 lines, adjusted with '-n' option 
+                        --> in pipeline: 'ls /usr/bin | tail -n 5'
+                        --> tail -f /var/log/messages
+                            ---> '-f' options allows 'tail' continuing to monitor the file, and when new lines are appended, they immediately appear in the dispaly
+                            ---> CTRL+C breaks it 
+                            ---> superuser privileges are required 
+                    
+                    -> tee : ls /usr/bin | tee ls.txt | grep zip
+                        --> 'tee ls.txt' create a complete list of /usr/bin from 'ls /usr/bin' and store it in ls.txt, and continue the pipeline 
+                        --> 'tee' allows the previous output to 1. be stored in a file and 2. pass through to the next stage in the pipeline 
+        
+    -- seeing the world as the shell sees it 
+
+        --- echo : prints its text arguments on standard output 
+
+            ---- [me@linuxbox ~]$ echo this is a test
+                    this is a test
+        
+        --- expansion 
+
+            ---- with expansion, we enter something, and it is expanded into something else before the shell acts upon it 
+                    -> e.g., shell expands the '*' into something else (e.g., names of the files in the current working directory) in 'echo *', echo command never saw '*'
+            
+            ---- pathname expansion : wildcards 
+                    -> e.g., [me@linuxbox ~]$ echo [[:upper:]]*
+                                Desktop Documents Music Pictures Public Templates Videos
+                    
+                    -> pathname expansion of hidden files (files start with . are hidden)
+                        --> echo .* : will also include names with . and .. that refers to the current working directory and its parent directory (incorrect results)
+                        --> echo .[!.]* : begins with only one period followed by any other characters, still won't include filenames with multiple leading periods 
+                        --> ls -A : with 'almost all' option will provide a correct listing of hidden files 
+            
+            ---- tilde expansion : with ~
+
+                    -> recall using '~' (tilde character) with 'cd' expands into the name of the home directory of the named user or, if no user is named, the home directory 
+                        --> [me@linuxbox ~]$ echo ~
+                            /home/me
+                        --> if 'foo' has an account : [me@linuxbox ~]$ echo ~foo
+                                                        /home/foo
+            
+            ---- $((expression)) : arithmetic expansion 
+
+                    -> e.g., [me@linuxbox ~]$ echo $((2 + 2))
+                                4
+                    
+                    -> shell allows arithmetic to be performed by expansion 
+                        --> it supports only integers
+                        --> space is not significant in arithmetic expressions, and expressions may be nested 
+                        --> supported operators: +, -, *, /, %, **
+            
+            ---- {} : brace expansion 
+
+                    -> [me@linuxbox ~]$ echo Front-{A,B,C}-Back
+                        Front-A-Back Front-B-Back Front-C-Back
+                        --> can create multiple text strings from a pattern containing braces
+                        --> patterns to be expanded may contain a leading portion (preamble) and a trailing portion (postscript)
+                        --> brace expression may contain
+                            ---> comma-separated list of strings 
+                            ---> range of integers
+                            ---> single characters 
+                        --> pattern may not contain unquoted whitespace 
+                        --> it can be nested 
+
+                    -> examples 
+                        --> [me@linuxbox ~]$ echo Number_{1..5}
+                            Number_1 Number_2 Number_3 Number_4 Number_5
+                        --> [me@linuxbox ~]$ echo {001..15}
+                            001 002 003 004 005 006 007 008 009 010 011 012 013 014 015
+                        --> [me@linuxbox ~]$ echo {Z..A}
+                            Z Y X W V U T S R Q P O N M L K J I H G F E D C B A
+                        --> [me@linuxbox ~]$ echo a{A{1,2},B{3,4}}b
+                            aA1b aA2b aB3b aB4b
+                    
+                    -> common use: make lists of files or directories
+                            [me@linuxbox ~]$ mkdir Photos
+                            [me@linuxbox ~]$ cd Photos
+                            [me@linuxbox Photos]$ mkdir {2007..2009}-{01..12}
+                            [me@linuxbox Photos]$ ls
+                            2007-01 2007-07 2008-01 2008-07 2009-01 2009-07
+                            2007-02 2007-08 2008-02 2008-08 2009-02 2009-08
+                            2007-03 2007-09 2008-03 2008-09 2009-03 2009-09
+                            2007-04 2007-10 2008-04 2008-10 2009-04 2009-10
+                            2007-05 2007-11 2008-05 2008-11 2009-05 2009-11
+                            2007-06 2007-12 2008-06 2008-12 2009-06 2009-12
+
+            ---- parameter expansion 
+
+                    -> [me@linuxbox ~]$ echo $USER
+                        me
+                        --> system's ability to store small chunks of data and give each chunk a name (variables)
+                        --> e.g., variable named 'USER' contains your username 
+                    
+                    -> [me@linuxbox ~]$ printenv | less
+                        --> see a list of available variables 
+            
+            ---- command substitution
+
+                    -> command substitution allows us to use the output of a command as an expansion 
+
+                    -> [me@linuxbox ~]$ ls -l $(which cp)
+                        -rwxr-xr-x 1 root root 71516 2007-12-05 08:58 /bin/cp
+                        --> we passed the results of 'which cp' as an argument to the 'ls' command, showing a list of 'cp' programs without having to know its full pathname 
+                    
+                    -> [me@linuxbox ~]$ file $(ls -d /usr/bin/* | grep zip)
+                        /usr/bin/bunzip2: symbolic link to `bzip2'
+                        /usr/bin/bzip2: ELF 32-bit LSB executable, Intel 80386, version 1
+                        (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
+                        /usr/bin/bzip2recover: ELF 32-bit LSB executable, Intel 80386, version 1
+                        (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
+                        /usr/bin/funzip: ELF 32-bit LSB executable, Intel 80386, version 1
+                        (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
+                        /usr/bin/gpg-zip: Bourne shell script text executable
+                        /usr/bin/gunzip: symbolic link to `../../bin/gunzip'
+                        /usr/bin/gzip: symbolic link to `../../bin/gzip'
+                        --> the results of the pipeline (list all directories in /usr/bin that has zip in the name) became the argument list of the 'file' command 
+            
+            ---- quoting 
+
+                    -> double quotes 
+                        --> special characters lose special meanings except: $, \, ` 
+                        --> supressed 
+                            ---> word splitting
+                            ---> pathname expansion
+                            ---> tilde expansion 
+                            ---> brace expansion 
+                        --> carried 
+                            ---> parameter expansion 
+                            ---> arithmetic expansion 
+                            ---> command substitution 
+                            ---> [me@linuxbox ~]$ echo '$USER $((2+2)) $(cal)'
+                                    me 4 February 2020
+                                    Su Mo Tu We Th Fr Sa
+                                    1
+                                    2 3 4 5 6 7 8
+                                    9 10 11 12 13 14 15
+                                    16 17 18 19 20 21 22
+                                    23 24 25 26 27 28 29
+                        
+                        --> examining word splitting 
+                            ---> wihtout double quotes, spaces, tabs, and newlines will be treated as 'delimiters' between words
+                            ---> double quotes make them part of the arguments 
+                            ---> [me@linuxbox ~]$ echo $(cal)
+                                    February 2020 Su Mo Tu We Th Fr Sa 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+                                    18 19 20 21 22 23 24 25 26 27 28 29
+                                    [me@linuxbox ~]$ echo '$(cal)'
+                                    February 2020
+                                    Su Mo Tu We Th Fr Sa
+                                    1
+                                    2 3 4 5 6 7 8
+                                    9 10 11 12 13 14 15
+                                    16 17 18 19 20 21 22
+                                    23 24 25 26 27 28 29
+                                    ----> the unquoted command substitution results in a command line containing 38 arguments 
+                                    ----> quoted command resulted in a command line with one argument that includes embedded spaces and newlines 
+                                    
+                    -> single quotes 
+                        --> supress all expansions 
+
+                        --> [me@linuxbox ~]$ echo text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER
+                            text /home/me/ls-output.txt a b foo 4 me
+                            70 Chapter 7
+                            
+                        --> [me@linuxbox ~]$ echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
+                            text ~/*.txt {a,b} foo 4 me
+                            
+                        --> [me@linuxbox ~]$ echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
+                            text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER
+                    
+            ---- \ : escapting characters 
+                    
+                    -> skip a single character in double quote / unquoted 
+                        --> to selectively prevent an expansion 
+                    
+                    -> [me@linuxbox ~]$ echo 'The balance for user $USER is: \$5.00'
+                        The balance for user me is: $5.00
+                    
+                    -> can also be used to eliminate the special meaning of a character in a filename 
+                        --> when filename includes '$', '!', '&', ' ', ...
+                        --> [me@linuxbox ~]$ mv bad\&filename good_filename
+
+                    -> control code : escape sequence
+                        --> '\' is also used as part of a notation for special characters
+                                \a      Bell (an alert that causes the computer to beep)
+                                \b      Backspace
+                                \n      Newline; on Unix-like systems, this produces a line feed
+                                \r      Carriage return
+                                \t      Tab
+
+                        --> adding the '-e' option to 'echo' will enable interpretation of escape sequences, or place them inside $' '
+                            ---> sleep 10; echo -e 'Time's up\a'
+                            ---> sleep 10; echo 'Time's up' $'\a'
+        
+    -- advance keyboard tricks
+
+        --- 'readline': bash uses this library to implement command line editing 
+
+            ---- cursor movement 
+
+                    ctrl-A              Move cursor to the beginning of the line.
+                    ctrl-E              Move cursor to the end of the line.
+                    ctrl-F              Move cursor forward one character; same as the right arrow key.
+                    ctrl-B              Move cursor backward one character; same as the left arrow key.
+                    alt-F               Move cursor forward one word.
+                    alt-B               Move cursor backward one word.
+                    ctrl-L              Clear the screen and move the cursor to the top-left corner. The clear
+                                            command does the same thing.
+            
+            ---- modifying text 
+
+                    ctrl-D              Delete the character at the cursor location.
+                    ctrl-T              Transpose (exchange) the character at the cursor location with the one preceding it.
+                    alt-T               Transpose the word at the cursor location with the one preceding it.
+                    alt-L               Convert the characters from the cursor location to the end of the word to lowercase.
+                    alt-U               Convert the characters from the cursor location to the end of the word to uppercase.
+            
+            ---- cutting and pasting (killing and yanking) text 
+
+                    ctrl-K              Kill text from the cursor location to the end of line.
+                    ctrl-U              Kill text from the cursor location to the beginning of the line.
+                    alt-D               Kill text from the cursor location to the end of the current word.
+                    alt-backspace       Kill text from the cursor location to the beginning of the current word. If
+                                            the cursor is at the beginning of a word, kill the previous word.
+                    ctrl-Y              Yank text from the kill-ring and insert it at the cursor location.
+            
+            ---- TAB : completion 
+
+                    -> [me@linuxbox ~]$ ls
+                        Desktop ls-output.txt Pictures Templates Videos
+                        Documents Music Public
+                    
+                    -> [me@linuxbox ~]$ ls l    + TAB   =    [me@linuxbox ~]$ ls ls-output.txt
+                        --> when there's no completion when the letter(s) entered matches more than one entry in the directory 
+                        --> for the completion to work, the 'clue' must be unambiguous 
+                    
+                    -> completion works on 
+                        --> pathnames 
+                        --> variables (word begins with '$')
+                        --> usernames (word begins with '~')
+                        --> commands (word is the first word on the line)
+                        --> hostnames (word begins with '@')
+                            ---> only works for hostnames listed in /etc/hosts 
+
+                    -> controls 
+                        alt-?           Display a list of possible completions. On most systems, you can also
+                                            do this by pressing the tab key a second time, which is much easier.
+                        alt-*           Insert all possible completions. This is useful when you want to use more
+                                            than one possible match.
+            
+            ---- history
+
+                    -> histories commands are kept in the home directory in a file called bash_history
+
+                    -> searching history 
+                        --> [me@linuxbox ~]$ history | less
+                        --> [me@linuxbox ~]$ history | grep /usr/bin
+                            ---> find the commands we used to list /usr/bin 
+                            ---> results will contain the line number of the command in the history list 
+                        --> [me@linuxbox ~]$ !line_num 
+                            ---> history expansion 
+                        
+                    -> incremental search (reverse-i-search)
+                        --> press CTRL+R to start typing 
+                        --> press ENTER to execute command when found 
+                        --> or press CTRL-J to copy the line from the history list to the current command line 
+                        --> press CTRL+R again to find the next occurrence 
+                    
+                    -> history commands 
+                        ctrl-P          Move to the previous history entry. This is the same action as the up arrow.
+                        ctrl-N          Move to the next history entry. This is the same action as the down arrow.
+                        alt-<           Move to the beginning (top) of the history list.
+                        alt->           Move to the end (bottom) of the history list, i.e., the current command line.
+                        ctrl-R          Reverse incremental search. This searches incrementally from the current command line up the history list.
+                        alt-P           Reverse search, nonincremental. With this key, type in the search string and press enter before the search is performed.
+                        alt-N           Forward search, nonincremental.
+                        ctrl-O          Execute the current item in the history list and advance to the next one. This
+                                            is handy if you are trying to re-execute a sequence of commands in the history list.
+                    
+                    -> history expansion 
+                        !!              Repeat the last command. It is probably easier to press the up arrow and enter.
+                        !number         Repeat history list item number.
+                        !string         Repeat last history list item starting with string.
+                        !?string        Repeat last history list item containing string.
+        
+            ---- script file_name : record the shell session and store it in file_name
+
+                -> if no file is specified, the file 'typescript' is used
+    
+    -- permissions 
+
+        --- Linux systems are designed for multi-users 
+            ---- remote users can log in via 'ssh' (secure shell) and operate the computer 
+            ---- there is a method that protect users from each other
+
+        --- roles 
+
+            ---- owners: a user may own files and directories, that user then has control over its access 
+
+            ---- group: users can beong to a group consisting of one or more users who are given access to files and directories by the owner 
+
+            ---- world: owner may also grant some set of access rights to everybody, in Unix is referred to as the world 
+
+            ---- id: find information about identity
+                    ->  [me@linuxbox ~]$ id
+                        uid=500(me) gid=500(me) groups=500(me)
+                        
+                        --> when user accounts are created, users are assigned a number called a user ID (uid) 
+                        --> the user is assigned a group ID (gid) and may belong to adidtional groups 
+            
+            ---- storage of identity information 
+
+                    -> user accounts are defined in the '/etc/passwd' file, and groups are defined in the '/etc/group' file 
+                        --> when the accounts are created, files are modified along with 'etc/shadow' which holds user's password information 
+
+                    -> for each user account, the /etc/passwd defines 
+                        --> user (login) name, uid, gid
+                        --> account's real name, home directory, and login shell 
+
+        --- access : reading, writing, and executing 
+
+            ----  [me@linuxbox ~]$ ls -l foo.txt
+                    -rw-rw-r-- 1 me me 0 2018-03-06 14:52 foo.txt
+
+                    -> the first 10 characters are the file attributes, which defines 
+
+                        --> 1st char : files types
+                            ---> common examples
+
+                                    -           A regular file.
+                                    d           A directory.
+                                    l           A symbolic link. Notice that with symbolic links, the remaining file attributes are always rwxrwxrwx and are dummy values. 
+                                                    The real file attributes are those of the file the symbolic link points to.
+                                    c           A character special file. This file type refers to a device that handles data
+                                                    as a stream of bytes, such as a terminal or /dev/null.
+                                    b           A block special file. This file type refers to a device that handles data in
+                                                    blocks, such as a hard drive or DVD drive.
+                        
+                        --> remining chars : file mode : listed in the order of perssions of 1. file's owner, 2. file's group owner, and everyone else 
+
+                            ---> definition of permissions
+
+                                attribute   files                                               directories 
+                                    r       Allows a file to be opened and read.                Allows a directory’s contents to
+                                                                                                    be listed if the execute attribute is also set.
+
+                                    w       Allows a file to be written to or                   Allows files within a directory to be
+                                                truncated; however, this attribute                  created, deleted, and renamed if
+                                                does not allow files to be renamed                  the execute attribute is also set.
+                                                or deleted. The ability to delete or
+                                                rename files is determined by directory
+                                                attributes.
+
+                                    x       Allows a file to be treated as a                    Allows a directory to be entered, e.g., cd directory.
+                                                program and executed. Program
+                                                files written in scripting languages
+                                                must also be set as readable to be
+                                                executed.
+                            
+                            ---> examples 
+
+                                    -rwx------              A regular file that is readable, writable, and executable by the file’s
+                                                                owner. No one else has any access.
+                                    -rw-------              A regular file that is readable and writable by the file’s owner. No one else has any access.
+                                    -rw-r--r--              A regular file that is readable and writable by the file’s owner.
+                                                                Members of the file’s owner group may read the file. The file is world-readable.
+                                    -rwxr-xr-x              A regular file that is readable, writable, and executable by the file’s
+                                                                owner. The file may be read and executed by everybody else.
+                                    -rw-rw----              A regular file that is readable and writable by the file’s owner and
+                                                                members of the file’s group owner only.
+                                    lrwxrwxrwx              A symbolic link. All symbolic links have “dummy” permissions. The
+                                                                real permissions are kept with the actual file pointed to by the symbolic link.
+                                    drwxrwx---              A directory. The owner and the members of the owner group may
+                                                                enter the directory and create, rename, and remove files within the directory.
+                                    drwxr-x---              A directory. The owner may enter the directory and create, rename,
+                                                                and delete files within the directory. Members of the owner group
+                                                                may enter the directory but cannot create, delete, or rename files.
+            
+        --- chmod : change file mode (permission)
+
+            ---- only file's owner or the superuser can change the mode of a file or directory 
+
+            ---- chmod : supports two ways of specifying mode changes 
+
+                    -> Octal number representation 
+
+                        --> code definition 
+                            Octal       Binary          File mode
+                            0           000             ---
+                            1           001             --x
+                            2           010             -w-
+                            3           011             -wx
+                            4           100             r--
+                            5           101             r-x
+                            6           110             rw-
+                            7           111             rwx
+                        
+                        --> example 
+                            ---> [me@linuxbox ~]$ > foo.txt
+                                 [me@linuxbox ~]$ ls -l foo.txt
+                                 -rw-rw-r-- 1 me me 0 2018-03-06 14:52 foo.txt
+                                 [me@linuxbox ~]$ chmod 600 foo.txt
+                                 [me@linuxbox ~]$ ls -l foo.txt
+                                 -rw------- 1 me me 0 2018-03-06 14:52 foo.txt
+                            
+                            ---> by passing 600, we were able to set the permissions of the owner to read and write while removing all perssions from the group owner and world
+
+                    -> symbolic representation 
+
+                        --> components 
+                            ---> who the change will affect 
+                            ---> which operation will be performed 
+                            ---> what permission will be set 
+                        
+                        --> 'u', 'g', 'o', 'a' : specifying who is affected 
+
+                                u       Short for “user” but means the file or directory owner.
+                                g       Group owner.
+                                o       Short for “others” but means world.
+                                a       Short for “all.” This is a combination of u, g, and o.
+                            
+                            ---> if no character is specified, 'all' will be assumed 
+
+                            ---> can be used in combination with '+', for adding a permission and '-' for taking away a permission 
+                        
+                        --> 'r', 'w', 'x' : specifying permission modified 
+
+                                u+x             Add execute permission for the owner.
+                                u-x             Remove execute permission from the owner.
+                                +x              Add execute permission for the owner, group, and world. This is equivalent to a+x.
+                                o-rw            Remove the read and write permissions from anyone besides the owner and group owner.
+                                go=rw           Set the group owner and anyone besides the owner to have read and write permissions. If either the group owner or the 
+                                                    world previously had execute permission, it is removed.
+                                u+x,go=rx       Add execute permission for the owner and set the permissions for the group and others to read and execute. 
+                                                    Multiple specifications may be separated by commas.
+
+            ---- umask : set default permissions 
+
+            ---- special permissions 
+
+                    -> full permission mask is 4 instead of 3 digits 
+
+                    -> special types 
+
+                        --> setuid bit : octal 4000
+                            ---> it changes the effective user ID from the real user (who running the program) to program's owner 
+                            ---> this allows the program to access files and directories that an oridnary user would normally be prohibited from accessing 
+
+                        --> setgid bit : octal 2000
+                            ---> changes the effective group ID from the real group ID of the real user to that of the file owner 
+                            ---> this is useful in a shared directory when members of a common group need access to all the files in the directory, regardless of the file owner's primary group
+                        
+                        --> sticky bit: octal 1000
+                            ---> it prevents users from deleting or renaming files unless the user is either the owner of the directory, the owner of the file, or the superuser
+                            ---> this is often used to control access to a shared directory, such as /tmp 
+        
+        --- change identities : 3 ways to take on an alternative identity for purposes such as testing an account
+
+            ---- log out and log back in
+
+            ---- 'su' : run a shell with substitute user and group IDs 
+
+                    -> su [-[l]] [user]
+                        --> '-l' option enables the resulting shell session to be a login shell for the specified user 
+                            ---> this means the user's environment is loaded and the working directory is changed to the user's home directory 
+                            ---> '-l' can be abbreviated as '-'
+                        --> if the user is not specified, the superuser is assumed
+
+                    -> example 
+                        --> [me@linuxbox ~]$ su -
+                            Password:
+                            [root@linuxbox ~]#
+
+                            [root@linuxbox ~]# exit
+                            [me@linuxbox ~]$
+
+                        --> executing a single command 
+                            [me@linuxbox ~]$ su -c 'ls -l /root/*'
+                            Password:
+                            -rw------- 1 root root 754 2007-08-11 03:19 /root/anaconda-ks.cfg
+                            /root/Mail:
+                            total 0
+                            [me@linuxbox ~]$
+                             
+            ---- 'sudo' : execute a command as another user 
+
+                    -> the administrator can configure 'sudo' to allow an ordinary user to execute commands as a different user in a controlled way 
+                        --> in particular, a user may be restricted to one or more specific commands and no others 
+
+                    -> the use of 'sudo' does not require access to the superuser's password 
+                        --> authenticating using 'sudo' requires the user's own password 
+
+                    -> 'sudo' does not start a new shell, nor load another user's environment 
+                        --> commands do not need to be quoted any differently than they would be without using 'sudo'
+                    
+                    -> after entering password for the first time, in the next few mintues, 'sudo' will not ask for re-entering password until its timer runs out 
+
+                    -> example 
+                        --> [me@linuxbox ~]$ sudo backup_script
+                            Password:
+                            System Backup Starting...
+
+                        --> list privileges granted by 'sudo'
+                            [me@linuxbox ~]$ sudo -l
+                            User me may run the following commands on this host:
+                            (ALL) ALL
+
+        --- 'chown' : cange file owner and group
+
+            ---- chown [owner][:[group]] file...
+
+                    -> example arguments 
+                            bob                         Changes the ownership of the file from its current owner to user bob.
+                            bob:users                   Changes the ownership of the file from its current owner to user bob, and changes the file group owner to group users.
+                            :admins                     Changes the group owner to the group admins. The file owner is unchanged.
+                            bob:                        Changes the file owner from the current owner to user bob and changes the group owner to the login group of user bob.
+                    
+                    ->  [janet@linuxbox ~]$ sudo cp myfile.txt ~tony
+                        Password:
+                        [janet@linuxbox ~]$ sudo ls -l ~tony/myfile.txt
+                        -rw-r--r-- 1 root root root 2018-03-20 14:30 /home/tony/myfile.txt
+                        [janet@linuxbox ~]$ sudo chown tony: ~tony/myfile.txt
+                        [janet@linuxbox ~]$ sudo ls -l ~tony/myfile.txt
+                        -rw-r--r-- 1 tony tony tony 2018-03-20 14:30 /home/tony/myfile.txt
+
+                        --> user janet copies the file from her directory to the home directory of user tony 
+                        --> janet then changes the ownership of the file from root (a result of using 'sudo') to tony 
+                        --> using the trailing colon, janet also changed the group ownership of the file to the login group of tony, which happens to be group tony  
+        
+        --- 'passwd' : changing password
+
+            ---- it will try to enforce use of strong passwords
+
+            ---- example
+                    ->  [me@linuxbox ~]$ passwd
+                        (current) UNIX password:
+                        New UNIX password:
+                        BAD PASSWORD: is too similar to the old one
+                        New UNIX password:
+                        BAD PASSWORD: it is WAY too short
+                        New UNIX password:
+                        BAD PASSWORD: it is based on a dictionary word
+            
+    -- processes 
+
+        --- multitasking : create the illusion of doing more than one thing at once by rapidly switching from one executing program to another 
+            ---- the kernel manages this through the use of processes.
+            ---- processes are how Linux organizes the different programs waiting for their turn at the CPU
+        
+        --- processes : how it works 
+
+            ---- when a system starts up, the kernel initiates a few of its own activities as processes and launches a program called init 
+
+            ---- init, then runs a series of shell scripts (located in /etc) called init scripts, which start all the system services 
+                    -> many of these services are implemented as daemon programs
+                    -> programs that just sit in the background and do their thing without having any user interface 
+            
+            ---- parent process producing child process : a program can launch other programs is expressed in this process scheme 
+
+            ---- the kernel maintains information about each process to help keep things organized
+                    -> e.g., each process is assigned a number called a process ID (PID) 
+                        --> PIDs are assigned in ascending order, with 'init' always getting PID 1
+                    -> the kernel also keeps track of the memory assigned to each process, as well as the processes' readiness to resume execution 
+                    -> like files, processes also have owners and user IDs, effective user IDs, and so on 
+        
+        --- ps : viewing processes 
+
+            ---- without any option 
+
+                    -> [me@linuxbox ~]$ ps
+                        PID     TTY     TIME    CMD
+                        5198    pts/1 00:00:00  bash
+                        10129   pts/1 00:00:00  ps
+                    
+                    -> result lists two processes associated with the current terminal session 
+
+                    -> TTY is short for "teletype" and refers to the controlling terminal for the process 
+
+                    -> TIME is the amount of CPU time consumed by the process 
+                        --> neither process makes the computer work very hard 
+            
+            ---- option 'x' : all processes regardless of what terminal they are controlled by
+
+                    -> [me@linuxbox ~]$ ps x
+                        PID     TTY     STAT    TIME    COMMAND
+                        2799    ?       Ssl     0:00    /usr/libexec/bonobo-activation-server –ac
+                        2820    ?       Sl      0:01    /usr/libexec/evolution-data-server-1.10 --
+                        15647   ?       Ss      0:00    /bin/sh /usr/bin/startkde
+                        15751   ?       Ss      0:00    /usr/bin/ssh-agent /usr/bin/dbus-launch --
+                        15754   ?       S       0:00    /usr/bin/dbus-launch --exit-with-session
+                        15755   ?       Ss      0:01    /bin/dbus-daemon --fork --print-pid 4 –pr
+                        15774   ?       Ss      0:02    /usr/bin/gpg-agent -s –daemon
+                        15793   ?       S       0:00    start_kdeinit --new-startup +kcminit_start
+                        15794   ?       Ss      0:00    kdeinit Running...
+                        15797   ?       S       0:00    dcopserver –nosid
+                        --snip--
+
+                    -> ? in the TTY column indicates no controlling terminal. 
+
+                    -> use this option, we see a list of every process that we own 
+                        --> when the list got long, we might want to pipe the output into 'less' for easier viewing 
+                    
+                    -> a new column STAT (short for state) reveals the current status of the process 
+
+                        --> State   Meaning
+                            R       Running. This means the process is running or ready to run.
+                            S       Sleeping. The process is not running; rather, it is waiting for an event, such as a keystroke or network packet.
+                            D       Uninterruptible sleep. The process is waiting for I/O such as a disk drive.
+                            T       Stopped. The process has been instructed to stop. You’ll learn more about this later in the chapter.
+                            Z       A defunct or “zombie” process. This is a child process that has terminated but has not been cleaned up by its parent.
+                            <       A high-priority process. It’s possible to grant more importance to a process, giving it more time on the CPU. This property of a process is called niceness.
+                                        A process with high priority is said to be less nice because it’s taking more of the CPU’s time, which leaves less for everybody else.
+                            N       A low-priority process. A process with low priority (a nice process) will get processor time only after other processes with higher priority have been serviced.
+
+                        --> state may be followed by other characters - indicate various exotic process characters 
+            
+            ---- option 'aux' : gives even more information 
+
+                    -> [me@linuxbox ~]$ ps aux
+                        USER PID  %CPU   %MEM   VSZ     RSS     TTY     STAT    START   TIME    COMMAND
+                        root 1    0.0     0.0   2136    644     ?       Ss      Mar05   0:31    init
+                        root 2    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kt]
+                        root 3    0.0     0.0   0       0       ?       S<      Mar05   0:00    [mi]
+                        root 4    0.0     0.0   0       0       ?       S<      Mar05   0:00    [ks]
+                        root 5    0.0     0.0   0       0       ?       S<      Mar05   0:06    [wa]
+                        root 6    0.0     0.0   0       0       ?       S<      Mar05   0:36    [ev]
+                        root 7    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kh]
+                        --snip--
+                    
+                    -> this set of options displays the processes belonging to every user 
+
+                    -> BSD style 'ps' column headers 
+
+                        --> Header  Meaning (102)
+                            USER    User ID. This is the owner of the process.
+                            %CPU    CPU usage in percent.
+                            %MEM    Memory usage in percent.
+                            VSZ     Virtual memory size.
+                            RSS     Resident set size. This is the amount of physical memory (RAM) the process is using in kilobytes.
+                            START   Time when the process started. For values over 24 hours, a date is used.
+
+
+
+
+
+                    
+
+
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
