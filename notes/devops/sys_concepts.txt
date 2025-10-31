@@ -1,0 +1,142 @@
+
+
+
+
+
+
+Python Environments
+
+
+    - environment vs. virtual environment 
+
+        -- environment 
+            --- means a collection of 
+                ---- a Python interpreter (the executable 'python')
+                ---- a set of installed packages 
+                ---- and a specific set of environment variables (like PATH, PYTHONPATH, etc.) that together determine what code runs, and how 
+            --- your system Python is itself an environment 
+                ---- /usr/bin/python3 
+                ---- /usr/lib/python3.10/site-pacakges/
+                ---- that's the global environment - all users share it 
+        
+        -- virtual environment - the isolated implementation
+            --- a 'venv' is a self-contained copy of a Python environment 
+                ---- it has its own interpreter binary (venv/bin/python)
+                ---- it maintains its own 'site-packages' directory (where packages are installed) 
+                ---- it "inherits" the standard library from the system Python but isolates dependencies 
+            --- when you activate it, your shell teporarily rewires PATH so 'python' and 'pip' point to that virtual copy, not the system one 
+
+
+ Linux Runtime
+
+    - binary 
+
+        -- general meaning 
+            --- a binary is a file that contains compiled machine code - the 1s and 0s (binary digits) that you CPU can directly execute 
+            --- it's called "binary" because its content isn't human-readable text - it's stored in binary (base-2) format, representing CPU instructions, memory addresses, and data
+        
+        -- binary in software terms
+            --- code in high-level languages like Python or C, computer can't run that directly; it must be turned into something your processor understands
+                ---- for C/C++, that's done by a compiler, which produces a binary executable (e.g., 'python', 'bash', 'ls')
+                ---- for Python, the interpreter itself is a binary - written in C, compiled into an executable file 
+            --- so /usr/bin/python3 
+                ---- that's the Python interpreter binary - an executable machine-code program that runs on your CPU and knows how to 
+                        -> read.py text file 
+                        -> parse them into bytecode 
+                        -> execute that bytecode line by line 
+        
+        -- what the /bin folder means 
+            --- bin is short for binaries - it's where executable programs live 
+
+            --- typical Linux hierarchy 
+                /bin/           → essential system binaries (e.g., bash, ls, cat)
+                /usr/bin/       → user-level binaries (e.g., python3, git)
+                /usr/local/bin/ → locally installed binaries
+
+            --- in virtual environment
+                venv/
+                ├── bin/
+                │   ├── python       ← the Python binary (executable)
+                │   ├── pip          ← the pip command (script wrapper)
+                │   ├── activate     ← shell script (text file)
+                │   └── ... 
+
+    - Spark Compatibility: why is Windows unstable 
+
+        -- gist: Spark was designed and battle-tested on Unix-like systems; on Windows, several low-level mismatches bite - especially inside partitions where Python workers and JVM executors churn hard 
+        
+        -- process model & signals
+            --- Spark executors launch many short-lived Python workers; on Linux this leans on POSIX semantics (fork/exec, signal delivery, process groups)
+            --- Windows lacks POSIX signals/fork; process startup is heavier; termination/cleanup is less reliable
+                ---- orphaned workers, slow teardown, weird "point in use" errors, and falky retry behavior during 'mapPartitions'
+        
+        -- networking & ports 
+            --- Python workers talk to the JVM over local sockets 
+            --- Windows firewalls/AV, IPv6/IPv4 quirks, and ephemeral-port exhaustion show up more often 
+            --- Linux networking stacks handle these high-churn localhost sockets more preditably 
+        
+        -- filesystem/path semantics 
+            --- Spark/Hadoop routines assume POSIX paths, symlinks, and premissive temp-dir behavior 
+            --- Windows path rules (backslashes, drive letters, MAX_PATH surprises, case-insensitivity) cause random "file not found" or staging failures mid-task 
+        
+        -- shell/bootstrap scripts 
+            --- Spark/Hadoop ship tons of Bash scripts 
+            --- on Windows they run via workarounds (e.g., 'cmd', Cygwin-like layers)
+            --- edge cases (CRLF vs LF line endings, environment expansion, quoting) can break executor setup under load
+        
+        -- Hadoop/winutils baggage
+            --- historically you needed 'winutils.exe' and special envs to emulate *nix features 
+            --- even with newer Spark, some code paths still assume Unixy behavior - showing up as flaky IO/permissions during shuffle and temp work 
+        
+        -- Python/native deps 
+            --- in partitions you often pull in 'pyarrow', 'pandas', 'numpy' (MKL/OpenBLAS), etc. 
+            --- native wheels and memory-mapping behave more consistently on Linux 
+            --- on Windows, you'll hit DLL resolution, file-locking, and shared-memory quirks more often under concurrency
+        
+        -- Antivirums & Defender 
+            --- real-time scanning on %TEMP%/ project dirs can stall or lock temporary files that Spark shuffles and deletes aggressively in partition tasks 
+
+    - POSIX 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
