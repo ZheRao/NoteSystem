@@ -10,6 +10,20 @@
                 ---- setup: Linux project/notes space, installed python and jupyter 
 
                 ---- DevOps track - Y1-Q1-Month1-Week1 plan created and tracked
+            
+            --- 30th
+
+                ---- DevOps: In Progress - Python virtual environment
+                        -> create/activate/deactivate/install packages with 'venv'
+                        -> why venv? -> isolation, dependency management, avoid system pollution 
+                        -> folder structure of venv, access to standard python library even not included in installation 
+                
+                ---- completed notes on first-time WSL set up in VS Code 
+
+                ---- other notes 
+                        -> system: environment vs. virtual environment 
+                        -> systen: binary - machine executable code 
+                        -> Spark: compatibility with Windows vs. Linux (WSL)
 
 
 
