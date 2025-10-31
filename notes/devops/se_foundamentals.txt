@@ -1,4 +1,132 @@
 
+Version Control
+
+
+
+
+
+
+
+
+
+Test, Automation, Project Organization & Continuous Integration (CI)
+
+
+
+
+
+
+
+
+
+Environments, Packaging & CLI Proficiency 
+
+    - Python virtual environments 
+
+        -- motive: virtual environment allows to manage dependecies separately for different projects, preventing conflicts and maintaining clearner setups 
+
+        -- Python module used - 'venv'
+
+        -- work with virtual environment 
+
+            --- quick notes
+
+                ---- why use '-m' in 'python3 -m pip...'?
+                        -> if you have multiple Pythons installed, plain 'pip' might point at a different interpreter than you expect
+                        -> 'python3 -m pip' removes that ambiguity
+                        -> '-m' tells Python: run a module as a script 
+
+            --- create: 'python3 -m venv .venv_name/'
+                ---- 'venv' - specifies the module 
+                ---- '.venv_name/' sets the name for your virtual environment
+                        -> don't need the '/', but it's clearer that you're creating a folder 
+            
+            --- activate: 'source .venv_name/bin/activate'
+                ---- make sure you're in the folder containing the virtual environment
+            
+            --- install package: 'python -m pip install <package-name>'
+                ---- because you first created and activated the virtual environment, pip will install the packages in an isolated location
+                ---- don't need to use 'python3' because it will automatically use the venv's interpreter (safe)
+            
+            --- deactivate: 'deactivate'
+        
+        -- why do we need virtual environments?
+
+            --- short answer: Python isn't great at dependency management; if you are not specific, the pip will place all the external packages that you install in 'site-packages/'
+
+            --- issues venv mitigate 
+
+                ---- avoid System Pollution 
+                        -> Linux and macOs come preinstalled with a version of Python that the OS uses for internal tasks 
+                        -> install packages to this global Python will mix these packages with the system-relevant packages - unexpected side effects on OS's normal behavior 
+                        -> updating OS could overwrite packages you installed or just lose them 
+                
+                ---- sidestep dependency conflicts 
+                        -> you won't be able to work with two different versions of the same library if there's only one place to install packages
+                
+                ---- dodge installation privilege lockouts 
+                        -> may need administrator privileges on a computer to install packages into the host Python's site-packages directory 
+                        -> in a corporate work environment, you most likely won't have that level of access to the machine that you're working on 
+                        -> in virtual environments, you create a new installation location within the scope of your user privileges, which allows you to install and work with external packages 
+                
+        -- base installation detailed look 
+
+            --- philosophy: Python virtual environment is a folder structure that gives you everything you need to run a lightweight yet isolated Python environment 
+                ---- to achieve this, 'venv' reproduces the folder structure that a standard Python installation creates 
+
+            --- folder structure 
+
+                ---- bin/ : executable files of the virtual environment 
+                        -> Python interpreter (python) and the pip executable (pip), and their respective symlinks (python3, python3.12, pip3, pip3.12)
+                        -> activation scripts for the virtual environment 
+                
+                ---- include/ : an initial empty folder that Python uses to include C header files for packages you might install that depend on C extensions 
+
+                ---- lib/ : contains the site-package/ directory nested in a folder that designates the Python version (python3.12/)
+                        -> site-package/ is one of the main reasons for creating the virtual environment 
+                        -> this folder is where you'll install the external packages that you want to use within your virtual environment 
+                        -> since Python 3.12, your virtual environment comes preinstalled with only one dependency, pip 
+                
+                ---- lib64/ : in many Linux systems comes as a symlink to lib/ for compatibility reasons 
+
+                ---- {name}-{version}.dist-info/ : default directory for pip
+                        -> contains package distribution information that exists to record information about installed packages 
+                
+                ---- pyvenv.cfg : contains only a couple of key-value pairs that Python uses to set variables in the 'sys' module that determine which Python interpreter and site-packages directory the current Python session will use 
+
+            --- standard Python library
+                ---- you will notice that this lightweight installation doesn't contain any of the trusted standard library modules, but you can still access all of them 
+                ---- your virtual environment reuses Python's built-ins and standard-library modules from the Python installation you used to create your virtual environment 
+            
+            --- 'python3 -m venv .venv_name/ --system-site-packages': optionally give virtual environment access to the base installation's site-packages 
+                ---- you can use any external packages that you installed to your base Python as if you'd installed them into your virtual environment 
+                ---- this connection works in only one direction - new packages installed into virtual environment won't mingle with the packages in base Python 
+        
+        -- how does virtual environment work? 
+
+
+
+
+
+
+
+
+
+
+
+Container and Continuous Deployment (CD)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
