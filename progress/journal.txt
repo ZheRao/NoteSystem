@@ -9,11 +9,11 @@
 
                 ---- setup: Linux project/notes space, installed python and jupyter 
 
-                ---- DevOps track - Y1-Q1-Month1-Week1 plan created and tracked
+                ---- DevOps: Y1-Q1 plan structure created - with month1-week1 detailed target created  
             
             --- 30th
 
-                ---- DevOps: In Progress - Python virtual environment
+                ---- DevOps: In Progress - venv
                         -> create/activate/deactivate/install packages with 'venv'
                         -> why venv? -> isolation, dependency management, avoid system pollution 
                         -> folder structure of venv, access to standard python library even not included in installation 
@@ -24,8 +24,26 @@
                         -> system: environment vs. virtual environment 
                         -> systen: binary - machine executable code 
                         -> Spark: compatibility with Windows vs. Linux (WSL)
+            
+            --- 31th
+
+                ---- skipped - day trip to Saskatoon 
+        
+        -- Novmber 
+
+            --- 1st 
+
+                ---- DevOps: Finished - venv (3.72 hours)
+                        -> execution of isolation and lightweight Python installation through 'pyvenv.cfg' file, modify sys.path, PYTHONPATH, PATH
+                        -> customize virtualenv: update core dependencies, include system site-packages
+                        -> manage virtualenv: locate venv folder, requirements.txt, avoid in Production 
+                
+                ---- DevOps: week2 plan created - realized adjustment needed - focused on working with virtualevn in Poetry + Conda, determine - is it really needed? 
+                
+                ---- DeepLearning: Y1-Q1 plan structure created - with month1-week1 detailed target created (switched 3 plans - 1 hour)
 
 
+                
 
 
 
