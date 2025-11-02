@@ -1,0 +1,35 @@
+
+
+Autograd & Backpropagation
+
+    - automatic differentiation 
+
+        -- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
