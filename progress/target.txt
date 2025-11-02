@@ -1,5 +1,9 @@
 
-Year 1
+Year 1 - DevOps - Solidifying Software Engineering Fundamentals
+
+    - goal
+        -- establish a strong foundation in software development best practices - from version control to basic project structure to testing and environment management 
+        -- this year is about moving from "code that works" to clean, maintainable code that can be collaboratively developed and easily deployed 
 
     - Q1 - Environments, Packaging & CLI Proficiency 
 
@@ -25,6 +29,19 @@ Year 1
                         -> create venvs via 'venv' and 'conda create'
                         -> install specific versions ('pip install pandas==2.2.3')
                         -> export 'requirements.txt' / 'environment.yml' 
+            
+            --- week 2 - advanced environment management 
+
+                ---- read: Poetry Basics + Conda vs. Poetry comparison 
+                        -> https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+                        -> https://python-poetry.org/docs/
+                
+                ---- practice
+                        -> install Poetry and create a sample project ('poetry new env_test')
+                        -> add dependecies, lock, export (poetry export -f requirements.txt)
+                
+                ---- exercise:
+                        -> reproduce an environment on a fresh Linux VM or WSL directory 
 
         -- month 2 - packaging & distribution (setup.py / pyproject.toml / wheels / entry-points)
 
@@ -45,6 +62,42 @@ Year 1
             --- aim to complete a Linux CLI challenge or use a site like OverTheWire to test Bash skills
 
 
+Year 1 - DeepLearning - Foundation: Build Mathematical & Experimental Intuition 
+
+    - goal 
+        -- rebuild your neural network understanding from first principles, now with modern engineering rigor 
+        -- this year is about mastering the basics throughly - not just knowing what a neural network is, but being able to implement and experiment with them at a low level 
+
+    - Q1 - Re-Foundations of Deep Learning (Autograd & Backprop from Scratch)
+
+        -- goal 
+            --- focus on fundamental mechanics of neural networks 
+            --- ensure you understand automatic differentiation and backpropagation at a granular level 
+            --- learn how frameworks like PyTroch perform autograd by building a computational graph and applying the chain rule in reverse to compute gradients 
+            --- revisit how weights are initialized and why initialization matters for training stability 
+        
+        -- month 1 - Manual Backprop from First Principles 
+
+            --- outcome: derive and code gradients by hand; focus on understanding and deriving the chain rule for NN 
+
+            --- week 1 - refresh core math 
+
+                ---- focus 
+                        -> revisit matrix calculus and chain rule 
+                        -> read D2L chapter 4.1 at https://d2l.ai/chapter_preliminaries/autograd.html
+                        -> read CS231n Backprop Notes at https://cs231n.github.io/optimization-2/
+
+                ---- practice 
+                        -> derive gradient for 'y = W2 * ReLU(W1 x)' on paper 
+                        -> verify shapes and Jacobians 
+
+        -- month 2 - Build a mini Autograd Engine 
+
+            --- outcome: implement micrograd-style computational graph 
+        
+        -- month 3 - Build & Train a 3-layer MLP with Only Tensors 
+
+            --- outcome: verify gradients vs PyTorch autograd 
 
 
 
