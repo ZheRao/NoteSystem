@@ -76,20 +76,22 @@ Year 1 - DeepLearning - Foundation: Build Mathematical & Experimental Intuition
             --- learn how frameworks like PyTroch perform autograd by building a computational graph and applying the chain rule in reverse to compute gradients 
             --- revisit how weights are initialized and why initialization matters for training stability 
         
-        -- month 1 - Manual Backprop from First Principles 
+        -- month 1 - The Mathematical Core
 
             --- outcome: derive and code gradients by hand; focus on understanding and deriving the chain rule for NN 
 
-            --- week 1 - refresh core math 
+            --- week 1 - computational graphs & the chain rule 
 
-                ---- focus 
-                        -> revisit matrix calculus and chain rule 
-                        -> read D2L chapter 4.1 at https://d2l.ai/chapter_preliminaries/autograd.html
-                        -> read CS231n Backprop Notes at https://cs231n.github.io/optimization-2/
+                ---- study
+                        -> study Karpathy's video (into and backprop): https://www.youtube.com/watch?v=VMj-3S1tku0&list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ&index=2
+                        -> read 
+                            --> CS231n Backprop Notes at https://cs231n.github.io/optimization-2/ 
+                            --> 3Blue1Brown: Neural Networks — The Backpropagation Algorithm
+                        -> read (light): Deep Learning Book, Ch. 6.5 Back-propagation and Other Differentiation Algorithms
 
                 ---- practice 
-                        -> derive gradient for 'y = W2 * ReLU(W1 x)' on paper 
-                        -> verify shapes and Jacobians 
+                        -> write out by hand a computational graph for a simple function, e.g., f(x,y)=(x+y)∗y, compute ∂f/∂x and ∂f/∂y step by step
+                        -> implement a minimal scalar reverse-mode autodiff engine (like micrograd, 50 lines)
 
         -- month 2 - Build a mini Autograd Engine 
 
