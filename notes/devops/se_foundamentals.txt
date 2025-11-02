@@ -21,11 +21,9 @@ Test, Automation, Project Organization & Continuous Integration (CI)
 
 Environments, Packaging & CLI Proficiency 
 
-    - Python virtual environments 
+    - Python virtual environments with 'venv'
 
         -- motive: virtual environment allows to manage dependecies separately for different projects, preventing conflicts and maintaining clearner setups 
-
-        -- Python module used - 'venv'
 
         -- work with virtual environment 
 
@@ -102,7 +100,182 @@ Environments, Packaging & CLI Proficiency
                 ---- you can use any external packages that you installed to your base Python as if you'd installed them into your virtual environment 
                 ---- this connection works in only one direction - new packages installed into virtual environment won't mingle with the packages in base Python 
         
-        -- how does virtual environment work? 
+        -- how the folder structre and the settings in 'pyvenv.cfg' file interact with Python to provide a reproducible and isolated space for installing external dependencies 
+
+            --- copies structure and files 
+                ---- when create a virtual environment using 'venv', the module re-creates the file and folder structure of a standard Python installation on OS 
+                        -> Python also copies or symlinks into that folder structure the Python executable with which you created as 'venv_name'
+                ---- base Python installation that the virtual environment is based on can be find under the 'home' key in 'pyvenv.cfg'
+            
+            --- adapts prefix-finding process 
+                ---- Python interpreter in virtual envrionment now can understand where all relevant files are located because of the standard folder structure 
+                ---- it is done with minor adaptions to its prefix-finding process 
+                ---- instead of looking for the 'os' module to deterine the location of the standard library, interpreter first looks for a 'pyvenv.cfg' file 
+                ---- if the file is located and contains a 'home' key, then the interpreter will use that key to set the value for two variables 
+                        -> 'sys.base_prefic' hold the path to Python executable used to create this virtual envrionment 
+                        -> 'sys.prefix' point to the directory containing 'pyvenv.cfg'
+                ---- this change allows the Python interpreter in the virtual environment to 
+                        -> use the standard-library modules from base Python installation 
+                        -> point to its internal site-packages directory to install and access external packages 
+                
+            --- 'sys.path'
+                ---- Python executable in virtual environment has access to standard-library modules because Python points to that file path in the 'home' setting in 'pyvenv.cfg'
+                ---- Python is set up to find these modeuls by adding the relevant path to 'sys.path'
+                ---- the paths that Python session has access to in 'sys.path' determine which locations Python can import modules from 
+            
+            --- modifies PYTHONPATH 
+                ---- to ensure scripts use the Python interpreter within the virtual environment, 'venv' modifies the PYTHONPATH environment variable that can be accessed using 'sys.path'
+                ---- if inspect 'sys.path' without an activate virtual environment - contains path to the site-packages directory - contains external modules that would be installed 
+                        >>> import sys
+                        >>> sys.path
+                        [...
+                        '/usr/local/lib/python3.12/site-packages']
+                ---- with activated virtual environment - Python replaced the default site-packages directory path with the one that lives inside virtual environment while base Python's site-package isn't here
+                        >>> import sys
+                        >>> sys.path
+                        [...
+                        '/home/name/path/to/venv/lib/python3.12/site-packages']
+                ---- optionally, you can get read-only access to the system site-packages directory of base Python installation 
+            
+            --- changes your shell PATH variable on activation 
+                ---- to activate virtual environment: you run 'source .venv_name/bin/activate'
+                ---- there are a few different activation scripts inside bin/ - all same purpose, distributor need to provide different ways to accomodate various OSs and shells  
+                        venv/
+                        │
+                        ├── bin/
+                        │   ├── Activate.ps1
+                        │   ├── activate
+                        │   ├── activate.csh
+                        │   ├── activate.fish
+                        ... ...
+                ---- two critical actions in activation scripts 
+                        -> Path: sets the VIRTUAL_ENV variable to the root folder path of your virtual environment and prepends the relative location of its Python executable to PATH 
+                            --> path to all the executables in virtual environment now lives at the front of your PATH 
+                            --> shell will invoke the internal versions of 'pip' or Python when you type 'pip' or 'python'
+                        -> Command Prompt: changes the command prompt to the name of the virtual environment 
+                ---- when 'deactivate', shell reverses these changes and returns PATH and your command prompt back to how they were before 
+            
+            --- it runs from anywhere with absolute path 
+                ---- you can work with virtual environment without activating it 
+                ---- if the name of an executable is provided to your shell, it'll look at the location recorded in PATH for an executable file sporting that name
+                        -> it sill then pick and run the first one that matches that criterion
+                        -> the activation script changes PATH variable so that the binaries folder of virtual environment is the first place your shell looks for executables 
+                ---- if you don't activate virtual environment, you can pass the absolute path of the Python executable inside your virtual environment to run script
+                ---- why?
+                        -> embed activation in script is unstable
+                        -> use absolute path to the Python interpreter in your virtual environment when running scripts 
+                ---- how? 
+                        0 * * * *
+                        /home/name/Documents/connectivity-checker/venv/bin/python
+                        -m rpchecker
+                        -u google.com twitter.com
+                        -a
+                            --> 0 * * * * : Cron schedule: run at minute 0 every hour 
+                            --> /home... : Python interpreter inside your virtual environment - this avois activation entirely and guarantees the venv's packages are used 
+                            --> -m rpchecker : run the module rpchecker as a script - equivalent to 'python path/to/module/_main_.py'
+            
+        -- customize a virtual environment 
+
+            --- update core dependencies 
+                ---- 'python3 -m venv venv/ --upgrade-deps'
+                ---- this only affects the dependencies upgrade at creation time - still need manual upgrade months later and you want new tooling 
+                
+            --- include the system site-packages 
+                ---- 'python3 -m venv venv/ --system-site-packages'
+                    >>> sys.path
+                    [...
+                    '/home/name/.local/lib/python3.12/site-packages',       # user site 
+                    '/usr/local/lib/python3.12/site-packages']              # system site 
+            
+            --- copy or link executables
+                ---- Linux distributions may create either a symlink or a copy, but often opt for synlinks over copies
+                ---- if virtualenv copies and later base Python was updated 
+                        -> 'python3 -m venv venv/ --upgrade'
+
+        -- how to manage virtual environments 
+
+            --- decide where to create environment folders 
+
+                ---- inside each project folder 
+                            project_name/
+                            │
+                            ├── venv/
+                            │
+                            └── src/
+                        -> pros: tracibility - which virtualenv belongs to which project; easy activate with short relative path 
+                
+                ---- single-folder approach 
+                            name/
+                            │
+                            ├── Documents/
+                            │   │
+                            │   └── projects/
+                            │       │
+                            │       ├── django-project/
+                            │       │
+                            │       ├── flask-project/
+                            │       │
+                            │       └── pandas-project/
+                            │
+                            ├── venvs
+                            │   │
+                            │   ├── django-venv/
+                            │   │
+                            │   ├── flask-venv/
+                            │   │
+                            │   └── pandas-venv/
+                        -> pros - easy to manage virtualevns
+                        -> cons - absolute path activation
+
+            --- requirements.txt 
+
+                ---- goal: be able to re-create Python environment on a different computer 
+                        -> Q: how can you do that when you treat virtualenv as disposable and don't commit it to version control?
+                
+                ---- pin dependencies: need a way to describe its contents 
+                        -> create a requirements.txt file while virtual environment is active 
+                        -> '(venv) $ python -m pip freeze > requirements.txt'
+                        -> 'pip freeze' - prints every installed Python package with its exact version in a format that pip can read back 
+                            --> only a installation snapshot 
+                        -> 'python -m pip freeze --local > requirements.txt' if created venv with '--system-site-packages'
+                
+                ---- install dependencies 
+                        -> '(new-venv) $ python -m pip install -r requirements.txt'
+
+                ---- danger 
+                        -> Python version: requirements.txt doesn't include information about which version of Python used as base Python interpreter when creating the virtual environment 
+                        -> sub-dependencies: it may not include version information about sub-dependencies of your dependencies 
+
+                ---- potential solutions to danger 
+                        -> requirements.txt using pip-tools 
+                        -> Pipfile.lock using Pipenv 
+                        -> poetry.lock using Poetry 
+            
+            --- avoid virtualevns in Production - why we need containers
+
+                ---- bad idea to include virtual environment folder in remote online locations:
+                        -> GitHub: don't push the venv/ folder to GitHub 
+                        -> CI/CD pipelines: don't cinlude venv/ folder in continuous integration or continuous delivery pipelines 
+                        -> server deployments: don't set up a virtual environment on deployment server unless you manage the server yourself and run multiple separate projects on it 
+                
+                ---- achieve isolated environments and reproducibility by pinning dependecies 
+                        -> many remote hosting providers, including CI/CD pipeline tools and PaaS providers will automatically create that isolation for you 
+                        -> in most hosted situations, you don't have to deal with creaing the isolation, you'll still need to provide the information about what to install in the remote env 
+                            --> use pinned dependencies in 'requirements.txt' file 
+                
+                ---- a popular option that takes virtualization to the next level and still allows you to create a lot of the setup yourself is Docker 
+
+                ---- third-party tools to manage multiple virtual environments 
+                        -> virtualenvwrapper
+                        -> Poetry 
+                        -> uv
+                        -> Hatch 
+                        -> Pipenv 
+                        -> pipx 
+                        -> pipx-in-pipx 
+                        -> pyenv-virtualenv 
+
+            
 
 
 
