@@ -2,9 +2,172 @@
 
 Autograd & Backpropagation
 
-    - automatic differentiation 
+    - micrograd_from_scratch 
 
-        -- 
+        -- micrograd is a tiny autograd engine - implements backpropagation (reverse-mode autodiff) over a dynamically built DAG and a small neural networks library on top of it 
+
+            --- DAG - Directed Acyclic Graph 
+
+                ---- a data structure - a collection of nodes and edges connecting them 
+                        -> directed - each edge has a direction (A -> B means A leads to B)
+                        -> Acyclic - there are no loops; you can't start at one code and follow edges to end up back at it 
+                    
+                ---- in the context of autograd / computation graphs 
+                        -> each node represents a value or operation (like addition, multiplication, tanh, etc.)
+                        -> edges represent dependencies (what depends on what)
+                    
+                ---- example: if you have 
+                            x = 2
+                            y = 3
+                            z = x * y
+                        the DAG looks like 
+                            x ----\
+                                    * → z
+                            y ----/
+                        z depends on x and y, and the arrow direction shows the flow of computation (forward pass)
+        
+        -- overview 
+
+            --- core idea: micrograd builds a dynamic computation graph (DAG) as operations are performed on data 
+                ---- each node in the graph is a 'Value' object that holds 
+                        -> data (scalar value)
+                        -> gradient (computed during backward pass)
+                        -> reference to the operation that created it 
+                        -> references to its parents (inputs)
+                ---- once a final output node is obtained, calling '.backward()' on it performs reverse traversal of this graph to compute gradients of all intermediate values using chain rule
+            
+            --- backward pass (reverse-mode autodiff)
+                ---- when you call 'z.backward()'
+                        -> topological sort the DAG (so children are visited before parents)
+                        -> initialize z.grad = 1 (∂z/∂z)
+                        -> traverse the graph in reverse order, and for each node 
+                            --> call its stored '_backward()' function to propagate gradients to its parents 
+                            --> use the chain rule to accumulate contributions to their '.grad'
+                ---- this process mirrors how backpropagation works in neural networks 
+            
+            --- neural networks on top 
+                ---- tiny nerual network library built on top of 'Value', includes
+                        -> 'Neuron' - represents a small unit with weights & bias 
+                        -> 'Layer' - a collection of neurons 
+                        -> 'MLP' - multi-layer perception (a simple feed-forward network)
+            
+            --- (for future) limitations to autograd in PyTorch
+                
+                ---- tensor & computational efficiency 
+                    | Missing Feature                                   | Why It Matters in Production                                                                              |
+                    | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+                    | **Tensor abstraction (multi-dimensional arrays)** | micrograd operates on scalars; PyTorch operates on tensors with broadcasting, slicing, and vectorization. |
+                    | **Vectorized operations (SIMD, BLAS, cuBLAS)**    | Production frameworks dispatch operations to optimized C/CUDA kernels for massive speedups.               |
+                    | **GPU/TPU acceleration**                          | micrograd runs only on CPU, in Python. PyTorch integrates with CUDA kernels.                              |
+                    | **Memory management & reference counting**        | Production frameworks handle large tensors efficiently, avoid memory leaks, and reuse buffers.            |
+                    | **Computation graph pruning**                     | PyTorch frees graph memory after `.backward()` unless `retain_graph=True`. micrograd keeps everything.    |
+                
+                ---- operator coverage & differentiability 
+                    | Missing Feature                                              | Why It Matters                                                                                 |
+                    | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+                    | **Dozens of math ops (sin, cos, log, matmul, conv2d, etc.)** | Real models require a wide operator library.                                                   |
+                    | **Automatic differentiation for custom ops**                 | PyTorch allows extending autograd via `Function`; micrograd cannot.                            |
+                    | **Control-flow awareness**                                   | PyTorch can differentiate through loops and conditionals; micrograd’s graph is too simplistic. |
+                
+                ---- graph optimization & execution 
+                    | Missing Feature                                  | Why It Matters                                                                                   |
+                    | ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+                    | **Static graph optimization (JIT, TorchScript)** | PyTorch can trace and optimize computation graphs for faster execution.                          |
+                    | **Lazy evaluation**                              | micrograd executes eagerly; production systems can fuse operations and delay execution.          |
+                    | **Parallel/distributed computation**             | PyTorch supports multi-GPU, distributed gradients, DDP, etc.                                     |
+                    | **Autograd engine scheduling**                   | PyTorch’s autograd engine uses optimized topological traversal, thread pools, and async streams. |
+
+                ---- model training infrastructure 
+                    | Missing Feature                                   | Why It Matters                                                             |
+                    | ------------------------------------------------- | -------------------------------------------------------------------------- |
+                    | **DataLoader / batching**                         | Efficiently feeds mini-batches to models.                                  |
+                    | **Optimizers (Adam, SGD with momentum, RMSProp)** | micrograd uses manual gradient descent.                                    |
+                    | **Loss functions**                                | PyTorch includes reusable differentiable losses (MSE, CrossEntropy, etc.). |
+                    | **Automatic mixed precision (AMP)**               | Enables float16/bfloat16 training for performance.                         |
+                
+                ---- ecosystem & usability 
+                    | Missing Feature                           | Why It Matters                                                                               |
+                    | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
+                    | **Serialization (save/load models)**      | micrograd models are not persistent; PyTorch has `state_dict()`.                             |
+                    | **Device management (CPU/GPU switching)** | PyTorch tracks device placement transparently.                                               |
+                    | **Error handling and gradient checks**    | micrograd gives no safety checks or shape validation.                                        |
+                    | **Ecosystem integration**                 | PyTorch connects to NumPy, ONNX, TorchServe, etc.                                            |
+                    | **Documentation & debugging tools**       | Production systems have logging, profiling, and visualization (TensorBoard, Torch Profiler). |
+                
+                ---- numerical & stability concerns 
+                    | Missing Feature                     | Why It Matters                                                                   |
+                    | ----------------------------------- | -------------------------------------------------------------------------------- |
+                    | **Gradient accumulation control**   | PyTorch zeroes grads explicitly; micrograd overwrites or leaks them.             |
+                    | **Precision & overflow safeguards** | micrograd doesn’t handle exploding/vanishing gradients or numeric overflow.      |
+                    | **Deterministic computation**       | Production frameworks guarantee reproducibility via seeding and backend control. |
+
+        -- derivative - different approaches than applying formulas
+
+            --- pure numeric approach 
+                
+                ---- idea: calculate slope (rate of change) at different 'x' values 
+
+                ---- given: d = a * b + c, want to find ∂d/∂a
+                        -> define h = 0.0001
+                        -> d1 = a * b + c 
+                        -> d2 = (a+h) * b + c 
+                        -> ∂d/∂a = (d2 - d1) / h
+        
+        -- 'Value' class 
+
+            --- initialization 
+                ---- record input data into self 
+                ---- record parent (immediate previous numbers in the computational graph)
+                ---- record operation that derived this result from operating on parents 
+                        
+                        def __init__(self, data, _parent=(), _op=''):
+                            self.data = data 
+                            self._prev = set(_parent)       # use set for efficiency
+                            self._op = _op  
+
+            --- representation: define output for when an instatiated object is called 
+                ---- '__repr__(self)'
+                ---- a = Value(2.0)
+                ---- a -> define the output when this code is run instead of '<__main__.Value at xxxxxxxxxx>'
+            
+            --- define a method to add values 
+                ---- concept: 'a + b' is equivalent to 'a.__add__(b)'
+                        
+                        def __add__(self, other):
+                            return Value(self.data + other.data, (self, other), '+')    # assuming other is a 'Value' object & if c = a + b, then the parent of c is (a, b)
+            
+            --- define a method to multiply values 
+                        
+                        def __mul__(self, other):
+                            return Value(self.data * other.data, (self, other), '*')
+        
+        -- functions to visualize nodes 
+
+                from graphviz import Digraph 
+
+                def trace(root):
+                    # builds a set of all nodes and edges in a graph 
+                    nodes, edges = set(), set()
+                    def build(v):
+                        if v not in nodes:      # safe guard against diamond shaped graph 
+                            nodes.add(v)
+                            for parent in v._prev:
+                                edges.add((parent, v))
+                                build(parent)
+                    build(root)
+                    return nodes, edges 
+
+
+
+
+
+
+
+
+            
+
+
+
 
 
 

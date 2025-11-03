@@ -41,6 +41,14 @@
                 ---- DevOps: week2 plan created - realized adjustment needed - focused on working with virtualevn in Poetry + Conda, determine - is it really needed? 
                 
                 ---- DeepLearning: Y1-Q1 plan structure created - with month1-week1 detailed target created (switched 3 plans - 1 hour)
+            
+            --- 2nd 
+
+                ---- DeepLearning: micrograd (2.5)
+                        -> overall idea: construct computational graph, so back propagation can be implemented easily from chain rule
+                        -> derivative concepts #1 - numeric comutation 
+                        -> constructed basic 'Value' class 
+                        -> working on functions to visualize computational graph - learning traversal of nodes 
 
 
                 

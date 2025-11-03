@@ -4,6 +4,8 @@ Year 1 - DevOps - Solidifying Software Engineering Fundamentals
     - goal
         -- establish a strong foundation in software development best practices - from version control to basic project structure to testing and environment management 
         -- this year is about moving from "code that works" to clean, maintainable code that can be collaboratively developed and easily deployed 
+    
+    - additional topics 
 
     - Q1 - Environments, Packaging & CLI Proficiency 
 
@@ -68,6 +70,15 @@ Year 1 - DeepLearning - Foundation: Build Mathematical & Experimental Intuition
         -- rebuild your neural network understanding from first principles, now with modern engineering rigor 
         -- this year is about mastering the basics throughly - not just knowing what a neural network is, but being able to implement and experiment with them at a low level 
 
+    - additional topics 
+
+        -- PyTorch Internals
+            --- why: open the hood a bit - enough to see how the engine breathes, for training custom models 
+            --- areas:
+                ---- autograd engine fundamentals
+                        -> how 'requires_grad', 'backward()', '.detach()' work 
+                        ->retain_graph, in-place ops, memory freeing 
+
     - Q1 - Re-Foundations of Deep Learning (Autograd & Backprop from Scratch)
 
         -- goal 
@@ -75,7 +86,7 @@ Year 1 - DeepLearning - Foundation: Build Mathematical & Experimental Intuition
             --- ensure you understand automatic differentiation and backpropagation at a granular level 
             --- learn how frameworks like PyTroch perform autograd by building a computational graph and applying the chain rule in reverse to compute gradients 
             --- revisit how weights are initialized and why initialization matters for training stability 
-        
+
         -- month 1 - The Mathematical Core
 
             --- outcome: derive and code gradients by hand; focus on understanding and deriving the chain rule for NN 
