@@ -121,6 +121,46 @@ Linux environment
         -- source ~/.bashrc 
             --- reloads your shell configuration so the new variables take effect immediately 
     
+    - install python3.11 with pyenv 
+
+        -- install pyenv 
+
+            --- build deps (Ubuntu/WSL)
+                    sudo apt update
+                    sudo apt install -y build-essential libssl-dev zlib1g-dev \
+                        libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+                        libncurses5-dev libncursesw5-dev xz-utils tk-dev \
+                        libffi-dev liblzma-dev python3-openssl git
+            
+            --- install pyenv 'curl https://pyenv.run | bash'
+
+            --- add to ~/.bashrc (idempotent)
+                    grep -q 'PYENV_ROOT' ~/.bashrc || cat >> ~/.bashrc <<'EOF'
+                    export PYENV_ROOT="$HOME/.pyenv"
+                    command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+                    eval "$(pyenv init -)"
+                    EOF
+                ---- 'grep -q 'PYENV_ROOT' ~/.bashrc' - quietly checks whether .bashrc already contains the text PYENV_ROOT; exit code 0 if found, non-zero if not 
+                ---- '||' - "or else" - if 'grep' didn't find it (non-zero), run the right-hand side 
+                ---- 'cat >> ~/.bashrc <<'EOF' ... EOF' - appends the following block literally to ~/.bashrc 
+                        -> the single-quoted 'EOF' means variables like '$HOME' aren't expanded now - they'll be expanded when '.bashrc' runs 
+                        -> 'export PYENV_ROOT="$HOME/.pyenv"' - sets pyenv's install root 
+                        -> 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' - if 'pyenv' isn't already on PATH (i.e., 'command -v' fails), prepend '$PYENV_ROOT/bin' to PATH
+                        -> 'eval "$(pyenv init -)"' - runs pyenv's shell initialization (sets up shims, completions, etc.) in your current shell on future logins 
+                ---- '>>' - append output to a file 
+                ---- '<<WORD ... WORD' - inline stdin block 
+                        -> <<'WORD' (quoted): prevents variable/command expansion inside the block, so '$HOME' stays as literal text until the file is later sourced 
+            
+            --- reflect changes 
+                ---- 'source ~/.bashrc' - activate changes to '.bashrc' or '.bash_profile', etc. without opening a new terminal 
+                ---- 'exec $SHELL' - starts a new shell process, destroying the old one 
+            
+            --- 'pyenv --version' - quick check
+
+            --- install python3.11 (doesn't conflict with other installed python versions)
+                ----- 'pyenv install 3.11.9'
+                ----- 'pyenv versions'
+
     - jump start project venv 
 
         -- mkdir -p project_name && cd project_name 
@@ -145,9 +185,16 @@ Linux environment
                 ---- '--license MIT': sets the license string in metadata (it doesn't create a 'LICENSE' file - do that separately if needed)
             
         -- manage packages 
+            
+            --- activate specific version of python 
+                ---- 'pyenv local 3.11.9' - writes a '.python-version' file in the project root so any shell in this folder uses pyenv's 3.11.9 
+                ---- 'python -V' - verify
+                ---- 'pyenv which python' - double check 
+                ---- 'poetry env use python'
+                ---- 'poetry install'
 
             --- lock onto dependencies already installed 
-                ---- 'poetry env use python 3.11' - lock to Python 3.11 for PySpark 
+                ---- 'poetry env use python3.11' - lock to Python 3.11 for PySpark 
             
             --- add packages 
                 ---- 'poetry add pyspark==3.5.1 pyarrow pandas orjson rich'
