@@ -1,25 +1,5 @@
 
-Version Control
-
-
-
-
-
-
-
-
-
-Test, Automation, Project Organization & Continuous Integration (CI)
-
-
-
-
-
-
-
-
-
-Environments, Packaging & CLI Proficiency 
+Environments
 
     - Python virtual environments with 'venv'
 
@@ -275,19 +255,6 @@ Environments, Packaging & CLI Proficiency
                         -> pipx-in-pipx 
                         -> pyenv-virtualenv 
 
-            
-
-
-
-
-
-
-
-
-
-
-
-Container and Continuous Deployment (CD)
 
 
 
