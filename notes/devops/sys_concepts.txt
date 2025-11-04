@@ -27,7 +27,7 @@ Python Environments
             --- when you activate it, your shell teporarily rewires PATH so 'python' and 'pip' point to that virtual copy, not the system one 
 
 
- Linux Runtime
+ Linux System 
 
     - binary 
 
@@ -98,6 +98,43 @@ Python Environments
 
     - POSIX 
 
+    - critical files 
+
+        -- '~/.bashrc' - full name: bash run commands
+
+            --- user-level startup script automatically executed every time a new interactive, non-login shell starts (personal shell initialization file for 'bash')
+
+            --- critical functions 
+
+                ---- defines shell environment 
+                        -> set up 
+                            -> environment variables (PATH, JAVA_HOME, PYTHONPATH, etc.)
+                            -> aliases (alias ll='ls -alF')
+                            -> functions (custom utilities or wrappers)
+                            -> shell options (e.g., 'set -o vi', 'shopt -s histappend')
+                        -> so when type 'java', 'python', or 'poetry', whether the system finds them depends on what's in PATH - which is often modified isnide '.bashrc'
+                
+                ---- controls tool behavior 
+                        -> many tools look for environment variables that are set in '.bashrc'
+                            --> PySpark reads $JAVA_HOME 
+                            --> Poetry or pyenv needs $PATH configured 
+                            --> CUDA, conda, or virtualenv setups rely on PATH and LD_LIBRARY_PATH
+                            --> prompt customization ('PS1'), history control, etc. 
+                
+                ---- user-specific customization 
+                        -> '~/.bashrc' affects only your user, not the system globally 
+                            --> global configs live in '/etc/bash/bashrc' or '/etc/profile'
+                            --> changes here are safe for your user and don't affect others 
+                
+                ---- loaded automatically 
+                        -> it's executed automatically for every new interactive shell 
+                        -> so, unlike editing '/etc/environment' or '/etc/profile', you don't have to restart your computer or session - just 'source ~/.bashrc'
+                
+            --- typical lifecycle
+                ---- open a new terminal -> bash starts 
+                ---- bash loads global configs ('/etc/profile', '/etc/bash.bashrc')
+                ---- bash loads your user configs ('~/.bashrc')
+                ---- all the exports, aliases, and functions become available 
 
 
 

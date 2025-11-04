@@ -33,7 +33,7 @@ Linux environment
                         -> doesn't remove unused packages, to clean leftovers: 'sudo apt autoremove' (and optionally 'sudo apt autoclean')
                         -> 'apt upgrade' won't remove packages; if a dependency change requires removals, use 'sudo apt full-upgrade' (more aggressive)
             
-            --- 'sudo apt install -y build-essential curl git pkg-config'
+            --- 'sudo apt install -y build-essential curl git pkg-config unzip'
 
                 ---- essentials for building python wheels, talking to git, etc. 
 
@@ -74,7 +74,7 @@ Linux environment
                         -> it mixes system and user dependencies - hard to maintain 
                             --> you'll lose control over versions when Ubuntu updates packages 
 
-            --- 'sudo apt install -y pipx' and then 'pipx ensurepath' and then (after reboot) 'pipx install jupyterlab'
+            --- 'sudo apt install -y pipx' and then 'pipx ensurepath' and then (after reboot)
 
                 ---- sets up pipx, a tool for installing Python CLI apps in their own isolated virtual environments - great for "global" tools like Jupyter - without polluting system Python or Conda envs 
 
@@ -95,8 +95,91 @@ Linux environment
                             --> new package will share that env's packages 
                         -> 'pipx install jupyterlab' creates a dedicated isolated venv just for the new package and exposes 'jupyter-lab' command on your PATH 
                             --> your project packages live elsewhere; Jupyter is just the "app shell"
+    
+            --- global packages 
+                ---- 'pipx install poetry'
+                ---- 'pipx install --include-deps jupyter'
+                        -> by default, pipx only exposes apps from the top-level packages you install 
+                        -> many packages are meta packages (they don't ship a CLI themselves; their dependencies do), 'jupyter' meta package is like that 
+                        -> 'jupyter' meta package depends on things like 'jupyter-core', but it doesn't have its own app 
+                            --> so 'pipx install jupyter' won't expose the dependency apps unless 'pipx install --include-deps jupyter'
 
-    - virtual environment 
+    - Java for PySpark (OpenJDK 17)
+
+        -- 'sudo apt install -y openjdk-17-jdk'
+            --- installs the Java 17 JDK (compiler + tools) 
+            --- PySpark needs a JVM; Java 11 or 17 is typical 
+        
+        -- echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> ~/.bashrc
+            --- appends a line to your '~/.bashrc' setting JAVA_HOME to where OpenJDK 17 lives (on Ubuntu this path is standard)
+            --- many tools (including PySpark) look for JAVA_HOME 
+            --- 'export' -> marks "JAVA_HOME" variable as an environment variable - visible to child processes (commands or programs launched from this shell)
+
+        -- echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> ~/.bashrc 
+            --- appends a line that puts Java's 'bin' directory at the front of your PATH so 'java', 'javac', etc. resolve to this JDK 
+        
+        -- source ~/.bashrc 
+            --- reloads your shell configuration so the new variables take effect immediately 
+    
+    - jump start project venv 
+
+        -- mkdir -p project_name && cd project_name 
+
+        -- config venv
+            
+            --- create venv inside the repo (creates .venv/)
+                ---- 'poetry config --local virtualenvs.in-project true'
+                        -> '--local' tells Poetry to write the setting into the current project (a 'poetry.toml' file) instead of global config 
+                        -> 'poetry.toml' - per-project Poetry settings
+                        -> 'pyproject.toml' - your project's pakcage metadata & dependencies
+
+            --- initialize pyproject quickly (edit later)
+                    poetry init -n --name "mf_qbo_spark_refactor" \
+                        --description "Spark refactor experimentation for QBO ETL" \
+                        --license "MIT"
+                ---- 'poetry init': creates a 'pyproject.toml' in the current directory to turn it into a Poetry-managed project 
+                        -> 'pyproject.toml' - your project's pakcage metadata & dependencies
+                ---- '-n' / '--no-interaction': skips the interactive wizard and writes a minimal config using the flags you provide (no prompts)
+                ---- '--name': sets your package/project name in metadata 
+                ---- '--description': sets the description field
+                ---- '--license MIT': sets the license string in metadata (it doesn't create a 'LICENSE' file - do that separately if needed)
+            
+        -- manage packages 
+
+            --- lock onto dependencies already installed 
+                ---- 'poetry env use python 3.11' - lock to Python 3.11 for PySpark 
+            
+            --- add packages 
+                ---- 'poetry add pyspark==3.5.1 pyarrow pandas orjson rich'
+                ---- 'poetry add -D ipykernel'
+                        -> 'ipykernel' is the Python kernel for Jupyter - it's the piece that runs Python code when cells are executed 
+                            --> Jupyter itself is just the front-end/server (UI, notebook handling, messaging)
+                            --> kernels are per-language back-ends that actually execute code 
+                        -> keep this separate for each project 
+                            --> each project's notebook should run with that project's packages 
+        
+        -- activate environment 
+
+            --- activate the venv for commands: 
+                    poetry run python -m ipykernel install --user \
+                        --name mf-qbo-spark \
+                        --display-name "mf-qbo-spark (poetry)"
+                this registers a kernel you can select inside VS Code 
+                ---- 'poetry run ...': runs the command inside your project's venv (so the kernel will use that exact interpreter + packages)
+                ---- 'python -m ipykernel install': create/updates a kernel spec for Jupyter 
+                ---- '--user': installs the kernel spec in your user dir (no sudo), typically under 
+                        -> '~/.local/share/jupyter/kernels/<name>/kernel.json'
+                ---- '--name mf-qbo-spark': the internal kernel id (folder name), but be unique; reusing will overwrite 
+                ---- '--diplay-name "mf-qbo-spark (poetry)"': the friendly label you'll see in Jupyter / VS Code kernel picker 
+
+    - system interaction 
+        -- Linux package management (apt)
+        -- Python version management (pyend)
+        -- virtual-environment management (poetry)
+        -- application sandboxing (pipx)
+        -- kernel registration & cross-process communication (ipykernel/jupyter)
+
+
 
 
 git

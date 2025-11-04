@@ -34,16 +34,90 @@ Year 1 - DevOps - Solidifying Software Engineering Fundamentals
             
             --- week 2 - advanced environment management 
 
-                ---- read: Poetry Basics + Conda vs. Poetry comparison 
-                        -> https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
-                        -> https://python-poetry.org/docs/
+                ---- goal 
+                        -> understand how modern Python packaging works (pyproject.toml, wheels, builds)
+                        -> know how Poetry compares with Conda and venv 
+                        -> be able to initialize, lock, and build a Poetry project cleanly 
+                        -> know how to manage dependencies across environments (dev/prod/test)
+                        -> understand how this links into Docker and CI/CD 
                 
-                ---- practice
-                        -> install Poetry and create a sample project ('poetry new env_test')
-                        -> add dependecies, lock, export (poetry export -f requirements.txt)
+                ---- core concepts 
+                        -> understanding Python Packaging Evolution 
+                            --> read 
+                                ---> https://realpython.com/python-application-layouts/
+                                ---> https://packaging.python.org/en/latest/tutorials/packaging-projects/
+                            --> learn 
+                                ---> what 'setup.py', 'requirements.txt', and 'pyproject.toml' each do 
+                                ---> how PEP 517/518 standardized 'pyproject.toml'
+                                ---> difference between "application" vs. "library" packaging 
+                            --> exercise
+                                ---> create a dummy 'hello_pkg/' folder with:
+                                        hello_pkg/
+                                            pyproject.toml
+                                            hello_pkg/
+                                                __init__.py
+                                                main.py
+                                    and manually edit the TOML fields (name, version, dependencies)
                 
-                ---- exercise:
-                        -> reproduce an environment on a fresh Linux VM or WSL directory 
+                ---- Poetry foundations 
+                        -> install Poetry & inspect behavior 
+                            --> https://python-poetry.org/docs/
+                            --> https://realpython.com/dependency-management-python-poetry/
+                        -> hands-on practice 
+                            --> create a project 
+                                poetry new mf_qbo_etl
+                                cd mf_qbo_etl
+                                poetry add requests polars
+                                poetry install
+                            --> study 
+                                ---> how Poetry builds '.venv' internally
+                                ---> meaning of 'project.toml' sections
+                                        [tool.poetry]
+                                        [tool.poetry.dependencies]
+                                        [tool.poetry.dev-dependencies]
+                                        [build-system]
+                                    add scripts:
+                                        [tool.poetry.scripts]
+                                        etl-run = "mf_qbo_etl.main:run"
+                            --> mini-project 
+                                ---> recreate ETL repo (simplified) using Poetry 
+                                    ----> moving existing code into a Petry project 
+                                    ----> define dev deps ('pytest', 'black', 'isort')
+                                    ----> lock versions ('poetry lock')
+                                    ----> build a wheel: 'poetry build'
+                                    ----> test installing it elsewhere 'pip install dist/mf_qbo_etl-0.1.0-py3-none-any.whl'
+                                ---> outcome: rebuild entire ETL environment from scratch with one 'poetry install'
+
+                ---- Conda vs. Poetry vs venv 
+                        -> conceptual comparison 
+                            --> read 
+                                ---> https://realpython.com/python-virtual-environments-a-primer/#poetry-and-conda
+                                ---> https://towardsdatascience.com/conda-vs-poetry-what-you-need-to-know-2022-edition-5e59b24a30f6
+                            --> learn 
+                                ---> 'venv' is Python-native, lightweight
+                                ---> 'Conda' manages binaries (C/C++, CUDA) - critical for ML/DL
+                                ---> 'Poetry' handles packaging, dependency resolution, and version pinning 
+
+                ---- (Docker) integration with Docker and reproducibility 
+                        -> read 
+                            --> https://docs.docker.com/build/building/multi-stage/python/
+                        -> learn how to 
+                            --> copy only 'pyproject.toml' + 'poetry.lock' first --> leverage Docker layer caching
+                            --> build reproducible images 
+                                FROM python:3.11-slim
+                                WORKDIR /app
+                                COPY pyproject.toml poetry.lock ./
+                                RUN pip install poetry && poetry install --no-root --no-dev
+                                COPY . .
+                                CMD ["poetry", "run", "python", "main.py"]
+                        -> this is the bridge between Week 2 and upcoming Week 3 (reproducibility & configs)
+                
+                ---- advanced references 
+                        -> https://peps.python.org/pep-0621/
+                        -> https://peps.python.org/pep-0518/
+                        -> https://packaging.python.org/en/latest/specifications/
+                
+
 
         -- month 2 - packaging & distribution (setup.py / pyproject.toml / wheels / entry-points)
 
