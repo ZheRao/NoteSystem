@@ -33,7 +33,7 @@
 
             --- 1st 
 
-                ---- DevOps: Finished - venv (3.72 hours)
+                ---- DevOps: Finished - venv
                         -> execution of isolation and lightweight Python installation through 'pyvenv.cfg' file, modify sys.path, PYTHONPATH, PATH
                         -> customize virtualenv: update core dependencies, include system site-packages
                         -> manage virtualenv: locate venv folder, requirements.txt, avoid in Production 
@@ -44,11 +44,28 @@
             
             --- 2nd 
 
-                ---- DeepLearning: micrograd (2.5)
+                ---- DeepLearning: micrograd
                         -> overall idea: construct computational graph, so back propagation can be implemented easily from chain rule
                         -> derivative concepts #1 - numeric comutation 
                         -> constructed basic 'Value' class 
                         -> working on functions to visualize computational graph - learning traversal of nodes 
+            
+            --- 3rd
+
+                ---- DevOps Layer 0: Linux Foundamentals Intro notes refactor 
+                        -> linux basics: pwd, cd, ls, file, less
+            
+            --- 4th
+
+                ---- DevOps Layer 0: notes refactor + temp: shell scripting  (2.5)
+                        -> files and directories: cp, mv, mkdir, rm, ln 
+                        -> common commands: type, which, help, man, apropos, whatis, info, alias 
+                        -> redirecting: >, >>, 2>, &>, /dev/null, cat - append & stdin, |, sort, uniq, wc, grep, head/tail, tee
+            
+            --- 5th
+
+                ---- DevOps Layer 0: notes 
+                        -> reorganized redirecting and pipeline & filters (subsequent contents require re-read for deep understanding)
 
 
                 

@@ -17,10 +17,12 @@ Layer 0 - Base Operating System & POSIX Model
                 ---- use 'man', 'ls -lh', 'find'
             
             --- day 1 
-                ---- read TLC Ch 1-2 - intro + terminal basics  
-                ---- LUC Day 1 - login, basic CLI 
+                ---- read TLC Ch 1-2 (intro + terminal basics)  
+                ---- LUC Day 1 (login, basic CLI)
             
-            --- day 2
+            --- day 2 (2.5 hours)
+                ---- Ch 3 (navigation) 
+                ---- LUC Day 2 (editing files)
 
 
 

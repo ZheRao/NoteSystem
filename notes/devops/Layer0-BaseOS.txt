@@ -16,6 +16,93 @@ system information
         -- df : current amount of free space on disk drives 
         -- free : dispaly the amount of free memory 
 
+
+other notes
+
+    - commands 
+
+        -- 'tree' - shows the folder structure from your current directory downward
+
+            --- example output 
+                    .
+                    ├── ETLPipeline
+                    │   ├── Bronze
+                    │   ├── Silver
+                    │   └── Gold
+                    └── README.md
+            
+            --- common options 
+                    | Option       | Description                                         |         |
+                    | ------------ | --------------------------------------------------- | ------- |
+                    | `-L N`       | Limit depth to *N* levels (e.g., `tree -L 2`)       |         |
+                    | `-d`         | Show only directories                               |         |
+                    | `-f`         | Show full paths                                     |         |
+                    | `-I pattern` | Ignore matching files/dirs (e.g., `-I "node_modules | .git"`) |
+                    | `-a`         | Show hidden files (`.` prefix)                      |         |
+                    | `-h`         | Show human-readable file sizes                      |         |
+                    | `-C`         | Add color (usually on by default)                   |         |
+            
+            --- examples 
+                ---- 'tree -L 3 -I "__pycache__|.git"' - prints up to 3 levels deep, skipping clutter 
+                ---- 'tree -P "*.sh" -L 3' - locate shell scripts visually 
+
+        -- 'rsync -av src/ dest/'
+            --- copies files from 'src/' to 'dest/' efficiently, preserving metadata
+
+            --- '-a' - archive mode (a bundle of options): recursive copy + preserve timestamps, perms, owner/group, symlinks, device, etc. 
+                ---- (on WSL's '/mnt/c' some metadata can't be fully preserved - normal)
+
+            --- '-v' - verbose output 
+
+            --- important notes 
+                ---- 'src/' with slash --> copy the contents of 'src' into 'dest'
+                        -> result: 'dest/fileA', 'dest/subdir/...'
+                ---- 'src' no slash --> copy the directory itself into 'dest'
+                        -> result: 'dest/src/fileA', 'dest/src/subdir/...'
+
+            --- typical usage 
+                ---- 'rsync -av src/ dest/' - copy contents of src into dest (create dest if needed)
+                ---- 'rsync -av --dry-run src/ dest/' - show what would happen (no change)
+                ---- 'rsync -av --info=progress2 src/ dest/' - progress bar (handy for big trees)
+
+            --- copy choices 
+                ---- 'rsync -av src/file1 dest/' - copies file1 into dest/
+                ---- 'rsync -av src/folder1/file1 dest/' - no original folder path - result: dest/file1 
+
+            --- '--ignore-times'
+                ---- by default, 'rsync' uses the "quick check" (same size & same modificiation time) to determine if two files are identical and should be skipped 
+                ---- add this option disables the "quick skip" shortcut 
+                        -> 'rsync' reads both files and computes rolloing checksums block by block - but only if the quick check would have skipped the file in the first place 
+                        -> if both files' content hashes match, it will not overwrite
+                        -> if not, 'rsync' will transfer only the changed parts
+
+            --- '--checksum' 
+                ---- compute checksums and send only when content actually differs (cost a tiny bit of CPU on both sides, fine for small JSON)
+                ---- always computes and compare a full MD5-like checksum for every file, regardless of timstamp of size 
+        
+        -- 'wslpath -u "C:\Users\..."'
+            --- portable, robust, and bi-directional 
+            --- pattern 
+            
+                    # 1. Windows → Linux (use Linux tools on a Windows folder)
+                    SRC_WIN='C:\Users\Zhe Rao\Documents\src'
+                    SRC_LNX="$(wslpath -u "$SRC_WIN")"
+                    rsync -av --info=progress2 "$SRC_LNX/" "$HOME/src_copy/"
+
+                    # 2. Linux → Windows (call a Windows .exe on a Linux folder)
+                    DST_LNX="$HOME\src_copy"
+                    DST_WIN="$(wslpath -w "$DST_LNX")"
+                    explorer.exe "$DST_WIN"
+
+                    # 3. UNC share
+                    UNC='\\fileserver\teamshare\project'
+                    UNC_LNX="$(wslpath -u "$UNC")"   # -> /mnt/unc/fileserver/teamshare/project
+                    ls "$UNC_LNX"
+
+
+
+
+
     
 (single) file system tree 
 
@@ -210,7 +297,7 @@ manipulating files and directories
 
             *[[:lower:]123]             Any file ending with a lowercase letter or the numerals 1, 2, or 3
     
-    - mkdir dir1 dir2 dir3 ... : make new directories 
+    - 'mkdir dir1 dir2 dir3 ... ': make new directories 
 
     - 'cp': copy files 
 
@@ -302,24 +389,31 @@ manipulating files and directories
     
     - 'ln': create either hard or symbolic links 
 
-        -- ln file link : creates a hard link 
-                -> by default, every file has a single hard link that gives the file its name 
-                -> when we create a hard link, we create an additional directory entry for a file.
-                -> hard links have two importnat limitations: 1. cannot reference a file outside its own file system (not on the same disk partition) 2. cannot reference a directory
-                -> a hard link is indistinguishable for the file itself. there's no special indiciation of the link 
-                -> modern practice prefers symbolic links
-                -> to see whether two differnt file names are pointing at the same file, use ls -i and check whether the first number is the same 
+        -- 'ln file link': creates a hard link 
+            --- by default, every file has a single hard link that gives the file its name 
+            --- when we create a hard link, we create an additional directory entry for a file.
+            --- hard links have two importnat limitations: 
+                ---- cannot reference a file outside its own file system (not on the same disk partition) 
+                ---- cannot reference a directory
+            --- a hard link is indistinguishable for the file itself. there's no special indiciation of the link 
+            --- modern practice prefers symbolic links
+            --- to see whether two differnt file names are pointing at the same file, use 'ls -i' and check whether the first number is the same 
+            --- when creating hard links, we are actually creating additional name parts that all refer to the same data part 
+                ---- the system assigns a chain of disk blocks to what is called an 'inode', which is then associated with the different names 
+                ---- each hard link therefore refers to a specific inode containing the file's contents 
 
-
-        -- ln -s item (actual_file) link (link_name) : creates a symbolic link, where item is either a file or a directory 
-                -> created to overcome limitations of hard links 
-                -> it creates a special type of file that contains a text pointer to the referenced file or directory (like Windows Shortcut)
-                -> if you write something to the symbolic link, reference file is written to 
-                -> when delete a symbolic link, only the link is deleted, not the file. 
-                -> if the file is deleted before the symbolic link, the link will just point at nothing, broken links are displayed in red with ls 
-                -> when creating a symbolic link, you can either use absolute pathnames, or relative path names.
+        -- 'ln -s item (:actual_file) link (:link_name)' : creates a symbolic link, where item is either a file or a directory 
+            --- created to overcome limitations of hard links 
+            --- it creates a special type of file that contains a text pointer to the referenced file or directory (like Windows Shortcut)
+            --- if you write something to the symbolic link, reference file is written to 
+            --- when delete a symbolic link, only the link is deleted, not the file. 
+            --- if the file is deleted before the symbolic link, the link will just point at nothing, broken links are displayed in red with 'ls'
+            --- when creating a symbolic link, you can either use absolute pathnames, or relative path names
+            --- when create a symlink, the path you give (item) is stored exactly as typed 
+                ---- if the path is a relative path, it is interpreted from the location of the symlink itself 
         
         -- examples : hard link
+                
                 file structure
                     └── dir1 
                     └── dir2
@@ -333,16 +427,17 @@ manipulating files and directories
                     12353540 drwxrwxr-x 2 me me 4096 2018-01-14 16:17 dir2
                     12353538 -rw-r--r-- 4 me me 1650 2018-01-10 16:33 fun
                     12353538 -rw-r--r-- 4 me me 1650 2018-01-10 16:33 fun-hard
-        
-        -- examples : symbolic links 
+                    
+        -- examples : symbolic links (inside dir1)
 
                 -> ln -s fun fun-sym
                 -> ln -s ../fun dir1/fun-sym
+                    --> a file 'dir1/fun-sysm' that points to '../fun', when accesss 'dir1/fun-sym', system resolves it from inside 'dir1' 
                 -> ln -s ../fun dir2/fun-sym
                 -> note that here uses relative location, relatively to inside dir1, fun is in the directory above it, if we run 'ls -l dir1'
                     -rw-r--r-- 4 me me 1650 2018-01-10 16:33 fun-hard
                     lrwxrwxrwx 1 me me 6 2018-01-15 15:17 fun-sym -> ../fun
-                -> and we can also reference directory: ln -s dir1 dir1-sym and run 'ls -l' returns 
+                -> and we can also reference directory: 'ln -s dir1 dir1-sym' and run 'ls -l' returns 
                     drwxrwxr-x 2 me me 4096 2018-01-15 15:17 dir1
                     lrwxrwxrwx 1 me me 4 2018-01-16 14:45 dir1-sym -> dir1
                     drwxrwxr-x 2 me me 4096 2018-01-15 15:17 dir2
@@ -351,392 +446,463 @@ manipulating files and directories
                     lrwxrwxrwx 1 me me 3 2018-01-15 15:15 fun-sym -> fun
 
 
+working with commands 
 
+    - 'type': display a command's type 
 
-
-
-
-    -- working with commands 
-
-        --- help : get help for shell builtins
-
-            ---- help cd 
-                    cd: cd [-L|[-P [-e]] [-@]] [dir]
-                        Change the shell working directory.
-                        ...
-                        Options:
-                    
-                    -> note that cd [-L|[-P[-e]]] [dir] means cd may be followed by either -L or a -P, and if -P is specified, -e may also be used 
-            
-            ---- '--help' : display usgage information
-                    -> many executable programs support a --help option that displays a description of the command's supported syntax and options.
-                    -> e.g., mkdir --help 
-                        Usage: mkdir [OPTION] DIRECTORY...
-                        Create the DIRECTORY(ies), if they do not already exist.
-                            -Z, --context=CONTEXT (SELinux) ...
-        
-        --- man : display a program's manual page 
-
-            ---- man can be used to dispaly manual pages for commands 
-                    -> man ls 
-                    -> it uses 'less' to display the manual page 
-            
-            ---- man can also be used to display system administration commands, programming interfaces, file formats, and more, below lists sections that it can display 
-                    1   User commands
-                    2   Programming interfaces for kernel system calls
-                    3   Programming interfaces to the C library
-                    4   Special files such as device nodes and drivers
-                    5   File formats
-                    6   Games and amusements such as screen savers
-                    7   Miscellaneous
-                    8   System administration commands
-                
-                -> syntax: man section search_term
-                -> man 5 passwd : this will display the man page describing the file format of the /etc/passwd file 
+        -- examples 
+            [me@linuxbox ~]$ type type
+            type is a shell builtin
+            [me@linuxbox ~]$ type ls
+            ls is aliased to `ls --color=tty'
+            [me@linuxbox ~]$ type cp
+            cp is /bin/cp
     
-        --- apropos : display appropriate commands 
+    - 'which': display an executable's location 
 
-            ---- it is possible to search the list of man pages for possible matches based on a search term 
+        -- motivation
+            --- there could be more than one version of an executable program installed on a system 
+            --- 'which' can be used to determine the exact location of a given executable
 
-            ---- apropos partition 
-                    addpart (8)             - simple wrapper around the 'add partition' ioctl
-                    all-swaps (7)           - event signalling that all swap partitions have been ac...
-                    cfdisk (8)              - display or manipulate disk partition table
-                    cgdisk (8)              - Curses-based GUID partition table (GPT) manipulator
-                    delpart (8)             - simple wrapper around the 'del partition' ioctl
-                    fdisk (8)               - manipulate disk partition table
-                    fixparts (8)            - MBR partition table repair utility
-                    gdisk (8)               - Interactive GUID partition table (GPT) manipulator
-                    mpartition (1)          - partition an MSDOS hard disk
-                    partprobe (8)           - inform the OS of partition table changes
-                    partx (8)               - tell the Linux kernel about the presence and numbering...
-                    resizepart (8)          - simple wrapper around the 'resize partition' ioctl
-                    sfdisk (8)              - partition table manipulator for Linux
-                    sgdisk (8)              - Command-line GUID partition table (GPT) manipulator fo..
+        -- example 
+                [me@linuxbox ~]$ which ls
+                /bin/ls
+        
+        -- 'which' works only for executable programs, not builtins or aliases that are substitutes for actual executable programs 
+
+    - 'help': get help for shell builtins
+
+        -- 'help cd'
+                cd: cd [-L|[-P [-e]] [-@]] [dir]
+                    Change the shell working directory.
+                    ...
+                    Options:
                 
-                -> first field is the name of the man page, second field shows the section 
-                -> 'man -k' performs the same function as 'apropos'
+            --- note that cd [-L|[-P[-e]]] [dir] means cd may be followed by either -L or a -P, and if -P is specified, -e may also be used 
         
-        --- whatis : display one-line manual page descriptions 
-
-            ---- whatis ls 
-                 ls (1)       list directory contents
-        
-        --- info : display a program's info entry 
-
-            ---- the info program reads info files, which are tree structured into individual nodes, each ontaining a single topic 
-
-            ---- infor files contain hyperlinks that can move you from node to node 
-
-            ---- many software packages installed have documentation files residing in the /usr/share/doc directory 
-        
-        --- alias : creating commands with alias
-
-            ---- it's possible to chain command together with ;
-                    -> cd /user; ls; cd -
-                        bin games include lib local sbin share src
-                        /home/me
-                        [me@linuxbox ~]$
-            
-            ---- type : we can find out whether a name is already being used for alias with 'type'
-                    -> type test 
-                        test is a shell builtin
-                        it's already been used 
-                    
-                    -> type foo 
-                        bash: type: foo: not found
-                        we can use this one as alias 
-            
-            ---- alias : create alias with structure : alias name='string'
-                    -> alias foo='cd /user; ls; cd -'
-                    -> foo 
-                        bin games include lib local sbin share src
-                        /home/me
-                        [me@linuxbox ~]$
-                    -> type foo 
-                        foo is aliased to `cd /usr; ls; cd -'
-            
-            ---- unalias : remove an alias 
-
-            ---- alias: see all the aliases defined in the environment with 'alias' without arguments 
-                    -> alias 
-                        alias l.='ls -d .* --color=tty'
-                        alias ll='ls -l --color=tty'
-                        alias ls='ls --color=tty'
-            
-            ---- alias vanish when shell session ends, but we can add aliases to the files that establish the environment
+        -- '--help': display usgage information
+            --- many executable programs support a --help option that displays a description of the command's supported syntax and options.
+            --- e.g., mkdir --help 
+                ---- Usage: mkdir [OPTION] DIRECTORY...
+                ---- Create the DIRECTORY(ies), if they do not already exist.
+                        -Z, --context=CONTEXT (SELinux) ...
     
-    -- I/O redirection : redirecting the input and output of commands 
+    - 'man': display a program's manual page 
 
-        --- stdin, stdout, stderr : standard input, output, and error 
-
-            ---- programs produce outputs of two kinds 
-                    -> program's results, i.e., data the program is deisnged to produce 
-                        results are sent to a special file called standard output (stdout)
-                    -> status and error message, tells us how the program is getting along 
-                        status messages are sent to another file called standard error (stderr)
-                    -> by default, those two files are linked to the screen and bot saved into a disk file 
+        -- 'man' can be used to dispaly manual pages for commands 
+            --- 'man ls'
+            --- it uses 'less' to display the manual page 
+        
+        -- 'man' can also be used to display system administration commands, programming interfaces, file formats, and more, below lists sections that it can display 
+                1   User commands
+                2   Programming interfaces for kernel system calls
+                3   Programming interfaces to the C library
+                4   Special files such as device nodes and drivers
+                5   File formats
+                6   Games and amusements such as screen savers
+                7   Miscellaneous
+                8   System administration commands
             
-            ---- many programs take input from a facility called standard input (stdin)
-                    -> this is attached to the keyboard 
+            --- syntax: 'man section search_term'
+            --- 'man 5 passwd': this will display the man page describing the file format of the /etc/passwd file 
+
+    - 'apropos': display appropriate commands 
+
+        -- it is possible to search the list of man pages for possible matches based on a search term 
+
+        -- 'apropos partition' 
+                addpart (8)             - simple wrapper around the 'add partition' ioctl
+                all-swaps (7)           - event signalling that all swap partitions have been ac...
+                cfdisk (8)              - display or manipulate disk partition table
+                cgdisk (8)              - Curses-based GUID partition table (GPT) manipulator
+                delpart (8)             - simple wrapper around the 'del partition' ioctl
+                fdisk (8)               - manipulate disk partition table
+                fixparts (8)            - MBR partition table repair utility
+                gdisk (8)               - Interactive GUID partition table (GPT) manipulator
+                mpartition (1)          - partition an MSDOS hard disk
+                partprobe (8)           - inform the OS of partition table changes
+                partx (8)               - tell the Linux kernel about the presence and numbering...
+                resizepart (8)          - simple wrapper around the 'resize partition' ioctl
+                sfdisk (8)              - partition table manipulator for Linux
+                sgdisk (8)              - Command-line GUID partition table (GPT) manipulator fo..
             
-            ---- I/O redirection allows us to change where output goes and where input comes from.
+            -> first field is the name of the man page, second field shows the section 
+            -> 'man -k' performs the same function as 'apropos'
+    
+    - 'whatis': display one-line manual page descriptions 
+
+        -- whatis ls 
+                ls (1)       list directory contents
+    
+    - 'info': display a program's info entry 
+
+        -- the 'info' program reads info files, which are tree structured into individual nodes, each ontaining a single topic 
+
+        -- info files contain hyperlinks that can move you from node to node 
+
+        -- many software packages installed have documentation files residing in the /usr/share/doc directory 
+    
+    - 'alias': creating commands with alias
+
+        -- it's possible to chain command together with ;
+            --- cd /user; ls; cd -
+                    bin games include lib local sbin share src
+                    /home/me
+                    [me@linuxbox ~]$
         
-        --- redirecting standard output : > , >> , 2> , &> , &>> 
-
-            ---- > : ls -l /usr/bin > ls-output.txt (create or overwrite output file)
-                    -> create a listing of the /user/bin directory and sent the results to the file 'ls-output.txt'
-                    -> it cannot redirect error messages, so if /user/bin doesn't exist, nothing will be written in 'ls-output.txt'
-        
-            ---- >> : (create or append output file)
-
-            ---- 2> : ls -l /bin/usr 2> ls-error.txt
-                    -> file descriptor for standard error 
-
-            ---- &> : ls -l /bin/usr &> ls-output.txt
-                    -> redirect both output and error to the file 'ls-output.txt'
-                    -> use &>> for append 
-        
-        --- disposing output 
-
-            ---- ls -l /bin/usr 2> /dev/null
-                    -> /dev/null is a system device often referred to as a bit bucket, which accepts input and does nothing with it
-        
-        --- cat: redirecting standard input
-
-            ---- cat : reads one or more files and copies them to standard output 
-                -> cat ls-output.txt
-                    --> analogous to the 'type' command. Display files without paging.
-                -> cat movie.mpeg.0* > movie.mpeg : 
-                    --> we can merge multiple files and store them into a single file with 
-                -> 'cat' without arguments reads from standard input (keyboard)
-                    --> it copies standard input to standard output 
-                    --> after typing CTRL+D (EOF), it will output whatever we typed
-                -> cat > lazy_dog.txt
-                    --> redircting keyboard input into a txt file 
-        
-        --- |, filters : pipelines, the standard output of one command can be piped into the standard input of another
-
-                ---- ls -l /usr/bin | less
-                    -> less accepts standard input 
-                    -> we can use less to display, page by page, the output of any command that sends its results to standard output 
+        -- 'type': we can find out whether a name is already being used for alias with 'type'
+            --- 'type test'
+                    test is a shell builtin
+                    it's already been used 
                 
-                ---- filters 
-                    -> sort : ls /bin /usr/bin | sort | less
-                        --> this makes a combined list of all the executable programs in /bin and /usr/bin, put them in sorted order and view the rsults 
-                        --> by including 'sort', it produces a single, sorted list 
+            --- 'type foo' 
+                    bash: type: foo: not found
+                    we can use this one as alias 
         
-                    -> uniq : ls /bin /usr/bin | sort | uniq | less
-                        --> unique accepts a sorted list of data from standard input or a single filename argument, and remove duplicated items 
-                        --> use 'uniq -d' to see the list of duplicates instead 
-                    
-                    -> wc: wc ls-output.txt
-                        7902 64566 503634 ls-output.txt
-                        --> print lines, words, and bytes contained in ls-output.txt 
-                        --> if execute without arguments, it accepts standard input 
-                        --> '-l' option limits its output to report only lines 
-                        --> to see the number of items we have in our sorted list, we can do this 
-                            ---> [me@linuxbox ~]$ ls /bin /usr/bin | sort | uniq | wc -l
-                                    2728
-                    
-                    -> grep pattern filename : ls /bin /usr/bin | sort | uniq | grep zip
-                        --> find all the files in our list of programs that had the word 'zip' embedded in the name.
-                        --> '-i' : ignore case 
-                        --> '-v' : print only those lines that do not match the pattern 
-                    
-                    -> head/tail : head -n 5 ls-output.txt
-                        --> default print first/last 10 lines, adjusted with '-n' option 
-                        --> in pipeline: 'ls /usr/bin | tail -n 5'
-                        --> tail -f /var/log/messages
-                            ---> '-f' options allows 'tail' continuing to monitor the file, and when new lines are appended, they immediately appear in the dispaly
-                            ---> CTRL+C breaks it 
-                            ---> superuser privileges are required 
-                    
-                    -> tee : ls /usr/bin | tee ls.txt | grep zip
-                        --> 'tee ls.txt' create a complete list of /usr/bin from 'ls /usr/bin' and store it in ls.txt, and continue the pipeline 
-                        --> 'tee' allows the previous output to 1. be stored in a file and 2. pass through to the next stage in the pipeline 
+        -- 'alias': create alias with structure : alias name='command string'
+            --- alias foo='cd /user; ls; cd -'
+            --- foo 
+                    bin games include lib local sbin share src
+                    /home/me
+                    [me@linuxbox ~]$
+            --- type foo 
+                    foo is aliased to `cd /usr; ls; cd -'
         
-    -- seeing the world as the shell sees it 
+        -- 'unalias': remove an alias 
 
-        --- echo : prints its text arguments on standard output 
-
-            ---- [me@linuxbox ~]$ echo this is a test
-                    this is a test
+        -- 'alias': see all the aliases defined in the environment with 'alias' without arguments 
+            --- alias 
+                    alias l.='ls -d .* --color=tty'
+                    alias ll='ls -l --color=tty'
+                    alias ls='ls --color=tty'
         
-        --- expansion 
+        -- alias vanish when shell session ends, but we can add aliases to the files that establish the environment
 
-            ---- with expansion, we enter something, and it is expanded into something else before the shell acts upon it 
-                    -> e.g., shell expands the '*' into something else (e.g., names of the files in the current working directory) in 'echo *', echo command never saw '*'
+
+I/O redirection : redirecting the input and output of commands 
+
+    - 'stdin', 'stdout', 'stderr': standard input, output, and error 
+
+        -- programs produce outputs of two kinds 
+
+            --- program's results, i.e., data the program is deisnged to produce 
+                ---- results are sent to a special file called standard output ('stdout')
+
+            --- status and error message, tells us how the program is getting along 
+                ---- status messages are sent to another file called standard error ('stderr')
+
+            --- by default, those two files are linked to the screen and bot saved into a disk file 
+        
+        -- many programs take input from a facility called standard input ('stdin')
+            --- this is attached to the keyboard 
+        
+        -- I/O redirection allows us to change where output goes and where input comes from.
+    
+    - redirecting standard output & error 
+
+        -- '>' - (create or overwrite output file)
+            --- 'ls -l /usr/bin > ls-output.txt' 
+                ---- create a listing of the /user/bin directory and sent the results to the file 'ls-output.txt'
+                ---- it cannot redirect error messages, so if /user/bin doesn't exist, nothing will be written in 'ls-output.txt'
+            --- '>>' - (create or append output file)
+
+        -- '2>' - file descriptor for standard error 
+            --- 'ls -l /bin/usr 2> ls-error.txt'
+
+        -- '&>' - redirect both output and error 
             
-            ---- pathname expansion : wildcards 
-                    -> e.g., [me@linuxbox ~]$ echo [[:upper:]]*
-                                Desktop Documents Music Pictures Public Templates Videos
+            --- 'ls -l /bin/usr &> ls-output.txt'
+                -> redirect both output and error to the file 'ls-output.txt'
+                -> use '&>>' for append 
+            
+            --- older-version: the redirection of stderr must always occur after redirecting stdout or it doesn't work 
+                ---- for example, the following command redirects stderr to the file 'ls-output.txt'
+                        -> '>ls-output.txt 2>&1'
+                ---- but changing the order will result in stderr directed to the screen 
+                        -> '2>&1 >ls-output.txt'
+    
+        -- '/dev/null': disposing output - throw away output from a command - "silence is golden" - not output will ever be printed
+            --- 'ls -l /bin/usr 2> /dev/null'
+            --- '/dev/null' is a system device often referred to as a bit bucket, which accepts input and does nothing with it
+    
+    - redirecting standard input
+
+        -- 'cat': concatenate files - reads one or more files and copies them to standard output 
+
+            --- 'cat ls-output.txt'
+                ---- analogous to the 'type' command. Display files without paging.
+
+            --- 'cat movie.mpeg.0* > movie.mpeg' 
+                ---- we can merge multiple files and store them into a single file with this command
+
+            --- 'cat' without arguments reads from standard input (keyboard)
+                ---- it copies standard input to standard output 
+                ---- after typing + ENTER + CTRL+D (EOF), it will output whatever we typed
+
+            --- 'cat > lazy_dog.txt'
+                ---- redircting keyboard input into a txt file 
+                ---- don't forget to type CTRL+D at the end 
+            
+            --- 'cat lazy_dog.txt'
+                ---- we can use 'cat' to copy the file to stdout again for see our results
+            
+            --- 'cat < lazy_dog.txt'
+                ---- with '<' we change the source of stdin from the keyboard to the file 'lazy_dog.txt'
+                ---- the result is the same as passing a single filename argument
+    
+    - '|': pipelines
+
+            -- concept 
+                --- the capability of commands to read data from stdin and send to stdout is utilized by a shell feature called 'pipeline'
+                --- with '|', the stdout of one command can be piped into the stdin of another 
+
+            -- example: 'ls -l /usr/bin | less'
+                --- 'less' accepts standard input 
+                --- we can use less to display, page by page, the output of any command that sends its results to standard output 
+            
+            -- '|' vs. '>'
+                --- '>' connects a command with a file - silently creates or overwrites files 
+                    ---- 'ls > less' is catastrophic because it could overwrite the 'less' program file with the text from ls 
+                    ---- if you are in directory '/usr/bin' that contains a file named 'less' (the 'less' program)
+            
+            -- filters 
+
+                -- filters take input, change it somehow, and then output it
+
+                --- 'sort': sort input
+                    ---- example: 'ls /bin /usr/bin | sort | less'
+                    ---- this makes a combined list of all the executable programs in /bin and /usr/bin, put them in sorted order and view the rsults 
+                    ---- by including 'sort', it produces a single, sorted list 
+    
+                --- 'uniq': report or omit repeated lines 
+                    ---- example: 'ls /bin /usr/bin | sort | uniq | less'
+                    ---- unique accepts a sorted list of data from standard input or a single filename argument, and remove duplicated items 
+                    ---- use 'uniq -d' to see the list of duplicates instead 
+                
+                --- 'wc': print line, world, and byte counts 
+                    ---- example: 'wc ls-output.txt'
+                    ---- print lines, words, and bytes contained in ls-output.txt 
+                            -> 7902 64566 503634 ls-output.txt
+                    ---- if execute without arguments, it accepts standard input 
+                    ---- '-l' option limits its output to report only lines 
+                    ---- to see the number of items we have in our sorted list, we can do this 
+                            -> [me@linuxbox ~]$ ls /bin /usr/bin | sort | uniq | wc -l
+                                2728
+            
+                --- 'grep _pattern _filename': printlines matching a pattern 
+                    ---- example: 'ls /bin /usr/bin | sort | uniq | grep zip'
+                    ---- find all the files in our list of programs that had the word 'zip' embedded in the name.
+                    ---- '-i' : ignore case 
+                    ---- '-v' : print only those lines that do not match the pattern 
+                
+                --- 'head'/'tail': print first/last part of files
+                    ---- example: 'head -n 5 ls-output.txt'
+                    ---- default print first/last 10 lines, adjusted with '-n' option 
+                    ---- in pipeline: 'ls /usr/bin | tail -n 5'
+                    ---- tail -f /var/log/messages
+                            -> '-f' options allows 'tail' continuing to monitor the file, and when new lines are appended, they immediately appear in the dispaly
+                            -> CTRL+C breaks it 
+                            -> superuser privileges are required 
+                
+                --- 'tee': read from 'stdin' and output to 'stdout' and files
+                    ---- example, 'ls /usr/bin | tee ls.txt | grep zip'
+                    ---- 'tee ls.txt' creates a complete list of /usr/bin from 'ls /usr/bin' and store it in ls.txt, and continue the pipeline 
+                    ---- 'tee' allows the previous output to 
+                            -> be stored in a file and 
+                            -> pass through to the next stage in the pipeline 
+
+
+
+
+
+seeing the world as the shell sees it 
+
+    - 'echo': prints its text arguments on standard output 
+
+        -- [me@linuxbox ~]$ echo this is a test
+            this is a test
+    
+    - expansion 
+
+        -- with expansion, we enter something, and it is expanded into something else before the shell acts upon it 
+            --- e.g., shell expands the '*' into something else (e.g., names of the files in the current working directory) in 'echo *', echo command never saw '*'
+        
+        -- pathname expansion : wildcards 
+                --- e.g., [me@linuxbox ~]$ echo [[:upper:]]*
+                            Desktop Documents Music Pictures Public Templates Videos
+                
+                --- pathname expansion of hidden files (files start with . are hidden)
+                    ---- echo .* : will also include names with . and .. that refers to the current working directory and its parent directory (incorrect results)
+                    ---- echo .[!.]* : begins with only one period followed by any other characters, still won't include filenames with multiple leading periods 
+                    ---- ls -A : with 'almost all' option will provide a correct listing of hidden files 
+        
+        -- tilde expansion : with ~
+
+                --- recall using '~' (tilde character) with 'cd' expands into the name of the home directory of the named user or, if no user is named, the home directory 
+                    ---- [me@linuxbox ~]$ echo ~
+                        /home/me
+                    ---- if 'foo' has an account : [me@linuxbox ~]$ echo ~foo
+                                                    /home/foo
+        
+        -- $((expression)) : arithmetic expansion 
+
+                --- e.g., [me@linuxbox ~]$ echo $((2 + 2))
+                            4
+                
+                --- shell allows arithmetic to be performed by expansion 
+                    ---- it supports only integers
+                    ---- space is not significant in arithmetic expressions, and expressions may be nested 
+                    ---- supported operators: +, -, *, /, %, **
+        
+        -- {} : brace expansion 
+
+                --- [me@linuxbox ~]$ echo Front-{A,B,C}-Back
+                    Front-A-Back Front-B-Back Front-C-Back
+                    ---- can create multiple text strings from a pattern containing braces
+                    ---- patterns to be expanded may contain a leading portion (preamble) and a trailing portion (postscript)
+                    ---- brace expression may contain
+                        ---> comma-separated list of strings 
+                        ---> range of integers
+                        ---> single characters 
+                    ---- pattern may not contain unquoted whitespace 
+                    ---- it can be nested 
+
+                --- examples 
+                    ---- [me@linuxbox ~]$ echo Number_{1..5}
+                        Number_1 Number_2 Number_3 Number_4 Number_5
+                    ---- [me@linuxbox ~]$ echo {001..15}
+                        001 002 003 004 005 006 007 008 009 010 011 012 013 014 015
+                    ---- [me@linuxbox ~]$ echo {Z..A}
+                        Z Y X W V U T S R Q P O N M L K J I H G F E D C B A
+                    ---- [me@linuxbox ~]$ echo a{A{1,2},B{3,4}}b
+                        aA1b aA2b aB3b aB4b
+                
+                --- common use: make lists of files or directories
+                        [me@linuxbox ~]$ mkdir Photos
+                        [me@linuxbox ~]$ cd Photos
+                        [me@linuxbox Photos]$ mkdir {2007..2009}-{01..12}
+                        [me@linuxbox Photos]$ ls
+                        2007-01 2007-07 2008-01 2008-07 2009-01 2009-07
+                        2007-02 2007-08 2008-02 2008-08 2009-02 2009-08
+                        2007-03 2007-09 2008-03 2008-09 2009-03 2009-09
+                        2007-04 2007-10 2008-04 2008-10 2009-04 2009-10
+                        2007-05 2007-11 2008-05 2008-11 2009-05 2009-11
+                        2007-06 2007-12 2008-06 2008-12 2009-06 2009-12
+
+        -- parameter expansion 
+
+                --- [me@linuxbox ~]$ echo $USER
+                    me
+                    ---- system's ability to store small chunks of data and give each chunk a name (variables)
+                    ---- e.g., variable named 'USER' contains your username 
+                
+                --- [me@linuxbox ~]$ printenv | less
+                    ---- see a list of available variables 
+        
+        -- command substitution
+
+                --- command substitution allows us to use the output of a command as an expansion 
+
+                --- [me@linuxbox ~]$ ls -l $(which cp)
+                    -rwxr-xr-x 1 root root 71516 2007-12-05 08:58 /bin/cp
+                    --> we passed the results of 'which cp' as an argument to the 'ls' command, showing a list of 'cp' programs without having to know its full pathname 
+                
+                --- [me@linuxbox ~]$ file $(ls -d /usr/bin/* | grep zip)
+                    /usr/bin/bunzip2: symbolic link to `bzip2'
+                    /usr/bin/bzip2: ELF 32-bit LSB executable, Intel 80386, version 1
+                    (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
+                    /usr/bin/bzip2recover: ELF 32-bit LSB executable, Intel 80386, version 1
+                    (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
+                    /usr/bin/funzip: ELF 32-bit LSB executable, Intel 80386, version 1
+                    (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
+                    /usr/bin/gpg-zip: Bourne shell script text executable
+                    /usr/bin/gunzip: symbolic link to `../../bin/gunzip'
+                    /usr/bin/gzip: symbolic link to `../../bin/gzip'
+                    --> the results of the pipeline (list all directories in /usr/bin that has zip in the name) became the argument list of the 'file' command 
+        
+        -- quoting 
+
+                --- double quotes 
+                    ---- special characters lose special meanings except: $, \, ` 
+                    ---- supressed 
+                        ---> word splitting
+                        ---> pathname expansion
+                        ---> tilde expansion 
+                        ---> brace expansion 
+                    ---- carried 
+                        ---> parameter expansion 
+                        ---> arithmetic expansion 
+                        ---> command substitution 
+                        ---> [me@linuxbox ~]$ echo '$USER $((2+2)) $(cal)'
+                                me 4 February 2020
+                                Su Mo Tu We Th Fr Sa
+                                1
+                                2 3 4 5 6 7 8
+                                9 10 11 12 13 14 15
+                                16 17 18 19 20 21 22
+                                23 24 25 26 27 28 29
                     
-                    -> pathname expansion of hidden files (files start with . are hidden)
-                        --> echo .* : will also include names with . and .. that refers to the current working directory and its parent directory (incorrect results)
-                        --> echo .[!.]* : begins with only one period followed by any other characters, still won't include filenames with multiple leading periods 
-                        --> ls -A : with 'almost all' option will provide a correct listing of hidden files 
-            
-            ---- tilde expansion : with ~
+                    ---- examining word splitting 
+                        ---> wihtout double quotes, spaces, tabs, and newlines will be treated as 'delimiters' between words
+                        ---> double quotes make them part of the arguments 
+                        ---> [me@linuxbox ~]$ echo $(cal)
+                                February 2020 Su Mo Tu We Th Fr Sa 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+                                18 19 20 21 22 23 24 25 26 27 28 29
+                                [me@linuxbox ~]$ echo '$(cal)'
+                                February 2020
+                                Su Mo Tu We Th Fr Sa
+                                1
+                                2 3 4 5 6 7 8
+                                9 10 11 12 13 14 15
+                                16 17 18 19 20 21 22
+                                23 24 25 26 27 28 29
+                                ----> the unquoted command substitution results in a command line containing 38 arguments 
+                                ----> quoted command resulted in a command line with one argument that includes embedded spaces and newlines 
+                                
+                --- single quotes 
+                    ---- supress all expansions 
 
-                    -> recall using '~' (tilde character) with 'cd' expands into the name of the home directory of the named user or, if no user is named, the home directory 
-                        --> [me@linuxbox ~]$ echo ~
-                            /home/me
-                        --> if 'foo' has an account : [me@linuxbox ~]$ echo ~foo
-                                                        /home/foo
-            
-            ---- $((expression)) : arithmetic expansion 
-
-                    -> e.g., [me@linuxbox ~]$ echo $((2 + 2))
-                                4
-                    
-                    -> shell allows arithmetic to be performed by expansion 
-                        --> it supports only integers
-                        --> space is not significant in arithmetic expressions, and expressions may be nested 
-                        --> supported operators: +, -, *, /, %, **
-            
-            ---- {} : brace expansion 
-
-                    -> [me@linuxbox ~]$ echo Front-{A,B,C}-Back
-                        Front-A-Back Front-B-Back Front-C-Back
-                        --> can create multiple text strings from a pattern containing braces
-                        --> patterns to be expanded may contain a leading portion (preamble) and a trailing portion (postscript)
-                        --> brace expression may contain
-                            ---> comma-separated list of strings 
-                            ---> range of integers
-                            ---> single characters 
-                        --> pattern may not contain unquoted whitespace 
-                        --> it can be nested 
-
-                    -> examples 
-                        --> [me@linuxbox ~]$ echo Number_{1..5}
-                            Number_1 Number_2 Number_3 Number_4 Number_5
-                        --> [me@linuxbox ~]$ echo {001..15}
-                            001 002 003 004 005 006 007 008 009 010 011 012 013 014 015
-                        --> [me@linuxbox ~]$ echo {Z..A}
-                            Z Y X W V U T S R Q P O N M L K J I H G F E D C B A
-                        --> [me@linuxbox ~]$ echo a{A{1,2},B{3,4}}b
-                            aA1b aA2b aB3b aB4b
-                    
-                    -> common use: make lists of files or directories
-                            [me@linuxbox ~]$ mkdir Photos
-                            [me@linuxbox ~]$ cd Photos
-                            [me@linuxbox Photos]$ mkdir {2007..2009}-{01..12}
-                            [me@linuxbox Photos]$ ls
-                            2007-01 2007-07 2008-01 2008-07 2009-01 2009-07
-                            2007-02 2007-08 2008-02 2008-08 2009-02 2009-08
-                            2007-03 2007-09 2008-03 2008-09 2009-03 2009-09
-                            2007-04 2007-10 2008-04 2008-10 2009-04 2009-10
-                            2007-05 2007-11 2008-05 2008-11 2009-05 2009-11
-                            2007-06 2007-12 2008-06 2008-12 2009-06 2009-12
-
-            ---- parameter expansion 
-
-                    -> [me@linuxbox ~]$ echo $USER
-                        me
-                        --> system's ability to store small chunks of data and give each chunk a name (variables)
-                        --> e.g., variable named 'USER' contains your username 
-                    
-                    -> [me@linuxbox ~]$ printenv | less
-                        --> see a list of available variables 
-            
-            ---- command substitution
-
-                    -> command substitution allows us to use the output of a command as an expansion 
-
-                    -> [me@linuxbox ~]$ ls -l $(which cp)
-                        -rwxr-xr-x 1 root root 71516 2007-12-05 08:58 /bin/cp
-                        --> we passed the results of 'which cp' as an argument to the 'ls' command, showing a list of 'cp' programs without having to know its full pathname 
-                    
-                    -> [me@linuxbox ~]$ file $(ls -d /usr/bin/* | grep zip)
-                        /usr/bin/bunzip2: symbolic link to `bzip2'
-                        /usr/bin/bzip2: ELF 32-bit LSB executable, Intel 80386, version 1
-                        (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
-                        /usr/bin/bzip2recover: ELF 32-bit LSB executable, Intel 80386, version 1
-                        (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
-                        /usr/bin/funzip: ELF 32-bit LSB executable, Intel 80386, version 1
-                        (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
-                        /usr/bin/gpg-zip: Bourne shell script text executable
-                        /usr/bin/gunzip: symbolic link to `../../bin/gunzip'
-                        /usr/bin/gzip: symbolic link to `../../bin/gzip'
-                        --> the results of the pipeline (list all directories in /usr/bin that has zip in the name) became the argument list of the 'file' command 
-            
-            ---- quoting 
-
-                    -> double quotes 
-                        --> special characters lose special meanings except: $, \, ` 
-                        --> supressed 
-                            ---> word splitting
-                            ---> pathname expansion
-                            ---> tilde expansion 
-                            ---> brace expansion 
-                        --> carried 
-                            ---> parameter expansion 
-                            ---> arithmetic expansion 
-                            ---> command substitution 
-                            ---> [me@linuxbox ~]$ echo '$USER $((2+2)) $(cal)'
-                                    me 4 February 2020
-                                    Su Mo Tu We Th Fr Sa
-                                    1
-                                    2 3 4 5 6 7 8
-                                    9 10 11 12 13 14 15
-                                    16 17 18 19 20 21 22
-                                    23 24 25 26 27 28 29
+                    ---- [me@linuxbox ~]$ echo text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER
+                        text /home/me/ls-output.txt a b foo 4 me
+                        70 Chapter 7
                         
-                        --> examining word splitting 
-                            ---> wihtout double quotes, spaces, tabs, and newlines will be treated as 'delimiters' between words
-                            ---> double quotes make them part of the arguments 
-                            ---> [me@linuxbox ~]$ echo $(cal)
-                                    February 2020 Su Mo Tu We Th Fr Sa 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
-                                    18 19 20 21 22 23 24 25 26 27 28 29
-                                    [me@linuxbox ~]$ echo '$(cal)'
-                                    February 2020
-                                    Su Mo Tu We Th Fr Sa
-                                    1
-                                    2 3 4 5 6 7 8
-                                    9 10 11 12 13 14 15
-                                    16 17 18 19 20 21 22
-                                    23 24 25 26 27 28 29
-                                    ----> the unquoted command substitution results in a command line containing 38 arguments 
-                                    ----> quoted command resulted in a command line with one argument that includes embedded spaces and newlines 
-                                    
-                    -> single quotes 
-                        --> supress all expansions 
+                    ---- [me@linuxbox ~]$ echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
+                        text ~/*.txt {a,b} foo 4 me
+                        
+                    ---- [me@linuxbox ~]$ echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
+                        text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER
+                
+        -- \ : escapting characters 
+                
+                --- skip a single character in double quote / unquoted 
+                    --> to selectively prevent an expansion 
+                
+                --- [me@linuxbox ~]$ echo 'The balance for user $USER is: \$5.00'
+                    The balance for user me is: $5.00
+                
+                --- can also be used to eliminate the special meaning of a character in a filename 
+                    --> when filename includes '$', '!', '&', ' ', ...
+                    --> [me@linuxbox ~]$ mv bad\&filename good_filename
 
-                        --> [me@linuxbox ~]$ echo text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER
-                            text /home/me/ls-output.txt a b foo 4 me
-                            70 Chapter 7
-                            
-                        --> [me@linuxbox ~]$ echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
-                            text ~/*.txt {a,b} foo 4 me
-                            
-                        --> [me@linuxbox ~]$ echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
-                            text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER
-                    
-            ---- \ : escapting characters 
-                    
-                    -> skip a single character in double quote / unquoted 
-                        --> to selectively prevent an expansion 
-                    
-                    -> [me@linuxbox ~]$ echo 'The balance for user $USER is: \$5.00'
-                        The balance for user me is: $5.00
-                    
-                    -> can also be used to eliminate the special meaning of a character in a filename 
-                        --> when filename includes '$', '!', '&', ' ', ...
-                        --> [me@linuxbox ~]$ mv bad\&filename good_filename
+                --- control code : escape sequence
+                    ---- '\' is also used as part of a notation for special characters
+                            \a      Bell (an alert that causes the computer to beep)
+                            \b      Backspace
+                            \n      Newline; on Unix-like systems, this produces a line feed
+                            \r      Carriage return
+                            \t      Tab
 
-                    -> control code : escape sequence
-                        --> '\' is also used as part of a notation for special characters
-                                \a      Bell (an alert that causes the computer to beep)
-                                \b      Backspace
-                                \n      Newline; on Unix-like systems, this produces a line feed
-                                \r      Carriage return
-                                \t      Tab
+                    ---- adding the '-e' option to 'echo' will enable interpretation of escape sequences, or place them inside $' '
+                        ---> sleep 10; echo -e 'Time's up\a'
+                        ---> sleep 10; echo 'Time's up' $'\a'
 
-                        --> adding the '-e' option to 'echo' will enable interpretation of escape sequences, or place them inside $' '
-                            ---> sleep 10; echo -e 'Time's up\a'
-                            ---> sleep 10; echo 'Time's up' $'\a'
-        
+
+
+
+
+
+
+
     -- advance keyboard tricks
 
         --- 'readline': bash uses this library to implement command line editing 
@@ -831,7 +997,18 @@ manipulating files and directories
             ---- script file_name : record the shell session and store it in file_name
 
                 -> if no file is specified, the file 'typescript' is used
-    
+
+
+
+
+
+
+
+
+
+
+
+
     -- permissions 
 
         --- Linux systems are designed for multi-users 
@@ -1085,104 +1262,142 @@ manipulating files and directories
                         BAD PASSWORD: it is WAY too short
                         New UNIX password:
                         BAD PASSWORD: it is based on a dictionary word
-            
-    -- processes 
 
-        --- multitasking : create the illusion of doing more than one thing at once by rapidly switching from one executing program to another 
-            ---- the kernel manages this through the use of processes.
-            ---- processes are how Linux organizes the different programs waiting for their turn at the CPU
+
+
+
+
+
+
+-- processes 
+
+    --- multitasking : create the illusion of doing more than one thing at once by rapidly switching from one executing program to another 
+        ---- the kernel manages this through the use of processes.
+        ---- processes are how Linux organizes the different programs waiting for their turn at the CPU
+    
+    --- processes : how it works 
+
+        ---- when a system starts up, the kernel initiates a few of its own activities as processes and launches a program called init 
+
+        ---- init, then runs a series of shell scripts (located in /etc) called init scripts, which start all the system services 
+                -> many of these services are implemented as daemon programs
+                -> programs that just sit in the background and do their thing without having any user interface 
         
-        --- processes : how it works 
+        ---- parent process producing child process : a program can launch other programs is expressed in this process scheme 
 
-            ---- when a system starts up, the kernel initiates a few of its own activities as processes and launches a program called init 
+        ---- the kernel maintains information about each process to help keep things organized
+                -> e.g., each process is assigned a number called a process ID (PID) 
+                    --> PIDs are assigned in ascending order, with 'init' always getting PID 1
+                -> the kernel also keeps track of the memory assigned to each process, as well as the processes' readiness to resume execution 
+                -> like files, processes also have owners and user IDs, effective user IDs, and so on 
+    
+    --- ps : viewing processes 
 
-            ---- init, then runs a series of shell scripts (located in /etc) called init scripts, which start all the system services 
-                    -> many of these services are implemented as daemon programs
-                    -> programs that just sit in the background and do their thing without having any user interface 
-            
-            ---- parent process producing child process : a program can launch other programs is expressed in this process scheme 
+        ---- without any option 
 
-            ---- the kernel maintains information about each process to help keep things organized
-                    -> e.g., each process is assigned a number called a process ID (PID) 
-                        --> PIDs are assigned in ascending order, with 'init' always getting PID 1
-                    -> the kernel also keeps track of the memory assigned to each process, as well as the processes' readiness to resume execution 
-                    -> like files, processes also have owners and user IDs, effective user IDs, and so on 
+                -> [me@linuxbox ~]$ ps
+                    PID     TTY     TIME    CMD
+                    5198    pts/1 00:00:00  bash
+                    10129   pts/1 00:00:00  ps
+                
+                -> result lists two processes associated with the current terminal session 
+
+                -> TTY is short for "teletype" and refers to the controlling terminal for the process 
+
+                -> TIME is the amount of CPU time consumed by the process 
+                    --> neither process makes the computer work very hard 
         
-        --- ps : viewing processes 
+        ---- option 'x' : all processes regardless of what terminal they are controlled by
 
-            ---- without any option 
+                -> [me@linuxbox ~]$ ps x
+                    PID     TTY     STAT    TIME    COMMAND
+                    2799    ?       Ssl     0:00    /usr/libexec/bonobo-activation-server –ac
+                    2820    ?       Sl      0:01    /usr/libexec/evolution-data-server-1.10 --
+                    15647   ?       Ss      0:00    /bin/sh /usr/bin/startkde
+                    15751   ?       Ss      0:00    /usr/bin/ssh-agent /usr/bin/dbus-launch --
+                    15754   ?       S       0:00    /usr/bin/dbus-launch --exit-with-session
+                    15755   ?       Ss      0:01    /bin/dbus-daemon --fork --print-pid 4 –pr
+                    15774   ?       Ss      0:02    /usr/bin/gpg-agent -s –daemon
+                    15793   ?       S       0:00    start_kdeinit --new-startup +kcminit_start
+                    15794   ?       Ss      0:00    kdeinit Running...
+                    15797   ?       S       0:00    dcopserver –nosid
+                    --snip--
 
-                    -> [me@linuxbox ~]$ ps
-                        PID     TTY     TIME    CMD
-                        5198    pts/1 00:00:00  bash
-                        10129   pts/1 00:00:00  ps
-                    
-                    -> result lists two processes associated with the current terminal session 
+                -> ? in the TTY column indicates no controlling terminal. 
 
-                    -> TTY is short for "teletype" and refers to the controlling terminal for the process 
+                -> use this option, we see a list of every process that we own 
+                    --> when the list got long, we might want to pipe the output into 'less' for easier viewing 
+                
+                -> a new column STAT (short for state) reveals the current status of the process 
 
-                    -> TIME is the amount of CPU time consumed by the process 
-                        --> neither process makes the computer work very hard 
-            
-            ---- option 'x' : all processes regardless of what terminal they are controlled by
+                    --> State   Meaning
+                        R       Running. This means the process is running or ready to run.
+                        S       Sleeping. The process is not running; rather, it is waiting for an event, such as a keystroke or network packet.
+                        D       Uninterruptible sleep. The process is waiting for I/O such as a disk drive.
+                        T       Stopped. The process has been instructed to stop. You’ll learn more about this later in the chapter.
+                        Z       A defunct or “zombie” process. This is a child process that has terminated but has not been cleaned up by its parent.
+                        <       A high-priority process. It’s possible to grant more importance to a process, giving it more time on the CPU. This property of a process is called niceness.
+                                    A process with high priority is said to be less nice because it’s taking more of the CPU’s time, which leaves less for everybody else.
+                        N       A low-priority process. A process with low priority (a nice process) will get processor time only after other processes with higher priority have been serviced.
 
-                    -> [me@linuxbox ~]$ ps x
-                        PID     TTY     STAT    TIME    COMMAND
-                        2799    ?       Ssl     0:00    /usr/libexec/bonobo-activation-server –ac
-                        2820    ?       Sl      0:01    /usr/libexec/evolution-data-server-1.10 --
-                        15647   ?       Ss      0:00    /bin/sh /usr/bin/startkde
-                        15751   ?       Ss      0:00    /usr/bin/ssh-agent /usr/bin/dbus-launch --
-                        15754   ?       S       0:00    /usr/bin/dbus-launch --exit-with-session
-                        15755   ?       Ss      0:01    /bin/dbus-daemon --fork --print-pid 4 –pr
-                        15774   ?       Ss      0:02    /usr/bin/gpg-agent -s –daemon
-                        15793   ?       S       0:00    start_kdeinit --new-startup +kcminit_start
-                        15794   ?       Ss      0:00    kdeinit Running...
-                        15797   ?       S       0:00    dcopserver –nosid
-                        --snip--
+                    --> state may be followed by other characters - indicate various exotic process characters 
+        
+        ---- option 'aux' : gives even more information 
 
-                    -> ? in the TTY column indicates no controlling terminal. 
+                -> [me@linuxbox ~]$ ps aux
+                    USER PID  %CPU   %MEM   VSZ     RSS     TTY     STAT    START   TIME    COMMAND
+                    root 1    0.0     0.0   2136    644     ?       Ss      Mar05   0:31    init
+                    root 2    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kt]
+                    root 3    0.0     0.0   0       0       ?       S<      Mar05   0:00    [mi]
+                    root 4    0.0     0.0   0       0       ?       S<      Mar05   0:00    [ks]
+                    root 5    0.0     0.0   0       0       ?       S<      Mar05   0:06    [wa]
+                    root 6    0.0     0.0   0       0       ?       S<      Mar05   0:36    [ev]
+                    root 7    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kh]
+                    --snip--
+                
+                -> this set of options displays the processes belonging to every user 
 
-                    -> use this option, we see a list of every process that we own 
-                        --> when the list got long, we might want to pipe the output into 'less' for easier viewing 
-                    
-                    -> a new column STAT (short for state) reveals the current status of the process 
+                -> BSD style 'ps' column headers 
 
-                        --> State   Meaning
-                            R       Running. This means the process is running or ready to run.
-                            S       Sleeping. The process is not running; rather, it is waiting for an event, such as a keystroke or network packet.
-                            D       Uninterruptible sleep. The process is waiting for I/O such as a disk drive.
-                            T       Stopped. The process has been instructed to stop. You’ll learn more about this later in the chapter.
-                            Z       A defunct or “zombie” process. This is a child process that has terminated but has not been cleaned up by its parent.
-                            <       A high-priority process. It’s possible to grant more importance to a process, giving it more time on the CPU. This property of a process is called niceness.
-                                        A process with high priority is said to be less nice because it’s taking more of the CPU’s time, which leaves less for everybody else.
-                            N       A low-priority process. A process with low priority (a nice process) will get processor time only after other processes with higher priority have been serviced.
+                    --> Header  Meaning (102)
+                        USER    User ID. This is the owner of the process.
+                        %CPU    CPU usage in percent.
+                        %MEM    Memory usage in percent.
+                        VSZ     Virtual memory size.
+                        RSS     Resident set size. This is the amount of physical memory (RAM) the process is using in kilobytes.
+                        START   Time when the process started. For values over 24 hours, a date is used.
 
-                        --> state may be followed by other characters - indicate various exotic process characters 
-            
-            ---- option 'aux' : gives even more information 
 
-                    -> [me@linuxbox ~]$ ps aux
-                        USER PID  %CPU   %MEM   VSZ     RSS     TTY     STAT    START   TIME    COMMAND
-                        root 1    0.0     0.0   2136    644     ?       Ss      Mar05   0:31    init
-                        root 2    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kt]
-                        root 3    0.0     0.0   0       0       ?       S<      Mar05   0:00    [mi]
-                        root 4    0.0     0.0   0       0       ?       S<      Mar05   0:00    [ks]
-                        root 5    0.0     0.0   0       0       ?       S<      Mar05   0:06    [wa]
-                        root 6    0.0     0.0   0       0       ?       S<      Mar05   0:36    [ev]
-                        root 7    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kh]
-                        --snip--
-                    
-                    -> this set of options displays the processes belonging to every user 
 
-                    -> BSD style 'ps' column headers 
 
-                        --> Header  Meaning (102)
-                            USER    User ID. This is the owner of the process.
-                            %CPU    CPU usage in percent.
-                            %MEM    Memory usage in percent.
-                            VSZ     Virtual memory size.
-                            RSS     Resident set size. This is the amount of physical memory (RAM) the process is using in kilobytes.
-                            START   Time when the process started. For values over 24 hours, a date is used.
+
+
+
+
+
+
+
+
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1221,41 +1436,7 @@ temp notes
             
             --- useful functions 
 
-                ---- 'rsync -av src/ dest/'
-                        -> copies files from 'src/' to 'dest/' efficiently, preserving metadata
-                        -> '-a' - archive mode (a bundle of options): recursive copy + preserve timestamps, perms, owner/group, symlinks, device, etc. 
-                            --> (on WSL's '/mnt/c' some metadata can't be fully preserved - normal)
-                        -> '-v' - verbose output 
-                        -> important notes 
-                            --> 'src/' with slash --> copy the comtents of 'src' int 'dest'
-                                ---> result: 'dest/fileA', 'dest/subdir/...'
-                            --> 'src' no slash --> copy the directory itself into 'dest'
-                                ---> result: 'dest/src/fileA', 'dest/src/subdir/...'
-                        -> typical usage 
-                            --> 'rsync -av src/ dest/' - copy contents of src into dest (create dest if needed)
-                            --> 'rsync -av --dry-run src/ dest/' - show what would happen (no change)
-                            --> 'rsync -av --info=progress2 src/ dest/' - progress bar (handy for big trees)
-                        -> copy choices 
-                            --> 'rsync -av src/file1 dest/' - copies file1 into dest/
-                            --> 'rsync -av src/folder1/file1 dest/' - no original folder path - result: dest/file1 
-                
-                ---- 'wslpath -u "C:\Users\..."'
-                        -> portable, robust, and bi-directional 
-                        -> pattern 
-                                # 1. Windows → Linux (use Linux tools on a Windows folder)
-                                SRC_WIN='C:\Users\Zhe Rao\Documents\src'
-                                SRC_LNX="$(wslpath -u "$SRC_WIN")"
-                                rsync -av --info=progress2 "$SRC_LNX/" "$HOME/src_copy/"
 
-                                # 2. Linux → Windows (call a Windows .exe on a Linux folder)
-                                DST_LNX="$HOME\src_copy"
-                                DST_WIN="$(wslpath -w "$DST_LNX")"
-                                explorer.exe "$DST_WIN"
-
-                                # 3. UNC share
-                                UNC='\\fileserver\teamshare\project'
-                                UNC_LNX="$(wslpath -u "$UNC")"   # -> /mnt/unc/fileserver/teamshare/project
-                                ls "$UNC_LNX"
 
 
 
