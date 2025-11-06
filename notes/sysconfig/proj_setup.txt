@@ -245,7 +245,25 @@ Spark setup
 
 
 
-
+├── Database
+    ├── .input 
+        ├── pillar_units.xlsx 
+        ├── Auth 
+            ├── QBO 
+                ├── secrets.json  
+                ├── tokens.json 
+            ├── QBOTime 
+                ├── tokens.json 
+        ├── pay_periods.xlsx 
+    ├── Bronze
+        ├── QBO 
+            ├── GL 
+                ├── MFUSA
+                    ├── 2025_10.json 
+                ├── MFL 
+            ├── PL 
+    ├── Gold
+    └── Silver
 
 
 
