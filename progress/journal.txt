@@ -57,7 +57,7 @@
             
             --- 4th
 
-                ---- DevOps Layer 0: notes refactor + temp: shell scripting  (2.5)
+                ---- DevOps Layer 0: notes refactor + temp: shell scripting
                         -> files and directories: cp, mv, mkdir, rm, ln 
                         -> common commands: type, which, help, man, apropos, whatis, info, alias 
                         -> redirecting: >, >>, 2>, &>, /dev/null, cat - append & stdin, |, sort, uniq, wc, grep, head/tail, tee
@@ -66,6 +66,14 @@
 
                 ---- DevOps Layer 0: notes 
                         -> reorganized redirecting and pipeline & filters (subsequent contents require re-read for deep understanding)
+                        -> started expansion 
+                
+                ---- reflection
+                        -> The Ones Who Believed First 
+                        -> MonetteOS + visibility
+                
+                ---- work
+                        -> experimented file transfer between Windows and WSL 
 
 
                 

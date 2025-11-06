@@ -712,6 +712,68 @@ I/O redirection : redirecting the input and output of commands
                             -> pass through to the next stage in the pipeline 
 
 
+seeing the world as the shell sees it 
+
+    - expansion: before 'bash' carries out commands, it performs several substitutions upon the text
+
+        -- how "pattern matcher" works?
+
+            --- 'echo *.sh'
+                ---- the shell, not the filesystem, sees '*'
+                ---- it checks "is there any unquoted wildcard character in this argument?"
+                ---- if yes -> perform "pathname expansion" (also called "globbing")
+                ---- it scans the current directory's entires (names only - not file contents)
+                ---- it tests each name against the pattern '*.sh'
+                ---- all matches are substituted into the command line before execution
+
+            --- how the matching itself works 
+                ---- at a high level, the shell uses a library routine like 'glob()' (in C, from '<glob.h>')
+                ---- it iterates through directory entries returned by 'opendir()' / 'readdir()' and applies pattern rules
+
+        -- 'echo': prints text arguments on stdout - can be used to examine expansions 
+
+            --- example: 'echo *' -> Desktop Documents ls-output.txt Music ...
+            
+            --- why didn't 'echo' print '*'?
+                ---- '*' character means match any character in a filename 
+                ---- before executing anything, '*' was expanded into the names of the files in the current working directory
+                ---- when the ENTER key is pressed, the shell automatically expands any qulifying char on the command line before the command is carried out 
+                ---- so the 'echo' command never saw the '*', only its expanded results
+        
+        -- pathname expansion: the mechanism by which wildcards work 
+
+            --- examples 
+                ---- 'echo D*' -> Desktop Documents 
+                ---- 'echo *s' -> Documents Pictures Templates Videos 
+                ---- 'echo [[:upper:]]*' -> Desktop Documents Music Pictures Public Templates Videos 
+                ---- 'echo /usr/*/share' -> /usr/kerberos/share /usr/local/share 
+            
+            --- hidden files 
+                ---- 'echo .*' -> almost correct, will include names "." (current working directory) and ".." (parent directory)
+                ---- 'echo .[!.]*' -> filenames that begins with only one period followed by any other characters - wouldn't include filenames with multiple leading periods 
+        
+        -- tilde ('~') expansion
+
+            --- 
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

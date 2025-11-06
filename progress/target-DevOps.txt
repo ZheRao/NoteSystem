@@ -10,19 +10,11 @@ Layer 0 - Base Operating System & POSIX Model
 
     - month 1 - foundations & shell environment 
 
-        -- week 1 - filesystem & navigation 
+        -- week 1 - TLC CH 1-4
 
-            --- deliverable 
-                ---- move confidently through '/', '/bin', '/usr'
-                ---- use 'man', 'ls -lh', 'find'
-            
-            --- day 1 
-                ---- read TLC Ch 1-2 (intro + terminal basics)  
-                ---- LUC Day 1 (login, basic CLI)
-            
-            --- day 2 (2.5 hours)
-                ---- Ch 3 (navigation) 
-                ---- LUC Day 2 (editing files)
+        -- week 2 - TCL CH 5-8
+
+        -- week 3 - TLC CH 9-11
 
 
 
