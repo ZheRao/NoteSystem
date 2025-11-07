@@ -31,49 +31,64 @@
         
         -- Novmber 
 
-            --- 1st 
+            --- week 0
 
-                ---- DevOps: Finished - venv
-                        -> execution of isolation and lightweight Python installation through 'pyvenv.cfg' file, modify sys.path, PYTHONPATH, PATH
-                        -> customize virtualenv: update core dependencies, include system site-packages
-                        -> manage virtualenv: locate venv folder, requirements.txt, avoid in Production 
+                --- 1st 
+
+                    ---- DevOps: Finished - venv
+                            -> execution of isolation and lightweight Python installation through 'pyvenv.cfg' file, modify sys.path, PYTHONPATH, PATH
+                            -> customize virtualenv: update core dependencies, include system site-packages
+                            -> manage virtualenv: locate venv folder, requirements.txt, avoid in Production 
+                    
+                    ---- DevOps: week2 plan created - realized adjustment needed - focused on working with virtualevn in Poetry + Conda, determine - is it really needed? 
+                    
+                    ---- DeepLearning: Y1-Q1 plan structure created - with month1-week1 detailed target created (switched 3 plans - 1 hour)
                 
-                ---- DevOps: week2 plan created - realized adjustment needed - focused on working with virtualevn in Poetry + Conda, determine - is it really needed? 
+                --- 2nd 
+
+                    ---- DeepLearning: micrograd
+                            -> overall idea: construct computational graph, so back propagation can be implemented easily from chain rule
+                            -> derivative concepts #1 - numeric comutation 
+                            -> constructed basic 'Value' class 
+                            -> working on functions to visualize computational graph - learning traversal of nodes 
                 
-                ---- DeepLearning: Y1-Q1 plan structure created - with month1-week1 detailed target created (switched 3 plans - 1 hour)
-            
-            --- 2nd 
+            --- week 1
 
-                ---- DeepLearning: micrograd
-                        -> overall idea: construct computational graph, so back propagation can be implemented easily from chain rule
-                        -> derivative concepts #1 - numeric comutation 
-                        -> constructed basic 'Value' class 
-                        -> working on functions to visualize computational graph - learning traversal of nodes 
-            
-            --- 3rd
+                --- 3rd
 
-                ---- DevOps Layer 0: Linux Foundamentals Intro notes refactor 
-                        -> linux basics: pwd, cd, ls, file, less
-            
-            --- 4th
-
-                ---- DevOps Layer 0: notes refactor + temp: shell scripting
-                        -> files and directories: cp, mv, mkdir, rm, ln 
-                        -> common commands: type, which, help, man, apropos, whatis, info, alias 
-                        -> redirecting: >, >>, 2>, &>, /dev/null, cat - append & stdin, |, sort, uniq, wc, grep, head/tail, tee
-            
-            --- 5th
-
-                ---- DevOps Layer 0: notes 
-                        -> reorganized redirecting and pipeline & filters (subsequent contents require re-read for deep understanding)
-                        -> started expansion 
+                    ---- DevOps Layer 0: Linux Foundamentals Intro notes refactor 
+                            -> linux basics: pwd, cd, ls, file, less
                 
-                ---- reflection
-                        -> The Ones Who Believed First 
-                        -> MonetteOS + visibility
+                --- 4th
+
+                    ---- DevOps Layer 0: notes refactor + temp: shell scripting
+                            -> files and directories: cp, mv, mkdir, rm, ln 
+                            -> common commands: type, which, help, man, apropos, whatis, info, alias 
+                            -> redirecting: >, >>, 2>, &>, /dev/null, cat - append & stdin, |, sort, uniq, wc, grep, head/tail, tee
                 
-                ---- work
-                        -> experimented file transfer between Windows and WSL 
+                --- 5th
+
+                    ---- DevOps Layer 0: notes 
+                            -> reorganized redirecting and pipeline & filters (subsequent contents require re-read for deep understanding)
+                            -> started expansion 
+                    
+                    ---- reflection
+                            -> The Ones Who Believed First 
+                            -> MonetteOS + visibility
+                    
+                    ---- work
+                            -> experimented file transfer between Windows and WSL 
+                
+                --- 6th
+
+                    ---- DevOps Layer 0
+                            -> expansions: pathname (echo D*), tilde (echo ~), arithmetic (echo $((2+ 2))), brace (echo Number_{1..5}), 
+                            -> expansions: command substitution ($(ls) | less), parameter (echo $USER)
+                            -> quoting: double quote supresses except $, \, `, single quote supresses everything, '\' - escape one char
+                            -> recreated: target file for part 1
+
+                    ---- work 
+                            -> initial PL extraction with Spark experiment success! 2 minutes -> 12 seconds
 
 
                 

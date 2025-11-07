@@ -908,6 +908,41 @@ seeing the world as the shell sees it
         
         -- single quotes 
 
+            --- single quotes suppress all expansions 
+        
+    - '\': escaping characters 
+
+        -- use cases 
+
+            --- selectively prevent an expansion 
+                ---- echo "The balance for user $USER is: \$5.00" -> The balance for user me is: $5.00
+            
+            --- eliminate the special meaning of a character in a filename 
+                ---- include $, !, &, space, and others 
+                ---- 'mv bad\$filename good_filename'
+            
+        -- to allow a backslash character to appear, escape it by typing '\\'
+
+        -- note that backslash loses its special meaning and is treated as an ordinary character within single quotes 
+
+        -- backslash escape sequence 
+            
+            --- backslash is also used as part of a notation to represent certain special characters called "control codes"
+
+            --- examples 
+                
+                \a      Bell (an alert that causes the computer to beep)
+                \b      Backspace
+                \n      Newline; on Unix-like systems, this produces a line feed
+                \r      Carriage return
+                \t      Tab
+    
+            --- adding the '-e' option to 'echo' will enable interpretation of escape sequences
+                ---- can also place them inside $' '
+                ---- echo -e "Time's up\a"
+                ---- echo "Time's up" $'\a'
+
+
 
 
 

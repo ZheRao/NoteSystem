@@ -1,20 +1,51 @@
 
+Layer 0 -Linux
+
+    - structure - 6-part 
+        -- 50% hands-on terminal practice 
+        -- 30% reading + notes 
+        -- 20% mini-projects + reflection 
+
+    - goal: becoming a systems-level engineer capable of building fast, scalable, sustainable, portable, autonomous data systems - leading naturally to cloud/container orchestration
+
+    - part 1 - foundations: shell, filesystem, navigation (Ch. 1-4)
+
+        -- theme: build absolute confidence in Linux navigation, commands, and file semantics 
+
+        -- outcome: you can traverse and manipulate the Linux filesystem with complete confidence 
+        
+        -- components 
+
+            --- read Ch. 1-4 (the shell, navigation, exploring, manipulating files)
+
+            --- practice: 
+                ---- explore '/', '/etc', '/usr', '/home';
+                ---- use 'ls', 'pwd', 'cd', 'cp', 'mv', 'rm', 'ln', 'file', 'cat'
+            
+            --- mini-labs 
+                ---- create project directory structure in '/home/zhe_rao/projects/linux_lab'
+                ---- simulate a mini filesystem for a data pipeline (bronze/silver/gold folders)
+            
+            --- concept notes 
+                ---- summarize: absolute vs. relative path, inode, hard/soft links, file types 
+            
+            --- checkpoint questions
+                ---- what happens when you type a command? 
+                ---- what's '$PATH'?
+                ---- why is 'usr/bin' special?
+            
+            --- project 
+                ---- "filesystem map" - create a Markdown doc mapping the Linux hierarchy and purpose of each directory 
 
 
-Layer 0 - Base Operating System & POSIX Model 
 
-    - resources 
-        -- The Linux Command Line (TLC) by William Shotts - 500 pages - 36 chapters 
-        -- Linux Upskill Challenge 
-            --- https://linuxupskillchallenge.org/#whats-it-about 
 
-    - month 1 - foundations & shell environment 
 
-        -- week 1 - TLC CH 1-4
 
-        -- week 2 - TCL CH 5-8
 
-        -- week 3 - TLC CH 9-11
+
+
+Layer 1 - Environment & Dependency Management 
 
 
 
