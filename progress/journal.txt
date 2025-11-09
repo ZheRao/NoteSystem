@@ -81,7 +81,7 @@
                 
                 --- 6th
 
-                    ---- DevOps Layer 0
+                    ---- DevOps Layer 0 (3)
                             -> expansions: pathname (echo D*), tilde (echo ~), arithmetic (echo $((2+ 2))), brace (echo Number_{1..5}), 
                             -> expansions: command substitution ($(ls) | less), parameter (echo $USER)
                             -> quoting: double quote supresses except $, \, `, single quote supresses everything, '\' - escape one char
@@ -89,7 +89,45 @@
 
                     ---- work 
                             -> initial PL extraction with Spark experiment success! 2 minutes -> 12 seconds
+                
+                --- 7th
 
+                    ---- DevOps Layer 0 
+                            -> keyboard tricks 
+                    
+                    ---- DevOps Layer 1 (0.7 h)
+                            -> restructured and started learning 
+                            -> detailed look at python verion 
+
+                --- 8th 
+
+                    ---- DeepLearning Layer 1 (2.3 h)
+                            -> setup venv for dp-experiments
+                            -> started implementing micrograd from scratch
+                            -> deep dive - env, python interpreter / package change with 'cd' directories
+                    
+                    ---- mindware (2.38 h)
+                            -> cognition
+                                --> learning 
+                                    ---> passive familiarity -> active competence (extremely fast progress compared to regular learner)
+                                    ---> apprentice (replicating code with reference) -> engineer-research mindset
+                                --> processional
+                                    ---> vs. NetSuite 
+                                    ---> my system = Monette OS - from COO 
+                                    ---> what I have accomplished? 
+                                    ---> broad qualities learnt 
+                                    ---> future job-seek implication 
+                                    ---> department vision proposal - 2025-11-05
+                                    ---> inter-dimensional growth 
+                                    ---> risk (uncertainty) & reward 
+                            -> growth 
+                                --> tech growth 
+                                    ---> thinking pattern for mastery 
+                                    ---> don't try to understand everything 
+                            -> observation 
+                                --> vs. other people 
+                                    ---> (social) default social script: "get job -> go out -> complain about job -> repeat"
+                                    ---> living in a different world
 
                 
 

@@ -177,6 +177,7 @@ Linux environment
                     poetry init -n --name "mf_qbo_spark_refactor" \
                         --description "Spark refactor experimentation for QBO ETL" \
                         --license "MIT"
+
                 ---- 'poetry init': creates a 'pyproject.toml' in the current directory to turn it into a Poetry-managed project 
                         -> 'pyproject.toml' - your project's pakcage metadata & dependencies
                 ---- '-n' / '--no-interaction': skips the interactive wizard and writes a minimal config using the flags you provide (no prompts)
@@ -207,7 +208,9 @@ Linux environment
         
         -- activate environment 
 
-            --- activate the venv for commands: 
+            --- install kernel: 'poetry add ipykernel'
+
+            --- create kernel: 
                     poetry run python -m ipykernel install --user \
                         --name mf-qbo-spark \
                         --display-name "mf-qbo-spark (poetry)"
@@ -217,7 +220,12 @@ Linux environment
                 ---- '--user': installs the kernel spec in your user dir (no sudo), typically under 
                         -> '~/.local/share/jupyter/kernels/<name>/kernel.json'
                 ---- '--name mf-qbo-spark': the internal kernel id (folder name), but be unique; reusing will overwrite 
+                        -> it becomes the folder name under your Jupyter kernels directory, e.g., '~/.local/share/jupyter/kernels/DLExprEnv/kernel.json'
                 ---- '--diplay-name "mf-qbo-spark (poetry)"': the friendly label you'll see in Jupyter / VS Code kernel picker 
+            
+            --- check kernels - 'jupyter kernelspec list'
+            
+            --- uninstall old kernels - 'jupyter kernelspec uninstall old_kernel_name'
 
     - system interaction 
         -- Linux package management (apt)

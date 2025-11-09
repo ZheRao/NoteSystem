@@ -100,9 +100,6 @@ other notes
                     ls "$UNC_LNX"
 
 
-
-
-
     
 (single) file system tree 
 
@@ -943,307 +940,100 @@ seeing the world as the shell sees it
                 ---- echo "Time's up" $'\a'
 
 
+advance keyboard tricks
 
+    - 'readline': bash uses this library to implement command line editing 
 
+        -- cursor movement 
 
+                ctrl-A              Move cursor to the beginning of the line.
+                ctrl-E              Move cursor to the end of the line.
+                ctrl-F              Move cursor forward one character; same as the right arrow key.
+                ctrl-B              Move cursor backward one character; same as the left arrow key.
+                alt-F               Move cursor forward one word.
+                alt-B               Move cursor backward one word.
+                ctrl-L              Clear the screen and move the cursor to the top-left corner. The clear
+                                        command does the same thing.
+        
+        -- modifying text 
 
+                ctrl-D              Delete the character at the cursor location.
+                ctrl-T              Transpose (exchange) the character at the cursor location with the one preceding it.
+                alt-T               Transpose the word at the cursor location with the one preceding it.
+                alt-L               Convert the characters from the cursor location to the end of the word to lowercase.
+                alt-U               Convert the characters from the cursor location to the end of the word to uppercase.
+        
+        -- cutting and pasting (killing and yanking) text 
 
+                ctrl-K              Kill text from the cursor location to the end of line.
+                ctrl-U              Kill text from the cursor location to the beginning of the line.
+                alt-D               Kill text from the cursor location to the end of the current word.
+                alt-backspace       Kill text from the cursor location to the beginning of the current word. If
+                                        the cursor is at the beginning of a word, kill the previous word.
+                ctrl-Y              Yank text from the kill-ring and insert it at the cursor location.
+        
+        -- TAB : completion 
 
+                -> [me@linuxbox ~]$ ls
+                    Desktop ls-output.txt Pictures Templates Videos
+                    Documents Music Public
+                
+                -> [me@linuxbox ~]$ ls l    + TAB   =    [me@linuxbox ~]$ ls ls-output.txt
+                    --> when there's no completion when the letter(s) entered matches more than one entry in the directory 
+                    --> for the completion to work, the 'clue' must be unambiguous 
+                
+                -> completion works on 
+                    --> pathnames 
+                    --> variables (word begins with '$')
+                    --> usernames (word begins with '~')
+                    --> commands (word is the first word on the line)
+                    --> hostnames (word begins with '@')
+                        ---> only works for hostnames listed in /etc/hosts 
 
+                -> controls 
+                    alt-?           Display a list of possible completions. On most systems, you can also
+                                        do this by pressing the tab key a second time, which is much easier.
+                    alt-*           Insert all possible completions. This is useful when you want to use more
+                                        than one possible match.
+        
+        -- history
 
+                -> histories commands are kept in the home directory in a file called bash_history
 
-
-
-
-
-
-
-
-
-
-
-seeing the world as the shell sees it 
-
-    - 'echo': prints its text arguments on standard output 
-
-        -- [me@linuxbox ~]$ echo this is a test
-            this is a test
+                -> searching history 
+                    --> [me@linuxbox ~]$ history | less
+                    --> [me@linuxbox ~]$ history | grep /usr/bin
+                        ---> find the commands we used to list /usr/bin 
+                        ---> results will contain the line number of the command in the history list 
+                    --> [me@linuxbox ~]$ !line_num 
+                        ---> history expansion 
+                    
+                -> incremental search (reverse-i-search)
+                    --> press CTRL+R to start typing 
+                    --> press ENTER to execute command when found 
+                    --> or press CTRL-J to copy the line from the history list to the current command line 
+                    --> press CTRL+R again to find the next occurrence 
+                
+                -> history commands 
+                    ctrl-P          Move to the previous history entry. This is the same action as the up arrow.
+                    ctrl-N          Move to the next history entry. This is the same action as the down arrow.
+                    alt-<           Move to the beginning (top) of the history list.
+                    alt->           Move to the end (bottom) of the history list, i.e., the current command line.
+                    ctrl-R          Reverse incremental search. This searches incrementally from the current command line up the history list.
+                    alt-P           Reverse search, nonincremental. With this key, type in the search string and press enter before the search is performed.
+                    alt-N           Forward search, nonincremental.
+                    ctrl-O          Execute the current item in the history list and advance to the next one. This
+                                        is handy if you are trying to re-execute a sequence of commands in the history list.
+                
+                -> history expansion 
+                    !!              Repeat the last command. It is probably easier to press the up arrow and enter.
+                    !number         Repeat history list item number.
+                    !string         Repeat last history list item starting with string.
+                    !?string        Repeat last history list item containing string.
     
-    - expansion 
+        -- script file_name : record the shell session and store it in file_name
 
-        -- with expansion, we enter something, and it is expanded into something else before the shell acts upon it 
-            --- e.g., shell expands the '*' into something else (e.g., names of the files in the current working directory) in 'echo *', echo command never saw '*'
-        
-        -- pathname expansion : wildcards 
-                --- e.g., [me@linuxbox ~]$ echo [[:upper:]]*
-                            Desktop Documents Music Pictures Public Templates Videos
-                
-                --- pathname expansion of hidden files (files start with . are hidden)
-                    ---- echo .* : will also include names with . and .. that refers to the current working directory and its parent directory (incorrect results)
-                    ---- echo .[!.]* : begins with only one period followed by any other characters, still won't include filenames with multiple leading periods 
-                    ---- ls -A : with 'almost all' option will provide a correct listing of hidden files 
-        
-        -- tilde expansion : with ~
-
-                --- recall using '~' (tilde character) with 'cd' expands into the name of the home directory of the named user or, if no user is named, the home directory 
-                    ---- [me@linuxbox ~]$ echo ~
-                        /home/me
-                    ---- if 'foo' has an account : [me@linuxbox ~]$ echo ~foo
-                                                    /home/foo
-        
-        -- $((expression)) : arithmetic expansion 
-
-                --- e.g., [me@linuxbox ~]$ echo $((2 + 2))
-                            4
-                
-                --- shell allows arithmetic to be performed by expansion 
-                    ---- it supports only integers
-                    ---- space is not significant in arithmetic expressions, and expressions may be nested 
-                    ---- supported operators: +, -, *, /, %, **
-        
-        -- {} : brace expansion 
-
-                --- [me@linuxbox ~]$ echo Front-{A,B,C}-Back
-                    Front-A-Back Front-B-Back Front-C-Back
-                    ---- can create multiple text strings from a pattern containing braces
-                    ---- patterns to be expanded may contain a leading portion (preamble) and a trailing portion (postscript)
-                    ---- brace expression may contain
-                        ---> comma-separated list of strings 
-                        ---> range of integers
-                        ---> single characters 
-                    ---- pattern may not contain unquoted whitespace 
-                    ---- it can be nested 
-
-                --- examples 
-                    ---- [me@linuxbox ~]$ echo Number_{1..5}
-                        Number_1 Number_2 Number_3 Number_4 Number_5
-                    ---- [me@linuxbox ~]$ echo {001..15}
-                        001 002 003 004 005 006 007 008 009 010 011 012 013 014 015
-                    ---- [me@linuxbox ~]$ echo {Z..A}
-                        Z Y X W V U T S R Q P O N M L K J I H G F E D C B A
-                    ---- [me@linuxbox ~]$ echo a{A{1,2},B{3,4}}b
-                        aA1b aA2b aB3b aB4b
-                
-                --- common use: make lists of files or directories
-                        [me@linuxbox ~]$ mkdir Photos
-                        [me@linuxbox ~]$ cd Photos
-                        [me@linuxbox Photos]$ mkdir {2007..2009}-{01..12}
-                        [me@linuxbox Photos]$ ls
-                        2007-01 2007-07 2008-01 2008-07 2009-01 2009-07
-                        2007-02 2007-08 2008-02 2008-08 2009-02 2009-08
-                        2007-03 2007-09 2008-03 2008-09 2009-03 2009-09
-                        2007-04 2007-10 2008-04 2008-10 2009-04 2009-10
-                        2007-05 2007-11 2008-05 2008-11 2009-05 2009-11
-                        2007-06 2007-12 2008-06 2008-12 2009-06 2009-12
-
-        -- parameter expansion 
-
-                --- [me@linuxbox ~]$ echo $USER
-                    me
-                    ---- system's ability to store small chunks of data and give each chunk a name (variables)
-                    ---- e.g., variable named 'USER' contains your username 
-                
-                --- [me@linuxbox ~]$ printenv | less
-                    ---- see a list of available variables 
-        
-        -- command substitution
-
-                --- command substitution allows us to use the output of a command as an expansion 
-
-                --- [me@linuxbox ~]$ ls -l $(which cp)
-                    -rwxr-xr-x 1 root root 71516 2007-12-05 08:58 /bin/cp
-                    --> we passed the results of 'which cp' as an argument to the 'ls' command, showing a list of 'cp' programs without having to know its full pathname 
-                
-                --- [me@linuxbox ~]$ file $(ls -d /usr/bin/* | grep zip)
-                    /usr/bin/bunzip2: symbolic link to `bzip2'
-                    /usr/bin/bzip2: ELF 32-bit LSB executable, Intel 80386, version 1
-                    (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
-                    /usr/bin/bzip2recover: ELF 32-bit LSB executable, Intel 80386, version 1
-                    (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
-                    /usr/bin/funzip: ELF 32-bit LSB executable, Intel 80386, version 1
-                    (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, stripped
-                    /usr/bin/gpg-zip: Bourne shell script text executable
-                    /usr/bin/gunzip: symbolic link to `../../bin/gunzip'
-                    /usr/bin/gzip: symbolic link to `../../bin/gzip'
-                    --> the results of the pipeline (list all directories in /usr/bin that has zip in the name) became the argument list of the 'file' command 
-        
-        -- quoting 
-
-                --- double quotes 
-                    ---- special characters lose special meanings except: $, \, ` 
-                    ---- supressed 
-                        ---> word splitting
-                        ---> pathname expansion
-                        ---> tilde expansion 
-                        ---> brace expansion 
-                    ---- carried 
-                        ---> parameter expansion 
-                        ---> arithmetic expansion 
-                        ---> command substitution 
-                        ---> [me@linuxbox ~]$ echo '$USER $((2+2)) $(cal)'
-                                me 4 February 2020
-                                Su Mo Tu We Th Fr Sa
-                                1
-                                2 3 4 5 6 7 8
-                                9 10 11 12 13 14 15
-                                16 17 18 19 20 21 22
-                                23 24 25 26 27 28 29
-                    
-                    ---- examining word splitting 
-                        ---> wihtout double quotes, spaces, tabs, and newlines will be treated as 'delimiters' between words
-                        ---> double quotes make them part of the arguments 
-                        ---> [me@linuxbox ~]$ echo $(cal)
-                                February 2020 Su Mo Tu We Th Fr Sa 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
-                                18 19 20 21 22 23 24 25 26 27 28 29
-                                [me@linuxbox ~]$ echo '$(cal)'
-                                February 2020
-                                Su Mo Tu We Th Fr Sa
-                                1
-                                2 3 4 5 6 7 8
-                                9 10 11 12 13 14 15
-                                16 17 18 19 20 21 22
-                                23 24 25 26 27 28 29
-                                ----> the unquoted command substitution results in a command line containing 38 arguments 
-                                ----> quoted command resulted in a command line with one argument that includes embedded spaces and newlines 
-                                
-                --- single quotes 
-                    ---- supress all expansions 
-
-                    ---- [me@linuxbox ~]$ echo text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER
-                        text /home/me/ls-output.txt a b foo 4 me
-                        70 Chapter 7
-                        
-                    ---- [me@linuxbox ~]$ echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
-                        text ~/*.txt {a,b} foo 4 me
-                        
-                    ---- [me@linuxbox ~]$ echo 'text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER'
-                        text ~/*.txt {a,b} $(echo foo) $((2+2)) $USER
-                
-        -- \ : escapting characters 
-                
-                --- skip a single character in double quote / unquoted 
-                    --> to selectively prevent an expansion 
-                
-                --- [me@linuxbox ~]$ echo 'The balance for user $USER is: \$5.00'
-                    The balance for user me is: $5.00
-                
-                --- can also be used to eliminate the special meaning of a character in a filename 
-                    --> when filename includes '$', '!', '&', ' ', ...
-                    --> [me@linuxbox ~]$ mv bad\&filename good_filename
-
-                --- control code : escape sequence
-                    ---- '\' is also used as part of a notation for special characters
-                            \a      Bell (an alert that causes the computer to beep)
-                            \b      Backspace
-                            \n      Newline; on Unix-like systems, this produces a line feed
-                            \r      Carriage return
-                            \t      Tab
-
-                    ---- adding the '-e' option to 'echo' will enable interpretation of escape sequences, or place them inside $' '
-                        ---> sleep 10; echo -e 'Time's up\a'
-                        ---> sleep 10; echo 'Time's up' $'\a'
-
-
-
-
-
-
-
-
-    -- advance keyboard tricks
-
-        --- 'readline': bash uses this library to implement command line editing 
-
-            ---- cursor movement 
-
-                    ctrl-A              Move cursor to the beginning of the line.
-                    ctrl-E              Move cursor to the end of the line.
-                    ctrl-F              Move cursor forward one character; same as the right arrow key.
-                    ctrl-B              Move cursor backward one character; same as the left arrow key.
-                    alt-F               Move cursor forward one word.
-                    alt-B               Move cursor backward one word.
-                    ctrl-L              Clear the screen and move the cursor to the top-left corner. The clear
-                                            command does the same thing.
-            
-            ---- modifying text 
-
-                    ctrl-D              Delete the character at the cursor location.
-                    ctrl-T              Transpose (exchange) the character at the cursor location with the one preceding it.
-                    alt-T               Transpose the word at the cursor location with the one preceding it.
-                    alt-L               Convert the characters from the cursor location to the end of the word to lowercase.
-                    alt-U               Convert the characters from the cursor location to the end of the word to uppercase.
-            
-            ---- cutting and pasting (killing and yanking) text 
-
-                    ctrl-K              Kill text from the cursor location to the end of line.
-                    ctrl-U              Kill text from the cursor location to the beginning of the line.
-                    alt-D               Kill text from the cursor location to the end of the current word.
-                    alt-backspace       Kill text from the cursor location to the beginning of the current word. If
-                                            the cursor is at the beginning of a word, kill the previous word.
-                    ctrl-Y              Yank text from the kill-ring and insert it at the cursor location.
-            
-            ---- TAB : completion 
-
-                    -> [me@linuxbox ~]$ ls
-                        Desktop ls-output.txt Pictures Templates Videos
-                        Documents Music Public
-                    
-                    -> [me@linuxbox ~]$ ls l    + TAB   =    [me@linuxbox ~]$ ls ls-output.txt
-                        --> when there's no completion when the letter(s) entered matches more than one entry in the directory 
-                        --> for the completion to work, the 'clue' must be unambiguous 
-                    
-                    -> completion works on 
-                        --> pathnames 
-                        --> variables (word begins with '$')
-                        --> usernames (word begins with '~')
-                        --> commands (word is the first word on the line)
-                        --> hostnames (word begins with '@')
-                            ---> only works for hostnames listed in /etc/hosts 
-
-                    -> controls 
-                        alt-?           Display a list of possible completions. On most systems, you can also
-                                            do this by pressing the tab key a second time, which is much easier.
-                        alt-*           Insert all possible completions. This is useful when you want to use more
-                                            than one possible match.
-            
-            ---- history
-
-                    -> histories commands are kept in the home directory in a file called bash_history
-
-                    -> searching history 
-                        --> [me@linuxbox ~]$ history | less
-                        --> [me@linuxbox ~]$ history | grep /usr/bin
-                            ---> find the commands we used to list /usr/bin 
-                            ---> results will contain the line number of the command in the history list 
-                        --> [me@linuxbox ~]$ !line_num 
-                            ---> history expansion 
-                        
-                    -> incremental search (reverse-i-search)
-                        --> press CTRL+R to start typing 
-                        --> press ENTER to execute command when found 
-                        --> or press CTRL-J to copy the line from the history list to the current command line 
-                        --> press CTRL+R again to find the next occurrence 
-                    
-                    -> history commands 
-                        ctrl-P          Move to the previous history entry. This is the same action as the up arrow.
-                        ctrl-N          Move to the next history entry. This is the same action as the down arrow.
-                        alt-<           Move to the beginning (top) of the history list.
-                        alt->           Move to the end (bottom) of the history list, i.e., the current command line.
-                        ctrl-R          Reverse incremental search. This searches incrementally from the current command line up the history list.
-                        alt-P           Reverse search, nonincremental. With this key, type in the search string and press enter before the search is performed.
-                        alt-N           Forward search, nonincremental.
-                        ctrl-O          Execute the current item in the history list and advance to the next one. This
-                                            is handy if you are trying to re-execute a sequence of commands in the history list.
-                    
-                    -> history expansion 
-                        !!              Repeat the last command. It is probably easier to press the up arrow and enter.
-                        !number         Repeat history list item number.
-                        !string         Repeat last history list item starting with string.
-                        !?string        Repeat last history list item containing string.
-        
-            ---- script file_name : record the shell session and store it in file_name
-
-                -> if no file is specified, the file 'typescript' is used
+            -> if no file is specified, the file 'typescript' is used
 
 
 
@@ -1509,6 +1299,7 @@ seeing the world as the shell sees it
                         BAD PASSWORD: it is WAY too short
                         New UNIX password:
                         BAD PASSWORD: it is based on a dictionary word
+
 
 
 
