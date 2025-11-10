@@ -95,18 +95,18 @@
                     ---- DevOps Layer 0 
                             -> keyboard tricks 
                     
-                    ---- DevOps Layer 1 (0.7 h)
+                    ---- DevOps Layer 1
                             -> restructured and started learning 
                             -> detailed look at python verion 
 
                 --- 8th 
 
-                    ---- DeepLearning Layer 1 (2.3 h)
+                    ---- DeepLearning Layer 1
                             -> setup venv for dp-experiments
                             -> started implementing micrograd from scratch
                             -> deep dive - env, python interpreter / package change with 'cd' directories
                     
-                    ---- mindware (2.38 h)
+                    ---- mindware
                             -> cognition
                                 --> learning 
                                     ---> passive familiarity -> active competence (extremely fast progress compared to regular learner)
@@ -128,7 +128,12 @@
                                 --> vs. other people 
                                     ---> (social) default social script: "get job -> go out -> complain about job -> repeat"
                                     ---> living in a different world
+                
+                --- 9 th 
 
+                    ---- mindware (4.5 h)
+
+            --- week 2
                 
 
 
