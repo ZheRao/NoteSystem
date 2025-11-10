@@ -1036,339 +1036,329 @@ advance keyboard tricks
             -> if no file is specified, the file 'typescript' is used
 
 
+permissions 
 
+    - Linux systems are designed for multi-users 
+        -- remote users can log in via 'ssh' (secure shell) and operate the computer 
+        -- there is a method that protect users from each other
 
+    - roles 
 
+        -- owners: a user may own files and directories, that user then has control over its access 
 
+        -- group: users can beong to a group consisting of one or more users who are given access to files and directories by the owner 
 
+        -- world: owner may also grant some set of access rights to everybody, in Unix is referred to as the world 
 
-
-
-
-
-    -- permissions 
-
-        --- Linux systems are designed for multi-users 
-            ---- remote users can log in via 'ssh' (secure shell) and operate the computer 
-            ---- there is a method that protect users from each other
-
-        --- roles 
-
-            ---- owners: a user may own files and directories, that user then has control over its access 
-
-            ---- group: users can beong to a group consisting of one or more users who are given access to files and directories by the owner 
-
-            ---- world: owner may also grant some set of access rights to everybody, in Unix is referred to as the world 
-
-            ---- id: find information about identity
-                    ->  [me@linuxbox ~]$ id
-                        uid=500(me) gid=500(me) groups=500(me)
-                        
-                        --> when user accounts are created, users are assigned a number called a user ID (uid) 
-                        --> the user is assigned a group ID (gid) and may belong to adidtional groups 
-            
-            ---- storage of identity information 
-
-                    -> user accounts are defined in the '/etc/passwd' file, and groups are defined in the '/etc/group' file 
-                        --> when the accounts are created, files are modified along with 'etc/shadow' which holds user's password information 
-
-                    -> for each user account, the /etc/passwd defines 
-                        --> user (login) name, uid, gid
-                        --> account's real name, home directory, and login shell 
-
-        --- access : reading, writing, and executing 
-
-            ----  [me@linuxbox ~]$ ls -l foo.txt
-                    -rw-rw-r-- 1 me me 0 2018-03-06 14:52 foo.txt
-
-                    -> the first 10 characters are the file attributes, which defines 
-
-                        --> 1st char : files types
-                            ---> common examples
-
-                                    -           A regular file.
-                                    d           A directory.
-                                    l           A symbolic link. Notice that with symbolic links, the remaining file attributes are always rwxrwxrwx and are dummy values. 
-                                                    The real file attributes are those of the file the symbolic link points to.
-                                    c           A character special file. This file type refers to a device that handles data
-                                                    as a stream of bytes, such as a terminal or /dev/null.
-                                    b           A block special file. This file type refers to a device that handles data in
-                                                    blocks, such as a hard drive or DVD drive.
-                        
-                        --> remining chars : file mode : listed in the order of perssions of 1. file's owner, 2. file's group owner, and everyone else 
-
-                            ---> definition of permissions
-
-                                attribute   files                                               directories 
-                                    r       Allows a file to be opened and read.                Allows a directory’s contents to
-                                                                                                    be listed if the execute attribute is also set.
-
-                                    w       Allows a file to be written to or                   Allows files within a directory to be
-                                                truncated; however, this attribute                  created, deleted, and renamed if
-                                                does not allow files to be renamed                  the execute attribute is also set.
-                                                or deleted. The ability to delete or
-                                                rename files is determined by directory
-                                                attributes.
-
-                                    x       Allows a file to be treated as a                    Allows a directory to be entered, e.g., cd directory.
-                                                program and executed. Program
-                                                files written in scripting languages
-                                                must also be set as readable to be
-                                                executed.
-                            
-                            ---> examples 
-
-                                    -rwx------              A regular file that is readable, writable, and executable by the file’s
-                                                                owner. No one else has any access.
-                                    -rw-------              A regular file that is readable and writable by the file’s owner. No one else has any access.
-                                    -rw-r--r--              A regular file that is readable and writable by the file’s owner.
-                                                                Members of the file’s owner group may read the file. The file is world-readable.
-                                    -rwxr-xr-x              A regular file that is readable, writable, and executable by the file’s
-                                                                owner. The file may be read and executed by everybody else.
-                                    -rw-rw----              A regular file that is readable and writable by the file’s owner and
-                                                                members of the file’s group owner only.
-                                    lrwxrwxrwx              A symbolic link. All symbolic links have “dummy” permissions. The
-                                                                real permissions are kept with the actual file pointed to by the symbolic link.
-                                    drwxrwx---              A directory. The owner and the members of the owner group may
-                                                                enter the directory and create, rename, and remove files within the directory.
-                                    drwxr-x---              A directory. The owner may enter the directory and create, rename,
-                                                                and delete files within the directory. Members of the owner group
-                                                                may enter the directory but cannot create, delete, or rename files.
-            
-        --- chmod : change file mode (permission)
-
-            ---- only file's owner or the superuser can change the mode of a file or directory 
-
-            ---- chmod : supports two ways of specifying mode changes 
-
-                    -> Octal number representation 
-
-                        --> code definition 
-                            Octal       Binary          File mode
-                            0           000             ---
-                            1           001             --x
-                            2           010             -w-
-                            3           011             -wx
-                            4           100             r--
-                            5           101             r-x
-                            6           110             rw-
-                            7           111             rwx
-                        
-                        --> example 
-                            ---> [me@linuxbox ~]$ > foo.txt
-                                 [me@linuxbox ~]$ ls -l foo.txt
-                                 -rw-rw-r-- 1 me me 0 2018-03-06 14:52 foo.txt
-                                 [me@linuxbox ~]$ chmod 600 foo.txt
-                                 [me@linuxbox ~]$ ls -l foo.txt
-                                 -rw------- 1 me me 0 2018-03-06 14:52 foo.txt
-                            
-                            ---> by passing 600, we were able to set the permissions of the owner to read and write while removing all perssions from the group owner and world
-
-                    -> symbolic representation 
-
-                        --> components 
-                            ---> who the change will affect 
-                            ---> which operation will be performed 
-                            ---> what permission will be set 
-                        
-                        --> 'u', 'g', 'o', 'a' : specifying who is affected 
-
-                                u       Short for “user” but means the file or directory owner.
-                                g       Group owner.
-                                o       Short for “others” but means world.
-                                a       Short for “all.” This is a combination of u, g, and o.
-                            
-                            ---> if no character is specified, 'all' will be assumed 
-
-                            ---> can be used in combination with '+', for adding a permission and '-' for taking away a permission 
-                        
-                        --> 'r', 'w', 'x' : specifying permission modified 
-
-                                u+x             Add execute permission for the owner.
-                                u-x             Remove execute permission from the owner.
-                                +x              Add execute permission for the owner, group, and world. This is equivalent to a+x.
-                                o-rw            Remove the read and write permissions from anyone besides the owner and group owner.
-                                go=rw           Set the group owner and anyone besides the owner to have read and write permissions. If either the group owner or the 
-                                                    world previously had execute permission, it is removed.
-                                u+x,go=rx       Add execute permission for the owner and set the permissions for the group and others to read and execute. 
-                                                    Multiple specifications may be separated by commas.
-
-            ---- umask : set default permissions 
-
-            ---- special permissions 
-
-                    -> full permission mask is 4 instead of 3 digits 
-
-                    -> special types 
-
-                        --> setuid bit : octal 4000
-                            ---> it changes the effective user ID from the real user (who running the program) to program's owner 
-                            ---> this allows the program to access files and directories that an oridnary user would normally be prohibited from accessing 
-
-                        --> setgid bit : octal 2000
-                            ---> changes the effective group ID from the real group ID of the real user to that of the file owner 
-                            ---> this is useful in a shared directory when members of a common group need access to all the files in the directory, regardless of the file owner's primary group
-                        
-                        --> sticky bit: octal 1000
-                            ---> it prevents users from deleting or renaming files unless the user is either the owner of the directory, the owner of the file, or the superuser
-                            ---> this is often used to control access to a shared directory, such as /tmp 
+        -- id: find information about identity
+                ->  [me@linuxbox ~]$ id
+                    uid=500(me) gid=500(me) groups=500(me)
+                    
+                    --> when user accounts are created, users are assigned a number called a user ID (uid) 
+                    --> the user is assigned a group ID (gid) and may belong to adidtional groups 
         
-        --- change identities : 3 ways to take on an alternative identity for purposes such as testing an account
+        -- storage of identity information 
 
-            ---- log out and log back in
+                -> user accounts are defined in the '/etc/passwd' file, and groups are defined in the '/etc/group' file 
+                    --> when the accounts are created, files are modified along with 'etc/shadow' which holds user's password information 
 
-            ---- 'su' : run a shell with substitute user and group IDs 
+                -> for each user account, the /etc/passwd defines 
+                    --> user (login) name, uid, gid
+                    --> account's real name, home directory, and login shell 
 
-                    -> su [-[l]] [user]
-                        --> '-l' option enables the resulting shell session to be a login shell for the specified user 
-                            ---> this means the user's environment is loaded and the working directory is changed to the user's home directory 
-                            ---> '-l' can be abbreviated as '-'
-                        --> if the user is not specified, the superuser is assumed
+    - access : reading, writing, and executing 
 
-                    -> example 
-                        --> [me@linuxbox ~]$ su -
-                            Password:
-                            [root@linuxbox ~]#
+        --  [me@linuxbox ~]$ ls -l foo.txt
+                -rw-rw-r-- 1 me me 0 2018-03-06 14:52 foo.txt
 
-                            [root@linuxbox ~]# exit
-                            [me@linuxbox ~]$
+                -> the first 10 characters are the file attributes, which defines 
 
-                        --> executing a single command 
-                            [me@linuxbox ~]$ su -c 'ls -l /root/*'
-                            Password:
-                            -rw------- 1 root root 754 2007-08-11 03:19 /root/anaconda-ks.cfg
-                            /root/Mail:
-                            total 0
-                            [me@linuxbox ~]$
-                             
-            ---- 'sudo' : execute a command as another user 
+                    --> 1st char : files types
+                        ---> common examples
 
-                    -> the administrator can configure 'sudo' to allow an ordinary user to execute commands as a different user in a controlled way 
-                        --> in particular, a user may be restricted to one or more specific commands and no others 
-
-                    -> the use of 'sudo' does not require access to the superuser's password 
-                        --> authenticating using 'sudo' requires the user's own password 
-
-                    -> 'sudo' does not start a new shell, nor load another user's environment 
-                        --> commands do not need to be quoted any differently than they would be without using 'sudo'
+                                -           A regular file.
+                                d           A directory.
+                                l           A symbolic link. Notice that with symbolic links, the remaining file attributes are always rwxrwxrwx and are dummy values. 
+                                                The real file attributes are those of the file the symbolic link points to.
+                                c           A character special file. This file type refers to a device that handles data
+                                                as a stream of bytes, such as a terminal or /dev/null.
+                                b           A block special file. This file type refers to a device that handles data in
+                                                blocks, such as a hard drive or DVD drive.
                     
-                    -> after entering password for the first time, in the next few mintues, 'sudo' will not ask for re-entering password until its timer runs out 
+                    --> remining chars : file mode : listed in the order of perssions of 1. file's owner, 2. file's group owner, and everyone else 
 
-                    -> example 
-                        --> [me@linuxbox ~]$ sudo backup_script
-                            Password:
-                            System Backup Starting...
+                        ---> definition of permissions
 
-                        --> list privileges granted by 'sudo'
-                            [me@linuxbox ~]$ sudo -l
-                            User me may run the following commands on this host:
-                            (ALL) ALL
+                            attribute   files                                               directories 
+                                r       Allows a file to be opened and read.                Allows a directory’s contents to
+                                                                                                be listed if the execute attribute is also set.
 
-        --- 'chown' : cange file owner and group
+                                w       Allows a file to be written to or                   Allows files within a directory to be
+                                            truncated; however, this attribute                  created, deleted, and renamed if
+                                            does not allow files to be renamed                  the execute attribute is also set.
+                                            or deleted. The ability to delete or
+                                            rename files is determined by directory
+                                            attributes.
 
-            ---- chown [owner][:[group]] file...
+                                x       Allows a file to be treated as a                    Allows a directory to be entered, e.g., cd directory.
+                                            program and executed. Program
+                                            files written in scripting languages
+                                            must also be set as readable to be
+                                            executed.
+                        
+                        ---> examples 
 
-                    -> example arguments 
-                            bob                         Changes the ownership of the file from its current owner to user bob.
-                            bob:users                   Changes the ownership of the file from its current owner to user bob, and changes the file group owner to group users.
-                            :admins                     Changes the group owner to the group admins. The file owner is unchanged.
-                            bob:                        Changes the file owner from the current owner to user bob and changes the group owner to the login group of user bob.
+                                -rwx------              A regular file that is readable, writable, and executable by the file’s
+                                                            owner. No one else has any access.
+                                -rw-------              A regular file that is readable and writable by the file’s owner. No one else has any access.
+                                -rw-r--r--              A regular file that is readable and writable by the file’s owner.
+                                                            Members of the file’s owner group may read the file. The file is world-readable.
+                                -rwxr-xr-x              A regular file that is readable, writable, and executable by the file’s
+                                                            owner. The file may be read and executed by everybody else.
+                                -rw-rw----              A regular file that is readable and writable by the file’s owner and
+                                                            members of the file’s group owner only.
+                                lrwxrwxrwx              A symbolic link. All symbolic links have “dummy” permissions. The
+                                                            real permissions are kept with the actual file pointed to by the symbolic link.
+                                drwxrwx---              A directory. The owner and the members of the owner group may
+                                                            enter the directory and create, rename, and remove files within the directory.
+                                drwxr-x---              A directory. The owner may enter the directory and create, rename,
+                                                            and delete files within the directory. Members of the owner group
+                                                            may enter the directory but cannot create, delete, or rename files.
+        
+    - chmod : change file mode (permission)
+
+        -- only file's owner or the superuser can change the mode of a file or directory 
+
+        -- chmod : supports two ways of specifying mode changes 
+
+                -> Octal number representation 
+
+                    --> code definition 
+                        Octal       Binary          File mode
+                        0           000             ---
+                        1           001             --x
+                        2           010             -w-
+                        3           011             -wx
+                        4           100             r--
+                        5           101             r-x
+                        6           110             rw-
+                        7           111             rwx
                     
-                    ->  [janet@linuxbox ~]$ sudo cp myfile.txt ~tony
+                    --> example 
+                        ---> [me@linuxbox ~]$ > foo.txt
+                                [me@linuxbox ~]$ ls -l foo.txt
+                                -rw-rw-r-- 1 me me 0 2018-03-06 14:52 foo.txt
+                                [me@linuxbox ~]$ chmod 600 foo.txt
+                                [me@linuxbox ~]$ ls -l foo.txt
+                                -rw------- 1 me me 0 2018-03-06 14:52 foo.txt
+                        
+                        ---> by passing 600, we were able to set the permissions of the owner to read and write while removing all perssions from the group owner and world
+
+                -> symbolic representation 
+
+                    --> components 
+                        ---> who the change will affect 
+                        ---> which operation will be performed 
+                        ---> what permission will be set 
+                    
+                    --> 'u', 'g', 'o', 'a' : specifying who is affected 
+
+                            u       Short for “user” but means the file or directory owner.
+                            g       Group owner.
+                            o       Short for “others” but means world.
+                            a       Short for “all.” This is a combination of u, g, and o.
+                        
+                        ---> if no character is specified, 'all' will be assumed 
+
+                        ---> can be used in combination with '+', for adding a permission and '-' for taking away a permission 
+                    
+                    --> 'r', 'w', 'x' : specifying permission modified 
+
+                            u+x             Add execute permission for the owner.
+                            u-x             Remove execute permission from the owner.
+                            +x              Add execute permission for the owner, group, and world. This is equivalent to a+x.
+                            o-rw            Remove the read and write permissions from anyone besides the owner and group owner.
+                            go=rw           Set the group owner and anyone besides the owner to have read and write permissions. If either the group owner or the 
+                                                world previously had execute permission, it is removed.
+                            u+x,go=rx       Add execute permission for the owner and set the permissions for the group and others to read and execute. 
+                                                Multiple specifications may be separated by commas.
+
+        -- umask : set default permissions 
+
+        -- special permissions 
+
+                -> full permission mask is 4 instead of 3 digits 
+
+                -> special types 
+
+                    --> setuid bit : octal 4000
+                        ---> it changes the effective user ID from the real user (who running the program) to program's owner 
+                        ---> this allows the program to access files and directories that an oridnary user would normally be prohibited from accessing 
+
+                    --> setgid bit : octal 2000
+                        ---> changes the effective group ID from the real group ID of the real user to that of the file owner 
+                        ---> this is useful in a shared directory when members of a common group need access to all the files in the directory, regardless of the file owner's primary group
+                    
+                    --> sticky bit: octal 1000
+                        ---> it prevents users from deleting or renaming files unless the user is either the owner of the directory, the owner of the file, or the superuser
+                        ---> this is often used to control access to a shared directory, such as /tmp 
+    
+    - change identities : 3 ways to take on an alternative identity for purposes such as testing an account
+
+        -- log out and log back in
+
+        -- 'su' : run a shell with substitute user and group IDs 
+
+                -> su [-[l]] [user]
+                    --> '-l' option enables the resulting shell session to be a login shell for the specified user 
+                        ---> this means the user's environment is loaded and the working directory is changed to the user's home directory 
+                        ---> '-l' can be abbreviated as '-'
+                    --> if the user is not specified, the superuser is assumed
+
+                -> example 
+                    --> [me@linuxbox ~]$ su -
                         Password:
-                        [janet@linuxbox ~]$ sudo ls -l ~tony/myfile.txt
-                        -rw-r--r-- 1 root root root 2018-03-20 14:30 /home/tony/myfile.txt
-                        [janet@linuxbox ~]$ sudo chown tony: ~tony/myfile.txt
-                        [janet@linuxbox ~]$ sudo ls -l ~tony/myfile.txt
-                        -rw-r--r-- 1 tony tony tony 2018-03-20 14:30 /home/tony/myfile.txt
+                        [root@linuxbox ~]#
 
-                        --> user janet copies the file from her directory to the home directory of user tony 
-                        --> janet then changes the ownership of the file from root (a result of using 'sudo') to tony 
-                        --> using the trailing colon, janet also changed the group ownership of the file to the login group of tony, which happens to be group tony  
-        
-        --- 'passwd' : changing password
+                        [root@linuxbox ~]# exit
+                        [me@linuxbox ~]$
 
-            ---- it will try to enforce use of strong passwords
+                    --> executing a single command 
+                        [me@linuxbox ~]$ su -c 'ls -l /root/*'
+                        Password:
+                        -rw------- 1 root root 754 2007-08-11 03:19 /root/anaconda-ks.cfg
+                        /root/Mail:
+                        total 0
+                        [me@linuxbox ~]$
+                            
+        -- 'sudo' : execute a command as another user 
 
-            ---- example
-                    ->  [me@linuxbox ~]$ passwd
-                        (current) UNIX password:
-                        New UNIX password:
-                        BAD PASSWORD: is too similar to the old one
-                        New UNIX password:
-                        BAD PASSWORD: it is WAY too short
-                        New UNIX password:
-                        BAD PASSWORD: it is based on a dictionary word
+                -> the administrator can configure 'sudo' to allow an ordinary user to execute commands as a different user in a controlled way 
+                    --> in particular, a user may be restricted to one or more specific commands and no others 
 
+                -> the use of 'sudo' does not require access to the superuser's password 
+                    --> authenticating using 'sudo' requires the user's own password 
 
+                -> 'sudo' does not start a new shell, nor load another user's environment 
+                    --> commands do not need to be quoted any differently than they would be without using 'sudo'
+                
+                -> after entering password for the first time, in the next few mintues, 'sudo' will not ask for re-entering password until its timer runs out 
 
+                -> example 
+                    --> [me@linuxbox ~]$ sudo backup_script
+                        Password:
+                        System Backup Starting...
 
+                    --> list privileges granted by 'sudo'
+                        [me@linuxbox ~]$ sudo -l
+                        User me may run the following commands on this host:
+                        (ALL) ALL
 
+    - 'chown' : cange file owner and group
 
+        -- chown [owner][:[group]] file...
 
+                -> example arguments 
+                        bob                         Changes the ownership of the file from its current owner to user bob.
+                        bob:users                   Changes the ownership of the file from its current owner to user bob, and changes the file group owner to group users.
+                        :admins                     Changes the group owner to the group admins. The file owner is unchanged.
+                        bob:                        Changes the file owner from the current owner to user bob and changes the group owner to the login group of user bob.
+                
+                ->  [janet@linuxbox ~]$ sudo cp myfile.txt ~tony
+                    Password:
+                    [janet@linuxbox ~]$ sudo ls -l ~tony/myfile.txt
+                    -rw-r--r-- 1 root root root 2018-03-20 14:30 /home/tony/myfile.txt
+                    [janet@linuxbox ~]$ sudo chown tony: ~tony/myfile.txt
+                    [janet@linuxbox ~]$ sudo ls -l ~tony/myfile.txt
+                    -rw-r--r-- 1 tony tony tony 2018-03-20 14:30 /home/tony/myfile.txt
 
--- processes 
-
-    --- multitasking : create the illusion of doing more than one thing at once by rapidly switching from one executing program to another 
-        ---- the kernel manages this through the use of processes.
-        ---- processes are how Linux organizes the different programs waiting for their turn at the CPU
+                    --> user janet copies the file from her directory to the home directory of user tony 
+                    --> janet then changes the ownership of the file from root (a result of using 'sudo') to tony 
+                    --> using the trailing colon, janet also changed the group ownership of the file to the login group of tony, which happens to be group tony  
     
-    --- processes : how it works 
+    - 'passwd' : changing password
 
-        ---- when a system starts up, the kernel initiates a few of its own activities as processes and launches a program called init 
+        -- it will try to enforce use of strong passwords
 
-        ---- init, then runs a series of shell scripts (located in /etc) called init scripts, which start all the system services 
-                -> many of these services are implemented as daemon programs
-                -> programs that just sit in the background and do their thing without having any user interface 
+        -- example
+                ->  [me@linuxbox ~]$ passwd
+                    (current) UNIX password:
+                    New UNIX password:
+                    BAD PASSWORD: is too similar to the old one
+                    New UNIX password:
+                    BAD PASSWORD: it is WAY too short
+                    New UNIX password:
+                    BAD PASSWORD: it is based on a dictionary word
+
+
+processes 
+
+    - how a process works 
+
+        -- system starts up 
+                -> kernel initiates a few of its own processes and launches a program called 'init'
+                -> 'init' runs a series of shell scripts (located in '/etc') called "init scripts" 
+                -> start all the system services 
+
+            --- many of the services are implemented as "daemon programs"
+                ---- programs that just sit in the background and do their thing without having any user interface  
         
-        ---- parent process producing child process : a program can launch other programs is expressed in this process scheme 
+        -- the kernel maintains information about each process to help keep things organized
 
-        ---- the kernel maintains information about each process to help keep things organized
-                -> e.g., each process is assigned a number called a process ID (PID) 
-                    --> PIDs are assigned in ascending order, with 'init' always getting PID 1
-                -> the kernel also keeps track of the memory assigned to each process, as well as the processes' readiness to resume execution 
-                -> like files, processes also have owners and user IDs, effective user IDs, and so on 
+            --- each process is assigned a number called a "process ID (PID)" 
+                ---- PIDs are assigned in ascending order, with 'init' always getting "PID 1"
+
+            --- kernel also keeps track of 
+                ---- memory assigned to each process 
+                ---- processes' readiness to resume execution 
+            
+            --- like files, processes also have owners and user IDs, effective userIDs, and so on 
     
-    --- ps : viewing processes 
+    - managing processes and terminal 
 
-        ---- without any option 
+        -- why terminal "locks up" when ran a command like 'python script.py'
+            --- the shell launches a foreground process - terminal is attached to that process's stdin/stdout/stderr 
+            --- shell is suspended while the child process runs in the foreground 
+        
+        -- how to keep control while a process runs 
 
-                -> [me@linuxbox ~]$ ps
+            --- run in the background 
+                ---- '&': 'python script.py &'
+                ---- the shell will start the process in the background 
+                ---- you immediately get your prompt back 
+                ---- you can check its PID (Process ID) and status using 
+                        -> 'jobs', 'ps', 'top', 'htop'
+                ---- you can still bring it to the foreground later with 
+                        -> 'fg %1'
+
+            --- suspend and background an existing process 
+                ---- press 'Ctrl + Z' -> this suspends (pauses) the process
+                ---- then run 'bg' to resume it in the background 
+                ---- now you can inspect with 'jobs', 'ps', or 'top'         
+    
+    - viewing processes 
+
+        -- 'ps' - snapshot of machine's state
+
+                [me@linuxbox ~]$ ps
                     PID     TTY     TIME    CMD
                     5198    pts/1 00:00:00  bash
-                    10129   pts/1 00:00:00  ps
+                    10129   pts/1 00:00:00   ps
+
+            --- by default, 'ps' doesn't show very much, just the processes associated with the current terminal session 
+            
+            --- outputs 
+                ---- "TTY" - teletype - "controlling terminal" for the process 
+                ---- "TIME" - amount of CPU time consumed by the process 
+            
+            --- options 
                 
-                -> result lists two processes associated with the current terminal session 
+                ---- 'ps x'
+                        -> 'x' option tells 'ps' to show a list of every process that we own regardless of what terminal (if any) they are controlled by 
+                        -> "?" in "TTY" indicates no controlling terminal
+                        -> a new column "STAT"  - state - will be included and it reveals the current status of the process 
 
-                -> TTY is short for "teletype" and refers to the controlling terminal for the process 
-
-                -> TIME is the amount of CPU time consumed by the process 
-                    --> neither process makes the computer work very hard 
-        
-        ---- option 'x' : all processes regardless of what terminal they are controlled by
-
-                -> [me@linuxbox ~]$ ps x
-                    PID     TTY     STAT    TIME    COMMAND
-                    2799    ?       Ssl     0:00    /usr/libexec/bonobo-activation-server –ac
-                    2820    ?       Sl      0:01    /usr/libexec/evolution-data-server-1.10 --
-                    15647   ?       Ss      0:00    /bin/sh /usr/bin/startkde
-                    15751   ?       Ss      0:00    /usr/bin/ssh-agent /usr/bin/dbus-launch --
-                    15754   ?       S       0:00    /usr/bin/dbus-launch --exit-with-session
-                    15755   ?       Ss      0:01    /bin/dbus-daemon --fork --print-pid 4 –pr
-                    15774   ?       Ss      0:02    /usr/bin/gpg-agent -s –daemon
-                    15793   ?       S       0:00    start_kdeinit --new-startup +kcminit_start
-                    15794   ?       Ss      0:00    kdeinit Running...
-                    15797   ?       S       0:00    dcopserver –nosid
-                    --snip--
-
-                -> ? in the TTY column indicates no controlling terminal. 
-
-                -> use this option, we see a list of every process that we own 
-                    --> when the list got long, we might want to pipe the output into 'less' for easier viewing 
-                
-                -> a new column STAT (short for state) reveals the current status of the process 
-
-                    --> State   Meaning
+                        State   Meaning
                         R       Running. This means the process is running or ready to run.
                         S       Sleeping. The process is not running; rather, it is waiting for an event, such as a keystroke or network packet.
                         D       Uninterruptible sleep. The process is waiting for I/O such as a disk drive.
@@ -1377,33 +1367,38 @@ advance keyboard tricks
                         <       A high-priority process. It’s possible to grant more importance to a process, giving it more time on the CPU. This property of a process is called niceness.
                                     A process with high priority is said to be less nice because it’s taking more of the CPU’s time, which leaves less for everybody else.
                         N       A low-priority process. A process with low priority (a nice process) will get processor time only after other processes with higher priority have been serviced.
-
-                    --> state may be followed by other characters - indicate various exotic process characters 
-        
-        ---- option 'aux' : gives even more information 
-
-                -> [me@linuxbox ~]$ ps aux
-                    USER PID  %CPU   %MEM   VSZ     RSS     TTY     STAT    START   TIME    COMMAND
-                    root 1    0.0     0.0   2136    644     ?       Ss      Mar05   0:31    init
-                    root 2    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kt]
-                    root 3    0.0     0.0   0       0       ?       S<      Mar05   0:00    [mi]
-                    root 4    0.0     0.0   0       0       ?       S<      Mar05   0:00    [ks]
-                    root 5    0.0     0.0   0       0       ?       S<      Mar05   0:06    [wa]
-                    root 6    0.0     0.0   0       0       ?       S<      Mar05   0:36    [ev]
-                    root 7    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kh]
-                    --snip--
                 
-                -> this set of options displays the processes belonging to every user 
+                        -> the process state may be followed by other chars, indicating exotic process characteristics. see 'ps' man page for more details 
+                
+                ---- 'ps aux'
 
-                -> BSD style 'ps' column headers 
+                        [me@linuxbox ~]$ ps aux
+                            USER PID  %CPU   %MEM   VSZ     RSS     TTY     STAT    START   TIME    COMMAND
+                            root 1    0.0     0.0   2136    644     ?       Ss      Mar05   0:31    init
+                            root 2    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kt]
+                            root 3    0.0     0.0   0       0       ?       S<      Mar05   0:00    [mi]
+                            root 4    0.0     0.0   0       0       ?       S<      Mar05   0:00    [ks]
+                            root 5    0.0     0.0   0       0       ?       S<      Mar05   0:06    [wa]
+                            root 6    0.0     0.0   0       0       ?       S<      Mar05   0:36    [ev]
+                            root 7    0.0     0.0   0       0       ?       S<      Mar05   0:00    [kh]
+                            --snip--
+                    
+                        -> this set of options displays the processes belonging to every user 
+                
+                ---- using options without leading dash invokes the command with "BSD-stype" behavior 
 
-                    --> Header  Meaning (102)
+                        Header  Meaning
+                        
                         USER    User ID. This is the owner of the process.
                         %CPU    CPU usage in percent.
                         %MEM    Memory usage in percent.
                         VSZ     Virtual memory size.
                         RSS     Resident set size. This is the amount of physical memory (RAM) the process is using in kilobytes.
                         START   Time when the process started. For values over 24 hours, a date is used.
+                
+        -- 'top' - dynamically vieweing processes 
+                
+
 
 
 

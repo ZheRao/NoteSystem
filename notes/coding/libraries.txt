@@ -1,0 +1,594 @@
+
+python system
+    
+    - iterable
+
+        -- list related
+        
+            --- .item() - get a single number out of a list/tensor as a python regular int/float
+            
+            --- range(start, stop, step)
+            
+            --- set(list) - create a set object that contains unique values in the list
+            
+            --- sorted(list) - create a list object that contains sorted values in the list
+            
+            --- itemgetter(*index_list)(list) - retrieve multiple items from a list with a list of index, operator module
+            
+            --- list(map(function, target)) - apply the function on elements of target
+                ---- map takes all objects in a list and applies a function 
+                ---- filter does the same, but takes the results and creates a new list with only the true values (when the function is conditional with if statement)
+            
+            --- list.index(element, start, end) - locate index of element from start to end positions
+            
+            --- list.remove("item")
+            
+            --- list(set(mylist))        - remove duplicated values
+        
+        -- set related 
+            
+            --- set_a.add(6)
+            
+            --- b = next(iter(set_a))                           -----------> accessing the first element of set_a 
+            
+            --- set_a.pop()                                     -----------> remove the first element from the set 
+            
+            --- set_a.remove(2)                                 -----------> remove 2 from the set, raise error if 2 is not an element 
+            
+            --- set_a.discard(2)                                -----------> remove 2 from the set, doesn't raise error if 2 is not an element 
+            
+            --- set_a.union(set_b) or equivalently set_a | set_b ----> sorted distinct values for both sets
+            
+            --- set_a.intersection(set_b) or set_a & set_b      -----> common values in both sets 
+            
+            --- set_a.difference(set_b) or set_a - set_b        -----> values in a not in b 
+            
+            --- set_a.symmetric_difference(set_b) or set_a ^ set_b -----> values appear only once in both sets 
+            
+            --- sets cannot be indexed
+        
+        -- Dictionary
+        
+            --- for key in dict or for key in dict.keys(): - retrieve the keys
+            
+            --- list(dict[key].values()):   - convert all values for that particular key in the dictionary to a list
+            
+            --- for item in dict.items(): - retrieve the entire pairs, e.g., (key1, item1)
+            
+            --- dict.get(key,alt_value) - retrieve value from key, if not found, return alt_value
+            
+            --- itemgetter(*keys)(dict) - retrieve items corresponding to the keys
+            
+            --- with open(path, "wb") as f: pickle.dump(dict,f) - save Dictionary
+            
+            --- with open(path, "rb") as f: dict=pickle.load(f) - load Dictionary
+            
+            --- max(stats, key=dict.get) - retrieve the value where the key is the largest
+            
+            --- sorted(dict.items(),key=lambda x: x[1], reverse=True) - sort dictionary based on value
+            
+            --- a.update(b) - equivalent to a.extend(b) for lists, this is for dictionary
+            
+            --- with open(path,"w") as file:
+                json.dump(dictfile, file, indent=4)
+            
+            --- inv_map = {v: k for k, v in my_map.items()}  - inverse dictionary
+            
+            --- create new dict based on base dict 
+                ---- d1 = base | {"new", new1}
+                ---- d2 = base | {"new", new2}
+            
+            --- create new dict from list with default value 
+                ---- items = [...]
+                ---- d = dict.fromkeys(items, 0)     # default value 0
+
+        -- iterator 
+    
+            --- use iter() to create an iterator 
+                ---- mytuple = ("apple", "banana", "cherry")
+                ---- myit = iter(mytuple)
+            
+            --- use next() method to access the next item in the iterator 
+                ---- next_item = next(myit)
+            
+            --- enumerate(iterable, start)
+                ---- takes a collection (e.g., a tuple) and returns it as an enumerate object, it adds a counter as the key of the enumerate object 
+
+    - IO
+
+        -- file-related 
+
+            --- orjson - read raw json bytes 
+
+                ---- 'data_orjson = orjson.loads(raw_bytes)'
+
+
+
+
+spark 
+
+    - concepts 
+
+        -- orchestrate partition pair with 'mapPartitions'
+
+            --- 'mapPartitions(func)': func runs once per partition, receiving an iterator over all elements in that partition, and must return/yield zero or more results 
+                
+                ---- sidenote: 'foreachPartition(func)' -> only for side effects (writes, logging), func returns nothing
+            
+                ---- preparation: 'parallelize(tasks, numSlices=num_partitions)'
+                        -> Spark divides the list into 'num_partitions' slices (roughly evenly)
+                        -> each slice becomes one partition -> one task that will call your 'mapPartitions' function once, handing it an iterator over that partition's elements 
+                            --> no shuffle happens here; it's a narrow transform
+                            --> scheduling: DAGScheduler creates tasks = number of partitions; executors pull tasks and run your function once per partition 
+                
+                ---- pitfall: why 'parallelize([partition1, partition2], numSlices=2)' wouldn't work 
+                    
+                        -> Spark will put one element per partition 
+                            --> partition 0 contains [partition1] (a single element, which itself is a list of tasks)
+                            --> partition 1 contains [partition2]
+                    
+                        -> so inside 'mapPartitions(func)', the iterator yields one item (a list) for that partition 
+                            --> if func is expecting [task1, task2, ...], it got [partition1], which is [[task1, task2, ...]]
+        
+        -- 'yield Row()': streaming results to form spark DataFrame 
+            
+            --- understanding yield
+
+                ---- mechanics 
+                        -> during compiling time, if there's 'yield' inside a function, a generator is created, Python changes the function's nature, and that function is not executed immediately when called
+                        -> when that function is called inside 'next()', code will be executed between 
+                            --> start of the function or immediate code after the last 'yield'
+                            --> the next 'yield' --> the yield line is executed 
+                        -> at the next 'yield'
+                            --> it emits the value 
+                            --> suspends again 
+                            --> waits for the next 'next()' call 
+                        -> when the function runs out of code, 'StopIteration' is raised automatically internally 
+                
+                ---- example 
+
+                        def test():
+                            print("A")
+                            yield 1
+                            print("B")
+                            yield 2
+                            print("C (after last yield)")
+                            return "done"
+
+                        g = test()
+
+                        next(g)    # prints A, yields 1
+                        next(g)    # resumes -> prints B, yields 2
+                        next(g)    # resumes -> prints C, returns, raises StopIteration("done")
+                        next(g)    # instantly StopIteration (nothing runs)
+
+            --- situation: we have tasks = [a1, a2, b1, b2] and partitions P0 = [a1, a2], P1 = [b1, b2]
+
+            --- pattern: 
+                    def f(records_iter):
+                        for r in records_iter:  # r will be a1, a2 (on P0) and b1, b2 (on P1)
+                            # ... process ... 
+                            yield Row(...)      # one yield -> one output row 
+                    
+                    rdd = spark.sparkContext.parallelize(tasks, numSlice=2).mapPartitions(f)
+                    df = spark.createDataFrame(rdd)     # later when you do df.show() or any action will trigger the plans to execute 
+            
+            --- timeline 
+
+                ---- 0 - everything is lazy (on the driver)
+                        -> 'parallelize(...)' create an RDD with 2 partitions and a lineage node (no work done)
+                        -> '.mapPartitions(f)' adds a transformation node to the lineage (still no work done)
+                        -> 'spark.createDataFrame(rdd)' builds a logical plan wrapping that RDD. this is still lazy 
+                            --> Spark may peek at a small sample to infer schema, which can trigger a tiny job, but the full mapPartitions work still hasn't run 
+                
+                ---- 1 - run an action (e.g., df.show(), df.count(), df.write...)
+                        -> the driver asks the scheduler to execute the RDD lineage 
+                        -> the 2 partitions become 2 tasks in a single stage 
+                
+                ---- 2 - executors start Python workers and feed partition data 
+                        -> for each partition (task):
+                            --> JVM executor starts (or reuses) a Python worker process 
+                            --> the JVM streams the partition's input elements (a1, a2 for P0; b1, b2 for P1) into Python as an iterator 
+                            --> f(records_iter) is invoked once per partition, receiving the iterator 
+                
+                ---- 3 - generator runs and yields rows (per partition)
+                        -> on P0:
+                            --> 'f' gets an iterator over [a1, a2]
+                            --> iteration begins:
+                                ---> for a1: compute, then 'yield Row(...)' - Spark immediately serializes that Row back across the Python <-> JVM boundary 
+                            ...
+                    ...
+                        -> important: each 'yield Row(...)' produces exactly one output row in the child RDD partition. you don't have to build a list; the generator stream is consumed as you yield 
+                
+                ---- 4 - serialization back to the JVM 
+                        -> each yielded Row is pickled in python and sent back to the executor's JVM 
+                        -> the JVM converts it to an internal representation (an InternalRow/UnsafeRow) compatible with Spark SQL 
+                
+                ---- 5 - the RDD of Rows backs a DataFrame 
+                        -> because the RDD outputs are 'Row(...)' objects with fields, Spark SQL knows how to treat them as columns 
+                        -> the stage completes when both partitions finish consuming their iterators (i.e., generator stops yielding)
+                
+                ---- 6 - the action completes 
+                        -> for df.show(): Spark collects (a limited) set of rows to the driver and prints them 
+                        -> for df.count(): it aggregates counts from partitions 
+                        -> for df.write: it writes partition outputs to storage 
+            
+            --- schema and createDataFrame(rdd)
+                --- if yield named Rows, e.g., Row(id=, ..., val=, ...), Spark can derive column names from the Row fields immediately 
+                --- if yield positional Rows/tuples, Spark will infer names like '_1', '_2' unless supplied with an explicit schema 
+                --- schema inference can cause Spark to "peek" at some data:
+                        -> PySpark often inspects one (or a few) rows to infer types. that may trigger a small job reading the first partition. it's quick, but surprising if you're watching the UI 
+                        -> if you pass an explicit schema, Spark skips inference
+    
+            --- better option: yield tuples according to a schema 
+
+                ---- create schema 
+                        from pyspark.sql.types import (
+                            StructType, StructField,
+                            StringType, IntegerType, TimestampType,
+                            DecimalType, ArrayType, MapType
+                        )
+
+                        schema = StructType([
+                            StructField("id",   StringType(),   nullable=False),
+                            StructField("val",  IntegerType(),  nullable=True),
+                            StructField("ts",   TimestampType(),nullable=True),
+                            StructField("amt",  DecimalType(18,2), nullable=True),
+                            StructField("tags", ArrayType(StringType()), nullable=True),
+                            StructField("meta", MapType(StringType(), StringType()), nullable=True),
+                        ])
+                
+                ---- create tuples for yield 
+                        def f(records_iter):
+                            # (Optional) one-time setup per partition (e.g., open client)
+                            for r in records_iter:
+                                # ...compute...
+                                _id   = str(r)
+                                _val  = int(hash(r) % 100)
+                                _ts   = datetime.utcnow()
+                                _amt  = Decimal("12.34")            # for DecimalType, use Decimal, not float
+                                _tags = ["a", "b"]
+                                _meta = {"source": "qbo", "p": "0"}
+                                # IMPORTANT: return a tuple in schema order (names in the tuple don't matter)
+                                yield (_id, _val, _ts, _amt, _tags, _meta)
+                
+                ---- initialize job 
+                        rdd = sc.parallelize(["a1","a2","b1","b2"], 2).mapPartitions(f)
+                        df  = spark.createDataFrame(rdd, schema=schema)
+
+            --- 'yield from' - generator "forward" values from another iterable 
+
+                ---- situation: searching to leaf node to yield values, if not leaf node -> recursively call itself 
+
+                ---- without 'yield from'
+
+                        for child in children:
+                            for result in crawler(child, acc_info):
+                                yield result
+                
+                ---- with 'yield from'
+
+                        for child in children:
+                            yield from crawler(child, acc_info)
+                
+                ---- gist: for each 'child', call 'crawler(child, acc_info)', and yield every value that the inner 'crawler' call yields 
+
+
+
+
+    - syntax
+
+        -- 
+
+
+
+
+ Pandas
+
+    - to force pandas not show scientific notation 
+        -- pd.set_option('display.float_format', '{:.2f}'.format)
+
+    - data frame creation
+        -- df = pd.DataFrame(data = [[1,2,3], [4,5,6]], columns=["col1", "col2", "col3"], index = ["row1", "row2"])
+        -- df = pd.read_csv(path, dtype={"col":"string"}, usecols=columns_to_read)
+        -- df = pd.read_parquet(path,)  ------> more storage efficient type
+        -- df = pd.read_excel(path, dtype={"col":"string"} sheet_name = "sheet1")
+        -- df = pd.read_json(path, dtype={"col":"string"})
+        -- empty_df = df.head(0).copy(deep=True)        # keeps all the columns of df, but with empty rows
+            --- insert one row 
+                    row = {"col1": v1, "col2": v2, ...}
+                    empty_df.loc[len(empty_df)] = row
+
+    - inspecting data frame 
+        -- df.columns / list(df.index)
+        -- df.info() / df.describe()
+        -- df.shape / df.size
+        -- df.head(n) / df.tail(n)
+        -- df.sample(n, random_state=seed_number)
+
+    - querying data 
+
+        -- df["col1"].unique()
+
+        -- accessing columns/items
+            --- df.iloc[:,1:6] / df.loc[:,["col1", "col2"]]
+            --- df.col1 / df["col1"]
+            --- df.at[0,"col1"] -----> more efficient single access
+
+        -- conditioning
+            --- df.loc[df["sales"]>=5000, ["itemID","sales"]]
+            --- df[df["sales"]>=5000][["itemID","sales"]]
+            --- df[(df["sales"]>=5000) & (df["cost"]==30)]
+            --- df[df.duplicated(subset=["col1", "col2"], keep="first")]
+
+        -- alternative conditioning
+            --- df.query(' country=="USA" and state=="New York" ')
+
+        -- string related conditioning
+            --- df[df["name"].str.contains("fire",case=False,regex=False,na=False)]
+                ----- regex rules
+                        -> anchors -> '^' start of string, '$' end of string 
+                            --> e.g., s.str.contains(r"^\d{4}-\d{2}-\d{2}$", na=False)  # exactly a YYYY-MM-DD string
+                        -> word boundaries -> '\b', '\B' is the opposite (no boundries)
+                            --> e.g., \bhello\b will match "hello world" or "say hello!", but won't match "shellos"
+                        -> character classes
+                            --> [abc] any of a, b, or c 
+                            --> [A-Za-z]
+                            --> [^0-9] not a digit
+                        -> predefined classes 
+                            --> '\d' digit 
+                            --> '\w' word char (letters/digits/underscore)
+                            --> '\s' whitespace
+                            --> uppercase means the inverse 
+                        -> quantifiers: how many times the preceding "token" (a character, a group, ...) should be repeated 
+                            --> '*'; 0 or more; e.g., "ab*c" will match "ac", "abc", "abbbbbc"
+                            --> '+'; 1 or more; e.g., "ab+c" will not match "ac"
+                            --> '?'; 0 or 1 (optional, when ? is used as quantifier); e.g., "colou?r" will match "color" or "colour"
+                            --> '{m}'; exactly m matches; e.g., \d{3} matches exactly three digits
+                            --> '{m,}'; m or more; 
+                            --> '{m,n}'; between m nad n occurrences (inclusive)  
+                        -> groups 
+                            --> (...) capturing - matches can be referenced back 
+                            --> (?:...) non capturing - matches cannot be reference back 
+                        -> lookarounds: zero-width assertions
+                            --> (?=...) must be followed by ...
+                                ---> 'A(?=B)'; positive lookahead; match A only if it is followed by B, B is not part of what's matched 
+                            --> (?!...) must not be followed by ...
+                                ---> 'A(?!B)'; negative lookahead; match A only if not followed by B 
+                            --> (?<=...) must be preceded by ...
+                                ---> '(?<=B)A'; positive lookbehind; match A only if it is preceded by B 
+                            --> (?<!...) must not be preceded by ...
+                                ---> '(?<!B)A'; negative lookbehind; match A only if not preceded by B 
+                            --> zero-width assertion means after completing the assessment, the search position is still at the same place as when it started the lookarounds search 
+                ---- regex examples 
+                        ->
+            
+            --- .str.startwith()
+
+        -- .isin 
+            --- df[df["country"].isin(["USA", "UK"])]
+        
+        -- .isna() / .notna()
+            --- df[~df["col1"].isna()]
+        
+    - modifying data
+
+        -- df.sort_values(["col1","col2"], ascending=[False,True]) ------> sort col2 by asscending order, then col1 by descending order 
+
+        -- modifying column values
+            --- df.iloc[1,["col1"]] = value 
+            --- df["price"] = np.where(df["item_type"] == "expensive", 999.99, 1.99)
+            --- df["total_price"] = df["units_sold"] * df["cost"]
+            --- df.drop_duplicates(subset=["col1", "col2"], ignore_index=)             --------------> ignore_index=True will reset index
+            --- df["col_min"] = df[df["col1", "col2", "col3"]].idxmin(axis=1)          --------------> return the column index with the minimum value among the columns
+            --- df = df.astype({"col1": type1, "col2":type2})
+            --- df["Amount"] = df["Amount"].clip(lower=0)   
+                ---- vectorized method for clipping any value below 0 (with 'lower=0') or any value above 0 (with 'upper=0') as 0, and keep missing values 
+
+            --- converting column to date format
+                    df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce")
+
+                        -> "09/07/2025 04:31 PM" is month/day/year with a 12-hour clock + AM/PM. Use %m/%d/%Y %I:%M %p (note %I = 1–12 hour, %p = AM/PM)
+                        -> Milliseconds: "2025-09-24 13:47:05.123" → "%Y-%m-%d %H:%M:%S.%f"
+                        -> “T” separator: "2025-09-24T13:47:05" → "%Y-%m-%dT%H:%M:%S"
+                        -> Timezone offset: "2025-09-24 13:47:05+00:00" → include %z: "%Y-%m-%d %H:%M:%S%z" (use %Z for names like UTC)
+                        -> errors="coerce" sets bad rows to NaT
+
+                    df["date diff"] = pd.to_timedelta(df["date diff"])
+                    df["days_away_from_Monday"] = pd.to_timedelta(df["date"].dt.weekday, unit="D")
+                    df["date + 1"] = df["date"] + pd.Timedelta(days=1)
+                        entry + dt.timedelta(days=1)    # for a single row processing 
+
+            --- string related
+                ---- df["first_name_only"] = df["name"].str.split(" ").str[0] - vectorized
+                ---- df["col"].str.zfill(2) - take two string digit from a column, if there's just a single digit, pad the front with '0'
+
+            --- take only year
+                    df["year"] = df["date"].dt.year
+                    
+            --- take month names 
+                    df["Month"] = df["date"].dt.month_name()
+        
+        -- modifying columns 
+            --- df = df.drop(columns = ["col1", "col2"])
+            --- df = df.rename(columns={"old_col_name": "new_col_name"})
+            --- df.add_prefix("col_")                                                ------------------------> add "col_" to the beginning of every column name
+            --- df["str_col"] = df["str_col"].replace({"old_val": "new_val", "old_val2":"new_val2"})
+            --- df["str_col"] = df["str_col"].str.slice(3,5)                            ---> not including 5th char
+                                             .str.contains()
+                                             .str.startswith()
+
+        -- copy data frame 
+            --- df2 = df1.copy(deep=True)
+        
+        -- merging and concatenating 
+            --- df3 = pd.merge(df1, df2, on="col_both", how="left", suffix=["df1","df2"])
+            --- df3 = pd.concat([df1, df2], ignore_index=True)          ------> create a new index column for the combined dataframe
+        
+        -- set index column
+            --- df.set_index("column_name")  --------------> set the column as index 
+            --- df.reset_index(drop=)        --------------> create a default index column, drop=True will remove the current index column
+        
+        -- assess whether a column value is between intervals
+            --- a = pd.IntervalIndex.from_arrays(left = intervals["left"], right = intervals["right"], closed = "both") ---> create [value1_left, value1_right], ... boundries from intervals df 
+            --- a.get_indexer([col_val1, col_val2, ...]) will return an array of positions that align the column values with the index boundary 'a', and -1 if no match found
+        
+        -- unpivot 
+            --- flatten_df = df.melt(
+                id_vars = ["location", "currency"],     # columns that should be repeated for each flattened row 
+                var_name = "Commodity",                 # column values that should be flattened from horizonal to vertical, e.g., in the pivot table, commodities are the columns 
+                value_name = "Amount"                   # column name for holding the actual values  
+            )
+        
+        -- expanding composite column values into separate rows while replicating other columns 
+            --- df = pd.DataFrame({
+                    'ID': [1, 2],
+                    'Combined': ['value1+value2+value3', 'foo+bar+baz'],
+                    'OtherCol': ['A', 'B']
+                })
+
+                df['Combined'] = df['Combined'].str.split('+')
+                        | ID | Combined                 | OtherCol |
+                        | -- | --------                 | -------- |
+                        | 1  | [value1,value2,value3]   | A        |
+                        | 2  | [foo, bar, baz]          | B        |
+
+                df_exploded = df.explode('Combined').reset_index(drop=True)
+                        | ID | Combined | OtherCol |
+                        | -- | -------- | -------- |
+                        | 1  | value1   | A        |
+                        | 1  | value2   | A        |
+                        | 1  | value3   | A        |
+                        | 2  | foo      | B        |
+                        | 2  | bar      | B        |
+                        | 2  | baz      | B        |
+
+    - aggregating 
+
+        -- df["col1"].value_counts()
+
+        -- df.groupby(["col1"]).agg({"col2":"sum", "col3":"mean", "col4": "prod"}).reset_index(drop=False)          # keep the complete information in each row 
+            --- vc_map.groupby("TransactionID_partial")["TransactionEntered"].agg(lambda s: " ".join(s.dropna().astype(str))).reset_index()
+                ---- for each TransactionID_partial group, concatenate TransactionEntered into one 
+                ---- the lambda receives the TransactionEntered Series per group, or use .agg(" ".join) if the data are already strings with no NaNs
+                        -> conceptualize as the function inside .agg() will be applied to each column series passed from .groupby per group 
+                        -> e.g., {"a" : "sum", "b": "sum"} will apply sum to all the columns values for a per group, and same as b
+                        -> specifying column after groupby will enbale more flexibility in function definition inside .agg() because it will only apply to one column series 
+                            --> but this will set the column as index unless otherwise specified, so don't use .reset_index(drop=True) later
+                ---- alternatively: vc_map.groupby("TransactionID_partial", as_index=False).agg(TransactionEntered_concat=("TransactionEntered", " ".join))
+
+        -- pivot
+            --- pivot = df.pivot(columns = "col_for_column", index = "col_for_row", values = "col", aggfunc="sum", fill_value=0)
+
+    - iterations
+        -- for index, row in df.iterrows(): ------> memory inefficient
+        -- df["col"] = df.apply(lambda x: fun(x), axis=1)
+            --- axis=1: iterating through each row 
+            --- axis=0: iterating through each column
+    
+    - NULL values
+
+        -- NA counts
+            --- df.isna().sum()
+        
+        -- fill NA
+            --- df = df.fillna(value = {"col1": df["col1"].mean(), "col2": 0, "col3": 400}, limit=20)        -------- replace the first 20 NULL according to the columns 
+            --- df["col1"] = df["col1"].interpolate()
+            --- fill na by using a mapping: fills only NaN entries in Product with the value from mapping_table at the same index, Non-missing Product values remain unchanged
+                s = pd.Series({"val_mapped_from_1":"val_mapped_to_1", ..., "val_mapped_from_n":"val_mapped_to_n"})
+                mapping_table = df["col_mapped_from"].map(s)    -   create a equal-length (to original df) series 
+                df["Product"] = df["Product"].fillna(mapping_table)
+        
+        -- drop NA
+            --- df = df.dropna(subset = ["col1", "col2"], how="all")         ----> or how = "any" to drop row when any of col1 or col2 is missing
+        
+    - advanced functionalities
+
+        -- shift - create a copy of a column and shift the values by 1, facilitate calculating percentage change
+            --- df["yesterday_revenue"] = df["revenue"].shift(1)
+
+        -- create rank
+            --- df["col_rank"] = df["col_compare"].rank(ascending=False)
+        
+        -- rolling cumulation
+            --- df["cumulative_revenue"] = df["revenue"].cumsum()
+    
+    - optimization in reading csv - after version 2.0
+        -- pd.read_csv(path, engine="pyarrow", dtype_backend = "pyarrow")
+    
+    - write out data
+        -- df.to_csv(path,index=False)
+        -- writer = pd.ExcelWriter("path_file.xlsx")
+            --- df1.to_excel(writer, sheet_name = "sheet_name1", index=False)
+            --- df2.to_excel(writer, sheet_name = "sheet_name2", index=False)
+            --- writer.close()
+
+    - working with JSON
+        -- df = pd.read_json(path)
+
+        -- df_json = df.to_dict(orient="records")       ------ convert dataframe back to JSON format 
+            --- orient = "records"
+                    [
+                        {"col1": value_00, "col2": value_01, ...},
+                        {"col1": value_10, "col2": value_11, ...},
+                        ...
+                    ]
+            --- orient = "index"
+                    [
+                        0: {"col1": value_00, "col2": value_01, ...},
+                        1: {"col1": value_10, "col2": value_11, ...},
+                        ...
+                    ]  
+            --- orient = "split"
+                    {
+                        "index": [0, 1, ...],
+                        "columns": ["col1", "col2", ...],
+                        "data": [
+                            [value_00, value_01, ...],
+                            [value_10, value_11, ...],
+                            ...
+                        ]
+                    }
+            --- orient = "dict"
+                    {
+                        "col1": {0: value_00, 1: value_10, ...},
+                        "col2": {0: value_01, 1: value_11, ...},
+                        ...
+                    }
+            --- orient = "list"
+                    {
+                        "col1": [value_00, value_10, ...],
+                        "col2": [value_01, value_11, ...],
+                        ...
+                    }
+            --- orient = "series"
+
+        -- df_flatten = pd.json_normalize(df_json, sep=".", max_level = 2)                                                                  
+            --- go to each sublevel of a column that is nested dictionary 
+        
+        -- df_flatten2 = pd.json_normalize(df_json, record_path=["key_treat_as_list_of_records"], meta=["fields_included_for_flatten"], record_prefix="line.") 
+            --- treat each item from record_path as individual records (duplicate other fields)
+            --- this expansion will keep "line." as prefix for the nested columns
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
