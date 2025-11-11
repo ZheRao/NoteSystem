@@ -1,0 +1,92 @@
+
+
+
+
+convolutional neural network 
+
+    - computing outputsize 
+
+        -- out = (in + 2p - k) / s + 1
+
+    - convolutional layer computation from scratch 
+
+        -- (beginner explaination) given 
+            --- input image: 3x5x5
+            --- # of filters: 5
+            --- filter size: 3x3
+            --- stride: 1
+            --- padding: 0
+            --- outputsize: 5x3x3
+
+        -- (beginner explaination) steps 
+
+            --- break original image into 3x3 patches - 9 patches per channel - result in 3x9
+
+            --- filters have shape 5x3x3x3 (5 filters, 3x3 shape, 3 channels)
+
+            --- perform element-wise matrix muliplication across image block and filters 
+                ---- there are 3 (color channel) - 3x3 patches against 5 - 3 (color channel) - 3x3 filters 
+                ---- for each filter - we have 3 - 3x3 patches against 3 - 3x3 filters 
+                ---- for R, G, B - we have 1 - 3x3 patch against 1 - 3x3 filter 
+                ---- for R, G, B - element-wise matrix multiplication produces 1 scaler 
+                ---- we have 3 scalers - add them up - produce 1 scaler 
+                ---- sum it all - we produce 1 scaler per patch (9 patches in total) per filter (5 in total) 
+                ---- produce 45 scalers in total 
+            
+            --- reshape 45 scalers into 5x3x3 tensor (output shape)
+
+        -- given 
+            --- input: 10x5x5
+            --- 20 filters: 3x3 
+        
+        -- calculation
+
+            | Level                      | Operation                      | Result                   |
+            | -------------------------- | ------------------------------ | ------------------------ |
+            | Per-channel                | 3×3 elementwise multiply + sum | 1 scalar per channel     |
+            | Across 10 channels         | Sum 10 scalars                 | 1 scalar total           |
+            | Across 9 spatial positions | Repeat for 9 patches           | 9 scalars per filter     |
+            | Across 20 filters          | Repeat for each                | 20×9 = 180 scalars total |
+
+        -- weights 
+
+            --- this convolutional layer requires 20 x 10 x 3 x 3 = 1800 weights 
+
+            --- if we add bias (one will be applied for channel) - that adds 20 more biases
+                ---- the same bias will be applied to every element inside a channel 
+                ---- bias acts as a per-feature offset, not a per-pixel offset 
+                        -> each output channel represents one learned feature detector (pattern)
+                        -> adding a bias adjusts the activation threshold for that entire detector 
+                ---- you don't want different biases per pixel - the kernel already captures spatial variation 
+                ---- the bias just shifts the "baseline" activation of that feature map globally
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
