@@ -1508,7 +1508,138 @@ processes
                             [1]+ Running xlogo &
                 
                         -> we have one job, numbered 1; that it is running; and that the command was 'xlogo &'
+        
+        -- returning a process to the foreground 
 
+            --- background process is immune from terminal keyboard input - including 'CTRL-C'
+
+            --- to bring a process to the foreground 
+
+                    [me@linuxbox ~]$ jobs
+                    [1]+  Running                 xlogo &
+                    [me@linuxbox ~]$ fg %1
+                    xlogo
+
+        -- stopping (pausing) a process 
+
+            --- 'CTRL-Z' - suspend a process 
+
+            --- 'fg %1' - resume process in the foreground 
+
+            --- 'bg %1' - resume process in the background 
+        
+        -- why would we want to launch a program from the command line 
+            --- program not listed on the window manager's menu 
+            --- might be able to see error messages that would otherwise be invisible if the program were launched graphically 
+                ---- sometimes, a program will fail to start up when launched from the graphical menu 
+    
+    - signals 
+
+        -- 'kill' - used to "kill" processes 
+
+                [me@linuxbox ~]$ xlogo &
+                [1] 28401
+                [me@linuxbox ~]$ kill 28401
+                [1]+  Terminated              xlogo
+        
+            --- we can also use a jobspec (e.g., %1) instead of a PID 
+        
+            --- it doesn't "kill" processes - it sent "signals"
+
+                ---- 'CTRL-C' and 'CTRL-Z' are signals 
+                        -> when terminal receives one of these keystrokes, it sends a singal to the program in the foreground 
+                        -> 'CTRL-C' - "INT" singnal (interrupt) 
+                        -> 'CTRL-Z' - "TSTP" signal (terminal stop)
+                
+                ---- programs "listen" for signals and may act upon them as they are received 
+                        -> the fact that a program can listen and act upon signals allows a program to do things such as save work in progress when it is sent a termination signal 
+        
+        -- sending signals to processes with 'kill'
+
+            --- 'kill -signal PID...'
+
+                ---- when no signal is specified, "TERM" (terminal) signal is sent by default 
+
+                ---- signals 
+
+                    Number  Name        Meaning
+                    1       HUP         Hang up. This is a vestige of the good old days when terminals were attached to remote computers with phone lines and modems. 
+                                            The signal is used to indicate to programs that the controlling terminal has “hung up.” The effect of this signal can be demonstrated 
+                                            by closing a terminal session. The foreground program running on the terminal will be sent the signal and will terminate.
+                                            This signal is also used by many daemon programs to cause a reinitialization. This means that when a daemon is sent this signal, 
+                                            it will restart and reread its configuration file. The Apache web server is an example of a daemon that uses the HUP signal in this way.
+
+                    2       INT         Interrupt. This performs the same function as ctrl-c sent from the terminal. It will usually terminate a program.
+                    
+                    9       KILL        Kill. This signal is special. Whereas programs may choose to handle signals sent to them in different ways, including ignoring them all together, 
+                                            the KILL signal is never actually sent to the target program. Rather, the kernel immediately terminates the process. When a process is 
+                                            terminated in this manner, it is given no opportunity to “clean up” after itself or save its work. For this reason, the KILL signal 
+                                            should be used only as a last resort when other termination signals fail.
+                    
+                    15      TERM        Terminate. This is the default signal sent by the kill command. If a program is still “alive” enough to receive signals, it will terminate.
+                    
+                    18      CONT        Continue. This will restore a process after a STOP or TSTP signal. This signal is sent by the bg and fg commands.
+                    
+                    19      STOP        Stop. This signal causes a process to pause without terminating. Like the KILL signal, it is not sent to the target process, and thus it cannot be ignored.
+                    
+                    20      TSTP        Terminal stop. This is the signal sent by the terminal when ctrl-Z is pressed. Unlike the STOP signal, the TSTP signal is received by the program, 
+                                            but the program may choose to ignore it
+            
+            --- processes, like files, have ownders, and you must be the owner of a process (or superuser) to send it signals with kill
+
+                ---- 'kill -l' - display a complete list of signals 
+        
+        -- sending signals to multiple processes with 'killall'
+
+            --- 'killall [-u user] [-signal] name...'
+
+                    [me@linuxbox ~]$ xlogo &
+                    [1] 18801
+                    [me@linuxbox ~]$ xlogo &
+                    [2] 18802
+                    [me@linuxbox ~]$ killall xlogo
+                    [1]-  Terminated              xlogo
+                    [2]+  Terminated              xlogo
+    
+    - shutting down the system 
+
+        -- involves 
+            --- orderly termination of all the processes on the system 
+            --- performing some vital housekeeping chores (such as syncing all of the mounted file systems)
+        
+        -- commands 
+
+            --- 'halt', 'poweroff', 'reboot'
+                ---- generally used without any command line options 
+                ---- 'sudo reboot'
+            
+            --- 'shutdown'
+                ---- it allows you to specify which of the actions to perform (halt, power down, or reboot) 
+                ---- it also allows a time delay to the shutdown event 
+                ---- examples 
+                        -> 'sudo shutdown -h now'
+                        -> 'duso shutdown -r now'
+        
+    - more process-related commands 
+
+        -- becuase monitoring processes is an important system administration task, there are a lot of commands for it
+
+                Command     Description
+
+                pstree      Outputs a process list arranged in a tree-like pattern showing the parent child relationships between processes.
+
+                vmstat      Outputs a snapshot of system resource usage including memory, swap, and disk I/O. To see a continuous display, follow the command with a time delay 
+                                (in seconds) for updates. Here’s an example: vmstat 5. Terminate the output with ctrl-c.
+
+                xload       A graphical program that draws a graph showing system load over time.
+
+                tload       Similar to the xload program but draws the graph in the terminal. Terminate the output with ctrl-c. 
+ 
+
+
+
+
+                    
 
 
 

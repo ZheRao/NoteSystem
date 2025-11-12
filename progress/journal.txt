@@ -148,7 +148,10 @@
                     ---- DevOps: L0 - proceses 
                             -> viewing processes 
                             -> putting process to background and view them 
-                
+                            -> signal through 'kill', shut down system, finished process 
+                    
+                    ---- DeepLearning: L0 - linear algebra
+                            -> diagnosed what's missing in the learning process - defined how to learn 
 
 
 
