@@ -139,7 +139,15 @@
 
                     ---- DevOps: L0 - moving through processes - realized need learning with observing processes as terminal froze
 
-                    ---- Deep Learning: 
+                    ---- Deep Learning
+                            -> deep dive into convolutional layer computation 
+                            -> re-planned learning plan - deep learning book (theoretical understanding) - dive into deep learning (reference for practicing coding)
+                
+                --- 11th
+
+                    ---- DevOps: L0 - proceses 
+                            -> viewing processes 
+                            -> putting process to background and view them 
                 
 
 
