@@ -152,6 +152,11 @@
                     
                     ---- DeepLearning: L0 - linear algebra
                             -> diagnosed what's missing in the learning process - defined how to learn 
+                
+                --- 12th
+
+                    ---- DevOps: L0 - environment 
+                            -> what is stored in environment, how is environment established 
 
 
 

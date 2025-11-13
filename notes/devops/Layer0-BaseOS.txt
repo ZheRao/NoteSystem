@@ -1722,6 +1722,64 @@ the environment
         
     - how is the environment established 
 
+        -- typical sequence 
+
+            --- log on to system
+                -> 'bash' starts and reads a series of configuration scripts called "startup files" - defines the default environment shared by all users 
+                -> more startup files in our home directory - defines our personal environment 
+            
+            --- exact sequence depends on the type of shell session being started 
+
+                ---- a login shell session 
+                        -> this is where we are prompted for you username and password 
+                        -> happens when we start a virtual console session, for example 
+                        -> typical startup files 
+
+                         File               Contents
+                        /etc/profile        A global configuration script that applies to all users.
+
+                        ~/.bash_profile     A user’s personal startup file. It can be used to extend or override settings in the global configuration script.
+
+                        ~/.bash_login       If ~/.bash_profile is not found, bash attempts to read this script.
+                        
+                        ~/.profile          If neither ~/.bash_profile nor ~/.bash_login is found, bash attempts to read this file. This is the default in Debian-based distributions, 
+                                                such as Ubuntu.
+
+                ---- a non-login shell session 
+                        -> occurs when lunching a terminal session in the GUI 
+                        -> typical startup files 
+
+                         File               Contents
+                        /etc/bash.bashrc    A global configuration script that applies to all users.
+                        ~/.bashrc           A user’s personal startup file. It can be used to extend or override settings in the global configuration script.
+
+                        -> in addition to reading these files, non-login shells inherit the environment from their parent process, usually a login shell 
+
+                ---- the '~/.bashrc' file is probably the most important startup file from the ordinary user's point of view, because it is almost always read 
+                        -> non-login shells read it by default 
+                        -> most startup files for login shells are written in such a way as to read the '~/.bashrc' file as well 
+        
+        -- what is in a startup file?
+
+            --- a typical '.bash_profile' (from CentOS 6 system)
+
+                    # .bash_profile
+                    # Get the aliases and functions
+                    if [ -f ~/.bashrc ]; then
+                            . ~/.bashrc
+                    fi
+                    # User specific environment and startup programs
+                    PATH=$PATH:$HOME/bin
+                    export PATH
+            
+                ---- lines begin with "#" - comments 
+
+                ---- "if compound command" translation - 'if ... fi'
+
+                        If the file "~/.bashrc" exists, then
+                            read the "~/.bashrc" file.
+                
+                ---- 
 
 
 
