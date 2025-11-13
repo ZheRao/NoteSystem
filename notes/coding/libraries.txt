@@ -130,7 +130,7 @@ spark
                         -> so inside 'mapPartitions(func)', the iterator yields one item (a list) for that partition 
                             --> if func is expecting [task1, task2, ...], it got [partition1], which is [[task1, task2, ...]]
         
-        -- 'yield Row()': streaming results to form spark DataFrame 
+        -- 'yield dict/Row()': streaming results to form spark DataFrame 
             
             --- understanding yield
 

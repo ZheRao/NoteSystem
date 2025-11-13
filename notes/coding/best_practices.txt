@@ -1,0 +1,82 @@
+
+
+
+
+type hint 
+
+    - 'TypedDict' - from 'typing' module 
+        -- a way to describe the exact shape of a 'dict' with string keys 
+        -- it locks down required keys, their types, and (optionally) which keys are optional 
+        -- just a normal 'dict' at runtime (no overhead)
+        -- checking happens in "type checker" (mypy/pyright/pyre) and in editors (VS Code/Pylance)
+        -- example 
+
+                from typing import TypedDict
+
+                class MetaDatum(TypedDict):
+                    Name: str
+                    Value: str
+    
+    - 'Literal' - from 'typing' module 
+        -- restricts a value to specific string/number/boolean values, not just the type 
+        -- you can encode small enums without creating an 'Enum' class 
+        -- example 
+
+                from typing import Literal
+
+                ColType = Literal["Date", "Text", "Number"]
+            
+            --- now 'ColType' rejects "Datetime" or "Numbers" by mistake
+            --- in the dictioanry, the corresponding values for "ColType" key must be in the list 
+    
+    - optional keys 
+        -- with 'NotRequired' from 'typing'
+                from typing import TypedDict, NotRequired
+
+                class Column(TypedDict):
+                    ColTitle: str
+                    ColType: ColType
+                    MetaData: list[MetaDatum]
+                    Description: NotRequired[str]   # optional
+        -- whole dict as "NotRequired"
+                class PartialColumn(TypedDict, total=False):
+                    ColTitle: str
+                    ColType: ColType
+                    MetaData: list[MetaDatum]
+            --- 'total = False', all keys are optional 
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
