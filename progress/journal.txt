@@ -157,6 +157,20 @@
 
                     ---- DevOps: L0 - environment 
                             -> what is stored in environment, how is environment established 
+                    
+                    ---- work 
+                            -> finished manual configuring task/partition/cores with 'mapPartitions' & 'foreachPartition' for Spark - built-in after this point 
+                
+                --- 13th
+
+                    ---- DevOps: L0 - environment 
+                            -> understood deeply about login shell and non-login shell (which startup files for establishing environment)
+                            -> how is environment established through startup files + text editor for customizing those files 
+                
+                    ---- work 
+                            -> understood deeply about repartition, and write afterwards - repartition forces one key to be in the same partition always 
+                
+                
 
 
 

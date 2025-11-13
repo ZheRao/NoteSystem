@@ -273,12 +273,144 @@ spark
                 
                 ---- gist: for each 'child', call 'crawler(child, acc_info)', and yield every value that the inner 'crawler' call yields 
 
+        -- repartition 
+
+            --- key facts - 'repartition(num, "fiscal_year")' guarantees that each fiscal_year value lives in exactly one Spark partition 
+                ---- then '.write.partitionBy("fiscal_year")', each fiscal_year folder will get at most one file per write (ignoring special options like 'maxRecordsPerFile')
+
+            --- case study - assuming there are 3 fiscal years
+
+                ---- no repartition, original 20 partitions
+                        -> each of those 20 partitions might contain a mix of years 
+                        -> each partition that has rows for 2024 will open a writer for fiscal_year = 2024 and write a file 
+                        -> potentially 20 files for year 2024
+
+                ---- '.repartition(3, "fiscal_year")'
+                        -> Spark creates 3 Spark partitions 
+                        -> it uses a hash on fiscal_year to map each year to one of those partitions 
+                        -> there could be collisions where one partition hosts multiple years, but each year still lives in exactly one partition 
+                        -> writes result in 3 folders, 1 file per folder (ignoring 'maxRecordsPerFile')
+
+                ---- '.repartition(2, "fiscal_year")'
+                        -> rows with the same fiscal_year are all in the same partition 
+                        -> one partition will contain 1 year, and another partition contains 2 years 
+                        -> writes still result in 1 file per fiscal year
+
+                ---- '.repartition(4, "fiscal_year")' 
+                        -> we have 4 partitions for 3 distinct keys (one per year)
+                        -> each key must go to exactly one partition 
+                        -> at most 3 of those partitions will actually have data; at least one will be empty   
 
 
+    - syntax general 
 
-    - syntax
+        -- imports 
+            --- from pyspark.sql import functions as F 
+            --- from pyspark.sql import Window
 
-        -- 
+        -- core DataFrame methods (transformations/actions)
+
+            --- creation & inspection 
+
+                ---- 'spark.read' (csv, json, parquet, jdbc, etc.), 'toDF', 'createDataFrame'
+
+                ---- 'printSchema()', 'dtypes', 'schema', 'columns', 'head()', 'show()', 'limit()'
+
+                ---- 'describe()', 'summary()'
+            
+            --- column & projection (master now)
+
+                ---- 'select', 'selectExpr'
+
+                ---- 'withColumn', 'withColumns', 'withColumnRenamed', 'alias'
+
+                ---- 'drop', 'dropDuplicates', 'distinct'
+            
+            --- row filtering 
+
+                ---- 'filter', 'where' (aliases). use column expression or SQL strings 
+            
+            --- aggregation & grouping 
+
+                ---- 'grouopBy', 'rollup', 'cube' - returns 'GroupedData' with 'agg', 'sum', 'avg', 'count', etc.
+            
+            --- joins & set operations (master now)
+
+                ---- 'join(other, on=..., how=...)' - 'inter', 'left', 'right', 'outer', 'semi', 'anti', 'cross'
+
+                ---- 'union', 'unionByName', 'intersect', 'exceptAll'
+            
+            --- ordering, repartitioning & sampling 
+
+                ---- 'orderBy', 'sort'
+
+                ---- 'repartition', 'coalesce', 'repartitionByRange'
+
+                ---- 'sample(withReplacement, fraction, seed=None)', 'randomSplit'
+            
+            --- missing data 
+
+                ---- 'na.fill', 'na.drop', 'na.replace' 
+            
+            --- persistence & caching 
+
+                ---- 'cache', 'persist', 'unpersist'
+
+                ---- 'checkpoint(eager=False)'
+            
+            --- IO (write path)
+                
+                ---- 'write' -> '.mode()', '.partitionBy()', '.bucketBy()', '.sortBy()', 'format()'
+            
+        -- column expressions & selectors 
+
+            --- basic column ops 
+                
+
+
+    - syntax details
+
+        -- IO 
+
+            --- write out 
+
+                (
+                    df.repartition(8, "fiscal_year")      # 8 output partitions total, keyed by fiscal_year
+                    .write
+                    .format("parquet")
+                    .mode("append")                       # or "overwrite"
+                    .option("compression", "snappy")      # default for Parquet, but explicit is nice
+                    .partitionBy("fiscal_year")           # can add more: "company", ...
+                    .save("/data/gold/pl")                # instead of .parquet(...)
+                )
+            
+                ---- produce layout 
+
+                    /data/gold/pl/
+                        fiscal_year=2023/part-0000-...
+                        fiscal_year=2024/part-0000-...
+                        fiscal_year=2025/part-0000-...
+                
+                ---- options 
+                        
+                        -> '.mode()'
+                            --> "error" / "errorifexists" (default): blow up if path exists 
+                            --> "overwrite": replacing existing data at the path 
+                            --> "append": add new files/partitions 
+                            --> "ignore": do nothing if path exists 
+                        
+                        -> '.repartition("fiscal_year")'
+                            --> ensures rows for the same fiscal_year tend to land in the same partition on disk 
+                            --> helps avoid having too many tiny files scattered across partitions
+                
+                ---- important 
+
+                        -> 'spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")'
+                            --> only the partitions present in df (e.g., fiscal_year = 2025) will be overwritten, others stay untouched 
+        
+                
+
+
 
 
 

@@ -652,6 +652,79 @@ tech growth
 
             Both matter. The first keeps you efficient; the second keeps you original.
 
+    - balance "progress now" vs. "deep insight later"
+
+        -- step 1 - ask 3 questions 
+
+            When you notice you’re about to go deep (like you did with shuffle avoidance), quickly ask:
+
+            1) Is this blocking shipping something in the next 1–2 weeks?
+
+                If yes → you’re allowed to go deeper but timebox it (e.g., “I’ll spend 2 focused hours on this, then decide again.”)
+
+            2) Is this concept clearly cross-cutting for my long-term path?
+                (e.g., Spark execution model, OS fundamentals, math foundations, PyTorch autograd)
+
+                If yes → that’s high future leverage. If it’s not urgent for the current task, mark it as:
+                    Park — high future value and schedule a proper deep dive later (weekend/evening block).
+
+            3) Could I get 80% of the benefit with a shallow understanding right now?
+
+                e.g., Learn “joins & groupBy = likely shuffle” instead of reading all of Spark’s DAG scheduling internals.
+
+                If the answer is:
+
+                    “Not blocking right now” + “Not clearly cross-cutting” + “Seems niche” →
+                    Skip — low yield and move on.
+        
+        -- step 2 - 80/20 rule 
+
+            Rough split that would fit you well:
+
+            ~80% time: Shipping / concrete progress
+
+                Getting the ETL working
+                Refactoring to clearer code
+                Adding tests, docs, metrics
+                Doing “just enough” understanding to not be reckless
+
+            ~20% time: Deliberate depth
+
+                Planned deep dives that align with your long-term roadmaps:
+                Spark internals basics (stages, tasks, shuffles, caching)
+                Linux, packaging, orchestration
+                Deep learning math & internals
+
+            Crucially: that 20% is planned, not random. It’s not “oops I spent 6 hours on shuffles”; 
+                it’s “I blocked 3 hours on Saturday to study Spark internals because that’s on my roadmap.”
+        
+        -- step 3 - separate tracks - "work mode" vs "research mode"
+
+            When you sit down, be explicit with yourself:
+
+            Work mode
+
+                Goal: ship something tangible
+
+                Rules:
+
+                    Avoid deep rabbit holes
+                    If curiosity hits, jot it into a “Later deep dives” list
+                    Use simple, robust solutions even if not “perfect”
+
+            Research mode
+
+                Goal: build deep, reusable mental models
+
+                Rules:
+
+                    No guilt about going slow
+                    You’re allowed to re-derive, read docs, explore internals
+                    Output: notes, sketches, small experiments
+
+            Right now, you often start in “work mode”, get triggered by a subtle performance thing, and accidentally drift into “research mode” for 3–4 hours. 
+                The fix isn’t to stop being deep; it’s to put each mode in its own time box so they don’t cannibalize each other.
+
 
 
 

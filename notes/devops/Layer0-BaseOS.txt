@@ -1730,7 +1730,7 @@ the environment
             
             --- exact sequence depends on the type of shell session being started 
 
-                ---- a login shell session 
+                ---- a login shell session (SSH)
                         -> this is where we are prompted for you username and password 
                         -> happens when we start a virtual console session, for example 
                         -> typical startup files 
@@ -1751,13 +1751,29 @@ the environment
 
                          File               Contents
                         /etc/bash.bashrc    A global configuration script that applies to all users.
-                        ~/.bashrc           A user’s personal startup file. It can be used to extend or override settings in the global configuration script.
+                        ~/.bashrc           A user’s personal startup file. It can be used to extend or override settings in the global configuration script. 'rc' means "run commands"
 
                         -> in addition to reading these files, non-login shells inherit the environment from their parent process, usually a login shell 
 
                 ---- the '~/.bashrc' file is probably the most important startup file from the ordinary user's point of view, because it is almost always read 
                         -> non-login shells read it by default 
                         -> most startup files for login shells are written in such a way as to read the '~/.bashrc' file as well 
+                
+                ---- mental model for two kinds of shell sessions 
+                        -> login shell sets the "root" environment - created by a login shell (environment accessible to all subshells)
+                        -> non-login shells inherit the root environment (then add interactive niceties from '.bashrc')
+                            --> local terminal only runs non-login shells without login shell constrcuting "root environment" 
+                            --> local "root environment" is not created by a bash env 
+                            --> local environment set by system 
+                                ---> '/etc/environment'
+                                ---> '/etc/security/pam_env.conf'
+                                ---> '.pam_environment'
+                                ---> sometimes '.profile' (not guaranteed)
+                                ---> '.xprofile' or '.xsessionrc' if the DE chooses 
+                
+                ---- importance 
+                        -> non-login vs. login shell knowledge is a practical DevOps skill
+                        -> "root CLI environment" created by a login shell is the environment Azure VMs, Databricks jumpboxes, Kubernetes pods, etc. expect you to understand 
         
         -- what is in a startup file?
 
@@ -1779,7 +1795,102 @@ the environment
                         If the file "~/.bashrc" exists, then
                             read the "~/.bashrc" file.
                 
-                ---- 
+                        -> this is how a login shell gets the contents of '.bashrc'
+                
+            --- 'PATH' - how does shell know where to find commands when entered on the command line 
+
+                ---- the shell searches a list of directories that are contained in the 'PATH' variable 
+
+                ---- the PATH variable is often (but not always, depending on distribution) set by the '/etc/profile' startup file with this code 
+                        -> 'PATH=$PATH:$HOME/bin'
+                        -> PATH is modified to add the directory '$HOME/bin' to the end of the list 
+                        -> then, the directory '$HOME/bin' is added to the list of directories searched when a command is entered 
+                        -> means, we can create a directory within our home directory for storing our own private programs 
+                
+                ---- note:
+                        -> many distributions provide this PATH setting by default 
+                        -> Debian-based distributions, such as Ubuntu, test for existence of the '~/bin' directory at login and dynamically add it to the PATH variable if the directory is found
+                
+                ---- 'export PATH'
+                        -> the 'export' command tells the shell to make the contents of PATH available to child processes of this shell 
+        
+        -- modifying the environment 
+        
+            --- which files should we modify?
+
+                ---- to add directories to PATH or define additional environment variables - place those in '.bash_profile' (or '.profile' in Ubuntu)
+
+                ---- everything else - place the change in '.bashrc'
+            
+            --- text editors - for actual editing 
+
+                ---- graphical editors 
+
+                ---- text-based editors 
+
+        -- using a text editor 
+
+            --- syntax: "editor_name" followed by "file_name" 
+
+            --- good habit: always back up file first 
+                ---- 'cp .bashrc .bashrc.bak'
+            
+            --- 'nano .bashrc'
+
+                        GNU nano 2.0.3 File: .bashrc
+                        
+                    # .bashrc
+
+                    # Source global definitions
+                    if [ -f /etc/bashrc ]; then
+                    . /etc/bashrc
+                    fi
+
+                    # User specific aliases and functions
+
+                                        [ Read 8 lines ]
+                    ^G Get Help ^O WriteOut ^R Read Fil ^Y Prev Pag ^K Cut Text ^C Cur Pos
+                    ^X Exit     ^J Justify  ^W Where Is ^V Next Pag ^U UnCut Te ^T To Spell
+                
+                ---- common commands 
+                        -> 'CTRL-X' - exit
+                        -> 'CTRL-O' - save 
+
+                ---- adding commands (along with comments!!!!)
+
+                    umask 0002
+                    export HISTCONTROL=ignoredups
+                    export HISTSIZE=1000
+                    alias l.='ls -d .* --color=auto'
+                    alias ll='ls -l --color=auto'
+                
+                ---- meaning 
+
+                    Line                                Meaning
+
+                    umask 0002                          Sets the umask to solve the problem with the shared directories we discussed in Chapter 9.
+
+                    export HISTCONTROL=ignoredups       Causes the shell’s history recording feature to ignore a command if the same command was just recorded.
+                    
+                    export HISTSIZE=1000                Increases the size of the command history from the usual default of 500 lines to 1,000 lines.
+
+                    alias l.='ls -d .* --color=auto'    Creates a new command called l., which displays all directory entries that begin with a dot.
+                    
+                    alias ll='ls -l --color=auto'       Creates a new command called ll, which displays a long-format directory listing.
+            
+            --- activate our changes 
+
+                ---- '.bashrc' can be read through 
+                        -> restart terminal 
+                        -> 'source ~/.bashrc'
+   
+    
+intro to VI 
+
+        
+
+
+                
 
 
 
