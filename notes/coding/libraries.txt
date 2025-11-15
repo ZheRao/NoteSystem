@@ -365,6 +365,210 @@ spark
         -- column expressions & selectors 
 
             --- basic column ops 
+
+                ---- column construction: 'F.col', 'F.lit', 'F.expr'
+
+                ---- arithmetic: '+ - * / %', 'F.pow'
+
+                ---- comparison: '==', '!=', '<', '>', '<=', '>='
+
+                ---- boolean: '&', '|', '~' (and, or, not) - remember parenthesis becaose of Python precedence 
+            
+            --- condition / CASE WHEN (master now)
+
+                ---- 'F.when(cond, value).otherwise(value2)' (SQL 'CASE WHEN')
+
+                ---- 'F.coalesce', 'F.ifnull', 'F.nullif'
+            
+            --- predicates 
+
+                ---- 'isNull', 'isNotNull', 'between', 'isin', 'like', 'rlike'
+        
+        -- aggregation functions 
+
+            --- core aggregations 
+
+                ---- 'F.count', 'F.countDistinct'
+
+                ---- 'F.sum', 'F.avg', 'F.min', 'F.max'
+
+                ---- 'F.first', 'F.last'
+
+                ---- 'F.approx_count_distinct', 'F.approx_percentile'
+            
+            --- stats-ish
+
+                ---- 'F.stddev', 'F.stddev_pop', 'F.stddev_samp'
+
+                ---- 'F.var_pop', 'F.var_samp'
+
+                ---- 'F.corr', 'F.covar_pip', 'F.covar_samp'
+            
+            --- advnaced grouping (master next)
+
+                ---- grouping sets: groupBy().agg(...) with SQL 'GROUPING SETS / ROLLUP / CUBE' via SQL or expressions 
+        
+        -- str functions 
+                
+            --- case: 'F.lower', 'F.upper', 'F.initcap'
+
+            --- trimming: 'F.trim', 'F.ltrim', 'F.rtrim'
+
+            --- length & substring: 'F.length', 'F.substr', 'F.slice' (on arrays or strings)
+
+            --- replacement: 'F.regexp_replace', 'F.translate'
+
+            --- pattern search: 'F.regexp_extract', 'rlike', 'like'
+
+            --- concatenation: 'F.concat', 'F.concat_ws'
+
+            --- padding: 'F.lpad', 'F.rpad'
+
+            --- whitespace normalization / special: 'F.format_string', 'F.soundex', etc.
+        
+        -- date & timestamp functions 
+
+            --- current time: 'F.current_date', 'F.current_timestamp'
+
+            --- extraction: 'F.year', 'F.month', 'F.dayofmonth', 'F.dayofweek', 'F.weekofyear', 'F.quarter', 'F.date_format'
+
+            --- arithmetic 
+
+                ---- 'F.to_date', 'F.to_timestamp', 'F.unix_timestamp', 'F.from_unixtime'
+            
+            --- difference 
+
+                ---- 'F.datediff', 'F.months_between'
+        
+        -- collection / array / map / struct functions (master now)
+
+            --- arrays 
+
+                ---- construction & basic: 'F.array', 'F.size', 'F.array_distinct', 'F.array_contains'
+
+                ---- transformations: 'F.array_union', 'F.array_except', 'F.array_intersect', 'F.sort_array', 'F.array_move'
+
+                ---- zipping & flattening: 'F.arrays_zip', 'F.flatten'
+
+                ---- slicing: 'F.slice', 'F.element_at', 'F.sequence', 'F.shuffle'
+            
+            --- maps 
+
+                ---- construction: 'F.create_map'
+
+                ---- access & manipulation: 'F.map_keys', 'F.map_values', 'F.element_at', 'F.map_from_entries', 'F.map_entries'
+            
+            --- structs 
+
+                ---- 'F.struct' to bundle multiple columns into one 
+
+                ---- 'col("struct_col.field")' or 'df.struct_col.field' to access 
+        
+        -- higher-order functions (arrays/maps)
+
+            --- on arrays/maps, you get: (park - high future value; super powerful once you're comfy with lambdas)
+
+                ---- 'F.transform(array_col, lambda x:...)'
+
+                ---- 'F.filter(array_col, lambda x: condition)'
+
+                ---- 'F.aggregate(array_col, zero, lambda acc, x: ...)'
+
+                ---- 'F.exists', 'F.forall', 'F.reduce', etc. 
+            
+                These let you express per-element logic in "pure column land" instead of UDFs
+        
+        -- window functions (master now)
+
+            --- define a window:
+
+                    w = Window.partitionBy("key").orderBy("timestamp")
+
+            --- ranking / row navigation 
+
+                ---- 'F.row_number', 'F.rank', 'F.dense_rank', 'F.ntile'
+
+                ---- 'F.lag', 'F.lead'
+
+                ---- 'F.first', 'F.last', 'F.nth_value' over a window
+            
+            --- aggregations over a frame 
+
+                ---- 'sum', 'avg', 'min', 'max', 'count' over 'w.rowsBetween(...)', 'w.rangeBetween(...)'
+            
+            great for time-series, "previous value" logic, cumulative metrics, and advanced QC 
+        
+        -- JSON / CSV / complex data 
+
+            --- JSON 
+
+                ---- 'F.from_json(col, schema)' - parse JSON string into struct/array 
+
+                ---- 'F.to_json(col)' - struct/array --> JSON string 
+
+                ---- 'F.get_json_object(col, '$.path')'
+
+                ---- 'F.json_tuple(col, 'path1', 'path2')' (SQL-style extraction)
+            
+            --- CSV 
+
+                ---- 'F.from_csv(col, schema, options)', 'F.to_csv(col, options)'
+        
+        -- math & numeric utilities 
+
+            --- general math 
+
+                ---- basc: 'F.abs', 'F.round', 'F.bround', 'F.floor', 'F.ceil', 'F.rint'
+
+                ---- exponential & log: 'F.exp', 'F.expm1', 'F.log', 'F.log10', 'F.log2', 'log1p'
+
+                ---- Trig: 'F.sin', 'F.cos', 'F.tan', 'F.asin', 'F.acos', 'F.atan', 'F.atan2' 
+
+                ---- bit operations: 'F.shiftleft', 'F.shiftright', 'F.bit_and', 'F.bit_or', 'F.bit_xor'
+            
+            --- utility 
+
+                ---- 'F.greatest', 'F.least'
+
+                ---- 'F.rand', 'f.randn' (random numbers)
+
+                ---- formatting: 'F.format_number'
+        
+        -- null & conditional helpers 
+
+            --- 'F.coalesce(c1,c2, ...)' - first non-null 
+
+            --- 'F.nvl', 'F.nvl2' (in SQL dialects)
+
+            --- 'F.when(...).otherwise(...)' - multi-branch logic 
+
+            --- 'F.nullif(col1, col2)' - null out when equal 
+
+            --- 'F.nanvl' - replace NaN with another value (floating)
+        
+        -- misc / advanced 
+
+            --- hashing & IDs 
+
+                ---- 'F.md5', 'F.sha1', 'F.sha2', 'F.crc32'
+
+                ---- 'F.monotonically_increasing_id', 'F.uuid'
+            
+            --- partition transformations & TVFs (newer Spark)
+
+                ---- table arguments: 'df.asTable().partitionBy(...).orderBy(...)' for table-valued functions / UDTFs
+
+                ---- partition transform functions (like 'years()', 'months()') when writing partitioned tables via SQL 
+            
+            --- UDFs
+
+                ---- row-wise: 'F.udf(py_func, returnType)' - but avoid when possible (slow, no catalyst optimization)
+
+                ---- Pandas/vectorized: 'pandas_udf' (various types: scalar, grouped_agg, map)
+
+                ---- SQL registration: 'spark.udf.register("name", func, returnType)'
+
+
                 
 
 
@@ -408,6 +612,16 @@ spark
                         -> 'spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")'
                             --> only the partitions present in df (e.g., fiscal_year = 2025) will be overwritten, others stay untouched 
         
+        -- 'withColumn'
+
+            --- datatype casting
+
+                ---- 'df = df.withColumn("col_new", F.col("col_old").cast("date"))'
+                        -> types: "string", "int"/"integer", "long", "double", "float", "boolean", "date", "timestamp", "decimal(10, 2)" 
+                
+                ---- specifically parsing non-standard formats - for string not in ISO format
+                        -> 'df = df.withColumn("date", F.to_date("raw_date", "yyyy-MM-dd"))'
+                        -> 'df = df.withColumn("ts", F.to_timestamp("raw_ts", "yyyy-MM-dd HH:mm:ss"))'
                 
 
 

@@ -169,6 +169,14 @@
                 
                     ---- work 
                             -> understood deeply about repartition, and write afterwards - repartition forces one key to be in the same partition always 
+                    
+                    ---- clarify 
+                            -> understood my ex is not a missed opportunity - my future self pulled myself from this dangerous situation
+                
+                --- 14th
+
+                    ---- DevOps: L0 - VI 
+                            
                 
                 
 
