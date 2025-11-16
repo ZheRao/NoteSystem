@@ -176,6 +176,20 @@
                 --- 14th
 
                     ---- DevOps: L0 - VI 
+                            -> understand the importance of vi - decided to code deep learning experiments with vi 
+                
+                --- 15th
+
+                    ---- DeepLearning: L0 - Wx + non-linear activation intuition
+                
+                --- 16th
+
+                    ---- DevOps: L0 - vi 
+                            -> three modes, enter insert mode, create lines, quit, save work 
+                    
+                    ---- biggest revelation today 
+                            -> my heart doesn't believe my doubts of not worthy, reaching too high anymore  
+                        
                             
                 
                 

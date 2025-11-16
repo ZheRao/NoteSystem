@@ -1887,6 +1887,100 @@ the environment
     
 intro to VI 
 
+    - why vi?
+        -- vi is amost always available - POSIX, a standard for program compatibility on Unix systems, requires that vi be present 
+        -- vi is lightweight and fast - vi is designed for typing speed 
+        -- don't want other Linux and Unix users to think we are cowards 
+    
+    - starting and stopping vi 
+
+        -- 'vi'
+
+                ~
+                ~
+                ~                         VIM - Vi Improved
+                ~
+                ~                          version 8.0.707
+                ~                     by Bram Moolenaar et al.
+                ~            Vim is open source and freely distributable
+                ~
+                ~                     Sponsor Vim development!
+                ~          type  :help sponsor<Enter>    for information
+                ~
+                ~          type  :q<Enter>               to exit
+                ~          type  :help<Enter>  or  <F1>  for on-line help
+                ~          type  :help version8<Enter>   for version info
+                ~
+                ~                   Running in Vi compatible mode
+                ~          type  :set nocp<Enter>        for Vim defaults
+                ~          type  :help cp-default<Enter> for info on this
+                ~
+                ~
+            
+            --- quit & force quit 
+                ---- ':q'
+                ---- ':q!'
+        
+    - editing modes 
+
+        -- 'vi foo.txt': open/create a new file 
+
+                    ~
+                    ~
+                    ~
+                    ~
+                    ~
+                    ~
+                    ~
+                    ~
+                    ~
+                    ~
+                    ~
+                    ~
+                    "foo.txt" [New File]
+            
+            --- '~' indicates that no text exists on that line 
+        
+        -- "command mode"
+
+            --- when vi starts, it begains in "command mode" - almost every key is a command - or "normal mode"
+
+                ---- 'i'    -> enter insert mode 
+                ---- 'dd'   -> delete a line 
+                ---- '/'    -> search 
+                ---- 'u'    -> undo 
+                ---- 'yy'   -> yank (copy) a line 
+
+        -- entering "insert mode"
+
+            --- 'i' and observe at the bottom 
+
+                    "-- INSERT --"
+
+            --- we can start typing 
+
+            --- press 'ESC' key to excit insert mode 
+        
+        -- "command-line mode": e.g., saving our work 
+
+            --- ':w'
+
+            --- and file will be written to hard drive, and observe the confirmation message at the bottom 
+
+                        "foo.txt" [New] 1L, 46C written
+            
+            --- commands 
+
+                ---- ':w'               -> save 
+                ---- ':q'               -> quit 
+                ---- ':wq'              -> save and quit 
+                ---- ':help'            -> help 
+                ---- ':set number'      -> show line numbers 
+        
+    - moving the cursor around  
+            
+            
+
     
 
         

@@ -1,0 +1,84 @@
+
+
+wx
+
+    - a matrix is a recipe for generating new features from your input 
+
+    - mental image - picture a 3D project 
+        -- rotate -> same coordinates, different basis (invertible)
+        -- flatten into 2D -> projection 
+        -- extrude into 4D -> embedding 
+        -- stretch and distort -> general linear transformation 
+        -- learn new axes to represent it -> neural network layer 
+
+    - wi^T x = how much x aligns with direction wi
+
+        -- components
+            --- x: raw input (image patch, sound, token embedding, etc.)
+            --- wi: a learned direction (edge detector, pattern detector, etc.)
+            --- wi^T x: the response of input x to that detector 
+        
+        -- when dot product is high 
+            --- x has a strong horizontal edge 
+            --- x contains the shape 
+            --- x matches the pattern 
+            --- x aligns with the learned concept 
+        
+        -- if it is low 
+            --- no match 
+            --- no alignment 
+            --- not that feature 
+        
+        -- dot product is "alignment"
+
+    - transformation from 3D to 5D
+
+        -- "let me feed this 3D thing into a machine that spits out a 5D description of it"
+
+        -- the result tensor will not span 5D space - but it's not the goal - the goal is to create a space where useful features live linearly 
+    
+    - non-linear activations 
+
+        -- concept 
+            --- linear layers create new coordinates where patterns look cleaner 
+            --- non-linear layers let the network bend space to fit the data 
+        
+        -- ReLU kills 3/4 of space 
+            --- linear transformations push irrelevant information into negative quadrants and preserve only relevant information in the positive quadrant, so only relevant info pass down 
+            --- even if ReLU kills some useful data, it can recover - because network has many neurons in each layer 
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
