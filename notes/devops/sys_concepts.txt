@@ -6,7 +6,6 @@
 
 Python Environments
 
-
     - environment vs. virtual environment 
 
         -- environment 
@@ -27,7 +26,7 @@ Python Environments
             --- when you activate it, your shell teporarily rewires PATH so 'python' and 'pip' point to that virtual copy, not the system one 
 
 
- Linux System 
+Linux System 
 
     - binary 
 
@@ -135,6 +134,170 @@ Python Environments
                 ---- bash loads global configs ('/etc/profile', '/etc/bash.bashrc')
                 ---- bash loads your user configs ('~/.bashrc')
                 ---- all the exports, aliases, and functions become available 
+
+
+packaging 
+
+    - pre-requisite 
+
+        -- repo structure 
+
+            spark-etl/
+            ├── pyproject.toml
+            ├── src/
+            │   └── qbo_etl/
+            │       ├── __init__.py
+            │       ├── pl/
+            │       │   ├── __init__.py
+            │       │   ├── extract.py
+            │       │   ├── flatten.py
+            │       │   └── business_rules.py
+            │       ├── gl/
+            │       │   ├── __init__.py
+            │       │   └── ...
+            │       └── hr/
+            │           ├── __init__.py
+            │           └── ...
+            ├── notebooks/
+            └── config/
+        
+        -- example pyproject.toml file 
+
+            [project]
+            name = "spark-etl"
+            version = "0.1.0"
+            description = "Spark refactor experimentation for ETL in Python and Pandas"
+            authors = [
+                {name = "ZheRao",email = "zheraoeminem@gmail.com"}
+            ]
+            #readme = "README.md"
+            requires-python = ">=3.11"
+            dependencies = [
+                "pyspark (==3.5.1)",
+                "pyarrow (>=22.0.0,<23.0.0)",
+                "pandas (>=2.3.3,<3.0.0)",
+                "orjson (>=3.11.4,<4.0.0)",
+                "numpy (>=2.3.4,<3.0.0)",
+                "requests (>=2.32.5,<3.0.0)",
+                "intuit-oauth (>=1.2.6,<2.0.0)"
+            ]
+
+
+            [build-system]
+            requires = ["poetry-core>=2.0.0,<3.0.0"]
+            build-backend = "poetry.core.masonry.api"
+
+            [tool.poetry]
+            packages = [
+            { include = "qbo_etl", from = "src" }
+            ]
+
+
+            [dependency-groups]
+            dev = [
+                "ipykernel (>=7.1.0,<8.0.0)"
+            ]
+    
+    - 'poetry install'
+
+        -- what it cares about 
+            --- 'pyproject.toml' being valid 
+            --- dependencies resolving 
+            --- build backend existing ('poetry-core' in this case)
+        
+        -- example output interpretation 
+
+            --- "Installing dependencies from lock file"
+                ---- Poetry looked at 'poetry.lock' and your '[projecct]/[dependency-groups]' in pyproject.toml 
+                ---- it compared what's already installed in the virtualenv vs what the lock file says 
+            
+            --- "No dependencies to install or update"
+                ---- the env already has all the dependencies, nothing new to do here 
+            
+            --- "Installing the current project: spark-etl (0.1.0)"
+
+                ---- poetry "installed" your project itself (the thing named 'spark-etl' in [project])
+
+                ---- practically, this is similar in spirit to 'pip install -e .'
+                        -> it registers your project in the venv so that tools that look for installed distributions see 'spark-etl==0.1.0'
+                        -> whether your 'qbo_etl' package is actually importable depends on how packaging is configured 
+        
+        -- so poetry achieved 
+            --- ensured dependencies match the lock file 
+            --- installed your current project as a distribution into the Poetry-managed virtualenv 
+    
+    - what is a "distribution"
+
+        -- "distribution" means "A build artifact containing your code + metadata, in a standard format that tools like pip can install."
+
+        -- two kinds 
+            --- 'sdist' (source distribution): usually a '.tar.gz' with your source 
+            --- 'wheel' (built distribution): a '.whl' file, faster to install 
+        
+        -- when Poetry "installs your project as a distribution", it is doing the equivalent of 
+            --- build a wheel for 'spark-etl'
+            --- install that wheel into the venv 
+        
+        -- what is a wheel?
+
+            --- a wheel is just a ZIP archive that follows a specific naming convention and contains 
+                ---- your package's code, exactly as it should appear in 'site-packages/'
+                ---- metadata (version, dependencies, entry points, etc)
+                ---- compiled extensions (if any - C/C++/Rust code, for example)
+                ---- a record file that tracks every file in the sheel (for reproducibility)
+            
+            --- that of a wheel as 
+                ---- the final, ready-to-install binary of your Python project 
+                ---- like a '.exe' installer for Windows or a '.deb' for Ubuntu - but for Python libraries 
+                ---- it is literally the artifact that tools like 'pip' install 
+    
+    - how other machines can access this package 
+
+        -- important: user has to define the venv first 
+
+            --- inside venv: pip install "git+https://github.com/YourUser/spark-etl.git"
+
+                ---- pip will 
+                        -> clone the repo temporarily
+                        -> read 'pyproject.toml'
+                        -> use Poetry's backend (poetry.core.masonry.api) to build a distribution 
+                        -> install that distribution, plus dependencies from '[project].dependencies'
+            
+            --- alternative flow: full flow 
+
+                    git clone https://github.com/YourUser/spark-etl.git
+                    cd spark-etl
+
+                    # create a venv however they like:
+                    python -m venv .venv
+                    source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+
+                    pip install .
+            
+                ---- then 
+                        -> pip reads your 'pyproject.toml'
+                        -> sees 
+                                [build-system]
+                                requires = ["poetry-core>=2.0.0,<3.0.0"]
+                                build-backend = "poetry.core.masonry.api"
+                        -> download 'poetry-core' (note: not full Poetry, just the build helper library)
+                        -> builds a wheel for spark-etl 
+                        -> installs 
+                            --> your package ('spark-etl' -> 'qbo_etl' code)
+                            --> all dependencies from '[project].dependencies'
+                
+                ---- note: pip completely ignores 'poetry.lock', it only trusts '[project].dependencies'
+                        -> the lock file is primarily for Poetry to reproduce environments 
+
+
+
+
+                
+
+                
+
+                
+
 
 
 
