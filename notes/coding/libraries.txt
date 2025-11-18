@@ -101,6 +101,64 @@ python system
             --- orjson - read raw json bytes 
 
                 ---- 'data_orjson = orjson.loads(raw_bytes)'
+    
+    - utilities 
+
+        -- logging 
+
+            --- components 
+
+                ---- logger - this is the "name" you use 
+
+                            import logging
+                            logger = logging.getLogger(__name__)
+                        
+                        -> a logger
+                            --> receives messages 
+                            --> tags them with severity (info/warning/error/etc.)
+                            --> sends them to handlers 
+                        
+                        -> important 
+                            --> a logger does NOT write to files or terminals 
+                            --> it only routes messages 
+                
+                ---- handlers 
+
+                        -> handlers are the actual "output devices"
+
+                        -> examples 
+                            --> 'StreamHandler'         -> prints to terminal 
+                            --> 'FileHandler'           -> writes to a file 
+                            --> 'RotatingFileHandler'   -> creates daily/size-based log files 
+                            --> 'SMTPHandler'           -> emails logs 
+                            --> 'HTTPHandler'           -> sends logs over the network 
+                
+                ---- formatters
+
+                        -> these shape how the output looks 
+
+                        -> example 
+                            --> "%(asctime)s - %(levelname)s - %(message)s"
+                            --> these turn raw log records into readable text 
+            
+            --- simplest working setup 
+
+                    import logging
+
+                    logging.basicConfig(
+                        filename="pipeline.log",
+                        level=logging.INFO,
+                        format="%(asctime)s [%(levelname)s] %(message)s"
+                    )
+
+                    logger = logging.getLogger(__name__)
+
+                    logger.info("Pipeline started")
+                    logger.warning("Column missing metadata")
+                    logger.error("Critical failure in flatten step")
+
+
+
 
 
 
