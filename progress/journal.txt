@@ -190,7 +190,13 @@
                     ---- biggest revelation today 
                             -> my heart doesn't believe my doubts of not worthy, reaching too high anymore  
                         
-                            
+            --- week 3 
+
+                --- 17th 
+
+                    ---- DeepLearning: L0 - representation learning 
+                            -> each row of weight matrix is detecting the presence of a feature inside the input  
+                            -> biggest breakthrough yet in neural network understanding       
                 
                 
 
