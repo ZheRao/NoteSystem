@@ -133,13 +133,36 @@ python system
                             --> 'SMTPHandler'           -> emails logs 
                             --> 'HTTPHandler'           -> sends logs over the network 
                 
-                ---- formatters
+                ---- format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
 
-                        -> these shape how the output looks 
+                        -> this is a template for how each log line is printed - the '%(...)' pieces are placeholders that Python's 'logging' module fills in 
 
-                        -> example 
-                            --> "%(asctime)s - %(levelname)s - %(message)s"
-                            --> these turn raw log records into readable text 
+                        -> '%(asctime)s'
+                            --> the timestamp (when the log record was created), as a string 
+                            --> Example: "2025-11-21 09:13:45,123"
+                        
+                        -> ' | '
+                            --> literal separator characters, exactly as you see them, to make the log easier to read 
+                        
+                        -> '%(levelname)-8s'
+                            --> the log level name: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+                            --> '-8s' = format it as a string ('s'), left-justified ('-'), taking up 8 characters 
+                            --> why? so the column lines up nicely 
+                                ---> INFO 
+                                ---> WARNING 
+                                ---> ERROR 
+                            --> that way your logs become visually aligned and easy to scan 
+                        
+                        -> '%(name)s'
+                            --> the name of the logger that produced this message 
+                            --> if you do 'logger = logging.getLogger("qbo.flatten")' then '%(name)s' -> "qbo.flatten"
+                        
+                        -> '%(message)s'
+                            --> the actual log message you passed into logger.info("Flatten started"), possibly after being formatted with arguments
+                        
+                        -> so a real line might look like 
+                                2025-11-21 09:13:45,123 | INFO     | qbo.flatten | Flattening started for company=Monette, year=2024
+
             
             --- simplest working setup 
 
@@ -358,6 +381,65 @@ spark
                         -> we have 4 partitions for 3 distinct keys (one per year)
                         -> each key must go to exactly one partition 
                         -> at most 3 of those partitions will actually have data; at least one will be empty   
+
+        -- 'TaskContext'
+
+            --- in PySpark, 'TaskContext' gives you information about the currently running task inside an RDD/DataFrame operation 
+
+            --- you use it inside functions like 'mapPartitions', 'foreachPartition', 'map', etc., to 
+                ---- figure out which partition you are working on 
+                ---- sometimes infer which executor you are likely on (by combining with logs / hostnames)
+                ---- access task-level local properties 
+                ---- manage resources tied to that task 
+            
+            --- key info 
+
+                ---- TaskContext.get()
+                        -> static method. 
+                        -> returns the current 'TaskContext' if you're inside a task, 
+                        -> or 'None' if you call it on the driver outside any RDD/DataFrame operation
+
+                ---- context.partitionId()
+                        -> which partition this task is processing 
+                        -> this is what you'll log to tag your messages 
+
+                ---- context.attemptNumber()
+                        -> if Spark retries the task, this increments 
+                        -> nice for understanding flaky partitions 
+
+                ---- context.stageId()
+                        -> which stage this task belongs to 
+
+            --- other useful ones 
+
+                ---- context.getLocalProperty(key)
+                        -> access custom properties set via 'sc.setLocalProperty(...)'
+
+                ---- context.resources()
+                        -> for resource-aware scheduling (GPUs, etc.), return what's allocated to this task in Spark 3 
+            
+            --- typical usage 
+
+                    from pyspark import TaskContext
+
+                    def process_partition(iter_rows):
+                        ctx = TaskContext.get()
+                        partition_id = ctx.partitionId()  # integer
+                        attempt_id = ctx.attemptNumber()  # integer, retries increase this
+                        stage_id = ctx.stageId()          # integer stage ID
+
+                        for row in iter_rows:
+                            # You might log with partition info
+                            # logger.info(f"Processing row in partition={partition_id}, stage={stage_id}, attempt={attempt_id}")
+                            yield row  # or transformed row
+                
+                ---- then 
+
+                    rdd = spark.sparkContext.parallelize(data, numSlices=8)
+                    processed = rdd.mapPartitions(process_partition)
+                
+                ---- inside 'process_partition', 'TaskConext.get()' returns the context for that task 
+
 
 
     - syntax general 

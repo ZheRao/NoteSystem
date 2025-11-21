@@ -198,6 +198,13 @@
                             -> each row of weight matrix is detecting the presence of a feature inside the input  
                             -> biggest breakthrough yet in neural network understanding       
                 
+                --- 21st
+
+                    ---- DevOpes: L0 - vim 
+                            -> appending & deleting texts
+                
+            
+                
                 
 
 

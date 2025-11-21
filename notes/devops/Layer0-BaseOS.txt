@@ -2020,7 +2020,75 @@ intro to VI
     - basic editing 
 
         -- common options 
-            --- 
+            
+            --- undo
+                ---- 'u' key in command mode, undo the last change that you made
+        
+        -- appending text ('i' vs. 'a')
+
+            --- gist 
+                ---- 'i' insert before the cursor 
+                ---- 'a' append after the cursor 
+            
+            --- both enter insert mode, but the cursor position is different 
+
+                    H e l l o
+                            ^
+                        cursor on 'o'
+                
+                ---- if you press 'i' - enter insert mode before "o", so typing "!!!!" gives 
+                        -> Hell!!!!o 
+                
+                ---- if you press 'a' instead - cursor moves one step to the right - so typing "!!!!" gives 
+                        -> Hello!!!!
+            
+            --- variations 
+
+                ---- 'A' - move to the end of the current line and start appending 
+        
+        -- opening a line - another way to insert text 
+
+            ---  inserts a blank line between two existing lines and enter insert mode
+
+            --- keys 
+                ---- 'o' - the line below the current line 
+                ---- 'O' - the line above the current line 
+        
+        -- deleting text 
+
+            --- keys 
+
+                ---- 'x' - delete a character at the curosr location  - deletes a fixed size 
+                        -> 'x' may be preceded by a number specifying how many characters are to be deleted 
+                        -> always deletes characters, nothing else 
+                        -> always forward (right)
+                        -> always a fixed amount 
+                        -> never uses motions (except with numbers)
+                
+                ---- 'd' - deletes a region of text spelled out by a movement 
+                        -> 'd' is waiting for you to tell it the shape of what to delete 
+                        -> examples 
+                            --> 'dw' - delete to the start of next word 
+                            --> 'de' - delete to the end of word 
+                            --> 'd$' - delete to end of line 
+                            --> 'd0' - delete to beginning of line 
+                            --> 'd3w' - delete 3 words 
+                            --> 'dap' - delete a paragraph
+                            --> 'di(' - delete inside parentheses
+                            --> 'da"' - delete a quoted string
+                            --> 'dd' - delete the current line 
+                            --> '5dd' - delete the current and the next four lines 
+                            --> 'd^' - delete to the first non-whitespace character in the line 
+                            --> 'dG' - delete to the end of the file 
+                            --> 'd20G' - delete to line 20
+            
+
+
+
+
+
+
+
             
             
 
