@@ -1978,6 +1978,49 @@ intro to VI
                 ---- ':set number'      -> show line numbers 
         
     - moving the cursor around  
+
+        -- in "command mode", vi offers a large number of movement commands, some of which shares with 'less'
+
+                Key                     Moves the cursor
+
+                l or right arrow        Right one character.
+                
+                h or left arrow         Left one character.
+
+                j or down arrow         Down one line.
+
+                k or up arrow           Up one line.
+
+                0 (zero)                To the beginning of the current line.
+
+                ^                       To the first non-whitespace character on the current line.
+
+                $                       To the end of the current line.
+
+                w                       To the beginning of the next word or punctuation character.
+
+                W                       To the beginning of the next word, ignoring punctuation characters.
+
+                b                       To the beginning of the previous word or punctuation character.
+                
+                B                       To the beginning of the previous word, ignoring punctuation characters.
+
+                ctrl-F or page down     Down one page.
+
+                ctrl-B or page up       Up one page.
+                
+                numberG                 To line number. For example, 1G moves to the first line of the file.
+
+                G                       To the last line of the file.
+            
+            --- many commands in vi can be prefixed with a number, as with the G command
+            --- by prefixing a command with a number we may specify the number of times a command is to be carried out 
+            --- e.g., '5j' causes vi to move the cursor down five lines 
+        
+    - basic editing 
+
+        -- common options 
+            --- 
             
             
 
