@@ -203,7 +203,10 @@
                     ---- DevOpes: L0 - vim 
                             -> appending & deleting texts
                 
-            
+            --- week 4
+
+                    ---- DevOpes: L0 - vim 
+                            -> visual line/character mode + copy paste 
                 
                 
 
