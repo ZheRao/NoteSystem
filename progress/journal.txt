@@ -205,8 +205,16 @@
                 
             --- week 4
 
+                --- 24th
+
                     ---- DevOpes: L0 - vim 
                             -> visual line/character mode + copy paste 
+
+                --- 25th
+
+                    ---- DevOps: L0 - vim 
+                            -> search and substitute 
+
                 
                 
 

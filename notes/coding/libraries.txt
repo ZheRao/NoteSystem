@@ -166,6 +166,57 @@ python system
             
             --- Spark workflow 
 
+                ---- big picture 
+                        -> there is one driver Python process 
+                        -> there are multiple Python worker processes (started by executors) that run your 'mpPartitions' code 
+                        -> each process needs its own logging configuration (handlers, file, format)
+                
+                ---- driver side 
+                        
+                        -> create directory for logs (both driver and workers can reuse this directory)
+                        
+                        -> define driver logger 
+                            --> choose a log file location for driver logs 
+                            --> 'logging.basicConfig(...)' - configure handers / format / level in the driver process
+                            --> 'logging.getLogger(...)' - get a driver logger
+                                ---> all '.info()', '.debug()', etc. on this logger now go through the driver's handlers (e.g., console + driver log file)
+
+                        -> initialize Spark and use the driver logger 
+                            --> build 'SparkSession'
+                            --> log high-level events to the driver logger:
+                                ---> "Spark started"
+                                ---> "Created DF with N rows / P partitions"
+                                ---> "Starting flatten job for company X / quarter Y"
+                            --> these messages live in driver logs only 
+
+                ---- worker / executor side (inside 'mapPartitions')
+
+                        -> use 'TaskContext' to identify task metadata 
+                            --> 'partitionId()'
+                            --> 'attemptNumber()'
+                            --> optionally, stage id, etc.
+                        
+                        -> define a process (worker) logger in what worker process 
+                            --> descide what file this worker will write to 
+                                ---> one shared executor file (more mushy), or 
+                                ---> one file per worker process (nicer for debugging): includes hostname + PID 
+                            --> attach handlers / format / level here, in the worker 
+                                ---> 'fh = logging.FileHandler(log_file, mode = "a", encoding = "utf-8")'
+                                ---> 'fh.setFormatter(logging.Formatter(
+                                            "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+                                        ))'
+                                ---> 'logger.addHandler(fh)'
+                                ---> 'logger.setLevel(logging.INFO)'
+                        
+                        -> initialize the process logger with 'logging.getLogger(...)'
+                            --> ensure we only add handlers once per process ('if not logger.handlers:')
+                        
+                        -> use this logger to log partition-level activity 
+                            --> "starting partition X | attempt Y"
+                            --> "processing record k / value v"
+                            --> "finished partition X" or "Error parsing file"
+                            --> all of these messages are written by the worker process to its own log file (or stdout, depending on how you configured the handlers)
+
 
 
 

@@ -2147,7 +2147,64 @@ intro to VI
             --- 'y2j' - enter and select in "character model" - press 'y' to copy and exit 
 
             --- 'Y2j' - enter and select in "Visual line mode" - press 'y' to copy and exit  
-            
+
+        -- join lines 
+
+            --- normally, it is not possible to move the cursor to the end of a line and delete the end-of-line character to join one line with the one below it 
+
+            --- 'J' can be used to join lines together 
+    
+    - search-and-replace 
+
+        -- capabilities 
+            --- move cursor to locations based on searches  
+            --- can do this either on a single line or over an entire file 
+            --- also perform text replacements with or without confirmation from the user 
+        
+        -- search within a line 
+
+            --- 'f' command searches a line and moves the cursor to the next instance of a specified character 
+                ---- 'fa' - move the cursor to the next occurrennce of the character "a" within the current line
+
+            --- after performing a character search within a line, the search may be repeated by typing a ';'
+
+        -- searching the entire file 
+
+            --- '/' command moves the cursor to the next occurrence of a word of phrase
+                ---- '/' will appear at the bottom of the screen when you type the command 
+                ---- next, type the word or phrase to be searched for, followed by the ENTER key 
+                ---- the cursor will move to the next location containing the search string 
+                ---- 'n' command: a search may be repeated using the previous search string
+        
+        -- global search and replace 
+
+            --- 'ex' - "substitution" over a range of lines or the entire file 
+
+            --- ':%s/Line/line/gc' - change word "Line" to "line" for the entire file 
+
+                ---- ':' - starts an 'ex' command 
+
+                ---- '%'  
+                        -> specifies the range of lines for the operation 
+                        -> '%' is a shortcut meaning from the first line to the last line 
+                        -> alternatively, the range could have been specified '1, 5' or '1, $' which means from line 1 to the last line in the file 
+                        -> if range is omitted, the operation is performed only on the current line 
+                
+                ---- 's' 
+                        -> specifies the operation
+                        -> 's' is substitution (search and replace)
+                
+                ---- '/Line/line/' - specifies the search pattern and the replacement text 
+
+                ---- 'g'
+                        -> this means "global" - substitution is performed on every instance 
+                        -> if omitted, only the first instance of the search string on each line is replaced 
+                
+                ---- 'c' 
+                        -> substitution with user confirmation
+                        -> before each substitution, vi stops and asks to confirm the substitution with message 
+                        -> "replace with Line (y/n/a/q/l/^E/^Y)?"
+                            
 
 
 
