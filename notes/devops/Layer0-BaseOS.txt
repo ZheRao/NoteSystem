@@ -2109,6 +2109,8 @@ intro to VI
                         yG              From the current line to the end of the file
 
                         y20G            From the current line to the twentieth line of the file
+
+                        -> '"+y + ENTER' - copy to system clipboard
         
         -- linewise motion vs. characterwise motion 
 
@@ -2204,9 +2206,16 @@ intro to VI
                         -> substitution with user confirmation
                         -> before each substitution, vi stops and asks to confirm the substitution with message 
                         -> "replace with Line (y/n/a/q/l/^E/^Y)?"
-                            
+                            --> 'y' - perform the substitution 
+                            --> 'n' - skip this instance of the pattern 
+                            --> 'a' - perform the substitution on this and all subsequent instances of the pattern 
+                            --> 'q' or ESC - quit subsituting 
+                            --> 'l' - perform this substitution and then quit, this is short for "last"
+                            --> 'CTRL-E', 'CTRL-Y' - scroll down and scroll up, respectively , this is useful for viewing the context of the proposed substitution 
 
+    - editing multiple files 
 
+        
 
 
 

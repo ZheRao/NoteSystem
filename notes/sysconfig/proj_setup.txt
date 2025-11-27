@@ -251,27 +251,78 @@ Spark setup
 
 
 
+Twilio setup 
+
+    - install nvm 
+
+        1) Install nvm
+
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+            # reload shell (or just close/open terminal)
+            source ~/.bashrc  # or ~/.zshrc depending on your shell
+
+        2) Install a stable Node version
+            nvm install --lts
+
+        3) Use it
+            nvm use --lts
+
+        4) Confirm
+            node -v
+            npm -v
+        
+        5) 
+            npm install -g twilio-cli
+
+    - login 
+
+        -- 'twilio login'
+    
+    - comman operations 
+
+        -- create a project 
+            --- 'twilio assets:init --service-name sop-project'
+
+        -- activate profile 
+            --- 'twilio profiles:list'
+            --- 'twilio profiles:use monette-zhe'
+        
+        -- assets 
+            --- 'twilio assets:list'
+            --- 'twilio assets:upload ./grain_handling.pdf' 
+        
+        -- upload bulk files 
+
+                cd ~/files
+                for f in *.pdf; do
+                    twilio assets:upload "$f"
+                done
+        
+        -- install serverless plugin 
+            --- 'twilio plugins:install @twilio-labs/plugin-serverless'
+        
+        -- initialize functions project 
+
+            --- 'twilio serverless:init sop-whatsapp-backend'
+            --- 'cd sop-whatsapp-backend'
+
+            --- structure 
+
+                    sop-whatsapp-backend/
+                        .env
+                        functions/
+                            hello-world.js   (sample)
+                        assets/
+                        package.json
 
 
-├── Database
-    ├── .input 
-        ├── pillar_units.xlsx 
-        ├── Auth 
-            ├── QBO 
-                ├── secrets.json  
-                ├── tokens.json 
-            ├── QBOTime 
-                ├── tokens.json 
-        ├── pay_periods.xlsx 
-    ├── Bronze
-        ├── QBO 
-            ├── GL 
-                ├── MFUSA
-                    ├── 2025_10.json 
-                ├── MFL 
-            ├── PL 
-    ├── Gold
-    └── Silver
+        
+        -- logout 
+            --- 'twilio logout'
+
+
+
 
 
 
