@@ -316,7 +316,14 @@ Twilio setup
                         assets/
                         package.json
 
-
+        -- test deploy 
+            --- 'cd ~/files/whatsapp-backend'
+            --- 'twilio serverless:start'
+            --- CTRL+c - cancel
+        
+        -- actual deploy 
+            --- 'cd ~/files/whatsapp-backend'
+            --- 'twilio serverless:deploy'
         
         -- logout 
             --- 'twilio logout'

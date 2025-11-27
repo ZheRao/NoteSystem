@@ -1,0 +1,58 @@
+core muscle memory
+
+    - models 
+    
+        -- 'i'      - enter insert mode 
+        -- ESC      - return to normal mode 
+        -- 'v'      - visual mode 
+        -- 'V'      - visual line mode 
+        -- CTRL+q   - visual block mode 
+
+    - movements
+        
+        -- 'h' - left
+        -- 'j' - down
+        -- 'k' - up
+        -- 'l' - right
+
+    - word navigation 
+        
+        -- 'w' - next word start
+        -- 'b' - previou word start
+        -- 'e' - next word end 
+
+    - operators (combine with motions)
+        
+        -- 'd'
+        
+
+
+
+    - page movements 
+        
+        -- Ctrl+f   - page down
+        -- Ctrl+b   - page up
+        -- Ctrl+d   - half-down
+        -- Ctrl+u   - half up
+
+        -- :n or nG - go to line n
+        -- 'gg'     - top of file
+        -- 'G'      - bottom of file
+
+        -- Ctrl+e   - scroll down
+        -- Ctrl+y   - scroll up
+
+    - indentation
+        
+        -- 'setlocal foldmethod=indent'
+        -- 'setlocal foldlevel=2'
+
+        -- 'z' - fold command prefix
+        -- 'c' - close, 'C' for nested close
+        -- 'o' - open, 'O' for nested Open 
+        -- 'M' - collapse everything
+        -- 'R' - open everything
+
+    - text-object moves
+        
+        -- 
