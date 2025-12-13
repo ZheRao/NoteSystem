@@ -23,10 +23,15 @@ core muscle memory
 
     - operators (combine with motions)
         
-        -- 'd'
+        -- 'd'  - delete
+        -- 'c'  - change (delete + insert)
+        -- 'y'  - yank (copy)
+
+    - repeating & undo
         
-
-
+        -- '.'      - repeat last change
+        -- 'u'      - undo
+        -- Ctrl-r   - redo
 
     - page movements 
         
@@ -42,17 +47,121 @@ core muscle memory
         -- Ctrl+e   - scroll down
         -- Ctrl+y   - scroll up
 
+        -- '%'      - jump to matching bracket/paren
+
     - indentation
         
         -- 'setlocal foldmethod=indent'
         -- 'setlocal foldlevel=2'
 
+        -- '=' - auto indent
         -- 'z' - fold command prefix
         -- 'c' - close, 'C' for nested close
         -- 'o' - open, 'O' for nested Open 
         -- 'M' - collapse everything
         -- 'R' - open everything
 
-    - text-object moves
+text object power (biggest accelerator)
+
+    - inside / around 
         
-        -- 
+        -- ci"      - change inside quotes
+        -- ca"      - change around quotes
+        -- ci'      - change inside single quotes
+        -- ci(      - change inside parentheses
+        -- ci[      - change inside brackets
+        -- ci{      - change inside braces 
+        -- diw      - delete inside word
+
+    - paragraph & block
+        
+        -- 'vip' - select inner paragraph
+        -- 'vap' - select around paragraph
+
+search, find, substitute
+    
+    - search 
+        
+        -- '/text'  - search forward
+        -- '?n'     - search backward
+        -- 'n'      - next match
+        -- 'N'      - previous match
+
+    - find on line
+        
+        -- 'f<char>'    - jump to nextg occurrence
+        -- 'F<char>'    - jump backwards
+        -- 't<char>'    - jump before occurrence
+        -- 'T<char>'    - jump before backwards 
+        -- ';'          - repeat
+        -- ','          - repeat backward
+
+    - substitute
+        
+        -- ':%s/old/new/g'  - replace all
+        -- ':%s/old/new/gc' - replace with confirm
+
+buffers, splits, file navigation
+
+    - buffers 
+        
+        -- ':ls'    - list buffers 
+        -- ':bn'    - next buffer 
+        -- ':bp'    - previous buffer
+        -- ':bd'    - delete buffer
+
+    - splits 
+        
+        -- ':sp'    - horizontal split
+        -- ':vs'    - vertical split
+        -- Ctrl-w w - move between splits
+        -- Ctrl-w = - equalize sizes
+        -- ':only'  - close all other splits
+
+essential engineer commands
+    
+    - save & quit
+        
+        -- ':w'     - write
+        -- ':q'     - quit
+        -- ':wq'    - write + quit
+        -- ':q!'    - quit without saving
+
+    - write with sudo
+        
+        -- ':w !sudo tee %' 
+
+    - open file explorer (built-in netrw)
+
+        -- ':Ex'
+
+registers, marks, jumps (for large work)
+
+    - register
+        
+        -- "0       - last yanked text
+        -- "1-9     - deletion history
+        -- "+       - system clipboard (if enabled)
+
+    - marks 
+        
+        -- ma       - mark position 'a'
+        -- `a       - jump to mark
+
+    - jump list
+
+        -- Ctrl-o   - jump back 
+        -- Ctrl-i   - jump forward
+
+macros
+
+    - record & replay
+        
+        -- 'q<letter>'  - start recording macro
+        -- 'q'          - stop recording
+        -- '@<letter>'  - play macro
+        -- '@@'         - repeat last macro
+
+
+
+

@@ -290,7 +290,9 @@ Twilio setup
         
         -- assets 
             --- 'twilio assets:list'
+                ---- 'twilio assets:list -o json > assets/assets_meta.json'
             --- 'twilio assets:upload ./grain_handling.pdf' 
+
         
         -- upload bulk files 
 
@@ -320,7 +322,15 @@ Twilio setup
             --- 'cd ~/files/whatsapp-backend'
             --- 'twilio serverless:start'
             --- CTRL+c - cancel
-        
+            --- example HTTP request for fake messages 
+
+curl -X POST http://localhost:3000/whatsapp-reply \
+    -d "Body=get-chemical, inspection" \
+    -d "From=whatsapp:+15551234567" \
+    -d "To=whatsapp:+1YOURTWILIONUM" \
+    -d "ProfileName=Local Test" \
+    -d "NumMedia=0"                
+    
         -- actual deploy 
             --- 'cd ~/files/whatsapp-backend'
             --- 'twilio serverless:deploy'

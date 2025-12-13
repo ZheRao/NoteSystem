@@ -1,0 +1,214 @@
+Twilio
+    
+    - structure
+
+            exports.hander = function (context, event, callback) {
+                const twilio = require("twilio");   // load the Twilio helper library provided in the Functions runtime
+                const twiml = new twilio.twiml.MessagingResponse(); // add reply message to this object
+                ...
+                ...
+                ... // define message_obj variable (constant)
+                twiml.message(message_obj);      // twiml.message(...) creates a <Message> in the response
+                callback(null, twiml);          // tell Twilio we're done and send the TwiML back - we pass null for error, and 'twiml' as result
+            };
+
+
+
+
+    - read assets
+        
+
+
+
+
+
+
+
+
+Generic
+
+    - variables
+
+        -- 'const n = 42;'  // constant binding
+        -- 'let x = 10;'    // mutable
+        -- 'const nothing = null;'
+
+    - equality, comparison, truthiness
+        
+        -- <, >, <=, >=, !==, ===
+        -- truthiness
+            --- false, 0, -0, "", null, undefined, NaN
+
+    - strings
+
+        -- const s = "hello";
+        -- const s2 = s.toUpperCase();
+        -- const result = s + "word";
+        -- const length = s.length;
+        -- const contains = s.includes("ell");
+        -- const words = s.split(" ");
+
+        -- common helpers
+            
+            --- s.startsWith("he");
+            --- s.endsWith("lo");
+            --- s.trim();
+            --- s.replace("he", "we");  // replaces first match; for all, use regex or replaceAll
+
+    - arrays
+        
+        -- const nums = [1, 2, 3];
+        -- nums.push(4);    // append 
+        -- const first = nums[0];
+        -- const last = nums[nums.length - 1];
+        -- const length = nums.length;
+
+        -- for (const x of nums) {...};
+
+        -- const squares = nums.map(x => x * x);
+        -- const filtered = nums.filter(x => x % 2 === 0);
+
+        -- common Array methods (Python -> JS)
+            
+            --- list.index(x)       -> arr.indexOf(x)
+            --- list.pop()          -> arr.pop()
+            --- list.insert(i, x)   -> arr.splice(i, 0, x)
+            --- sorted(list)        -> arr.slice().sort((a, b) => a - b) (copy first)
+
+    - dicts - objects / maps 
+        
+        -- Python 
+                
+                person = {"name": "age":42}
+                person["job"] = "farmer"
+                name = person["name"]
+                for key, value in person.items():
+                    print(key, value)
+
+        -- JavaScript
+            
+                const person = {name: "Mike", age: 42};
+                person.job = "farmer";
+                const name = person.name;       // dot access 
+                // or person["name"];           // bracket access 
+
+                for (const key in person) {
+                    const value = person[key];
+                    consle.log(key, value);
+                }
+            
+            --- rule of thumb: "dictionary with string keys" - JS plain object
+
+        -- when to use 'Map'
+            
+            --- if you need non-string keys or lots of dynamic inserts
+                
+                const m = new Map();
+                m.set("field", "field.pdf");
+                m.set("grain", "grain.pdf");
+
+                m.get("field");     // "field.pdf"
+                m.has("grain");     // true 
+
+                for (const [key, value] of m) {
+                    console.log(key, value);
+                }
+
+    - conditionals & boolean logic
+        
+            if (x > 10) {
+                ...
+            } else if (x === 10) {
+                ...
+            } else {
+                ...
+            }
+
+        -- boolean operators
+            
+            --- 'and'       -> '&&'
+            --- 'or'        -> '||'
+            --- 'not'       -> '|'
+        
+        -- Python substring test - 'includes'
+            
+            --- 'if "field" in text:'   -> 'if (text.includes("field")) {}'
+
+    - loops 
+
+        -- 'for' over sequence
+
+            --- Python
+                    
+                for x in items:
+                    print(x)
+
+            --- JS
+                
+                for (const x of items) {
+                    console.log(x);
+                }
+
+        -- 'for i in range(...)'
+            
+                for (let i = 0; i < 10; i++) {
+                    ...
+                }
+
+        -- while loop 
+            
+            --- Python 
+                
+                while condition:
+                    ...
+
+            -- JS
+                
+                while (condition) {
+                    ...
+                }
+
+    - functions 
+        
+            function greet(name = "frog") {
+                console.log("hi", name)
+            }
+
+    - common array "comprehension-like" patterns
+
+        -- Python 
+            
+            squares = [x*x for x in nums]
+            evens = [x for x in nums if x % 2 == 0]
+            total = sum(nums)
+
+        -- JS
+            
+            const squares = num.map(x => x * x);
+            const evens = num.filter(x => x%2 === 0);
+            const total = nums.reduce((acc, x) => acc + x, 0);
+
+    - try/except -> try/catch
+        
+        -- Python
+            
+            try:
+                risky()
+            except ValueError as e:
+                print(e)
+            finally:
+                cleanup()
+
+        -- JS
+            
+            try {
+                risky();
+            } catch(e) {
+                console.log(e);
+            } finally {
+                cleanup();
+            };
+    
+    - others 
+
+        -- '(text ?? "")' - If text is null or undefined, it falls back to "" (empty string).

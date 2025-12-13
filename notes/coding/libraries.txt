@@ -477,6 +477,17 @@ spark
                 
                 ---- inside 'process_partition', 'TaskConext.get()' returns the context for that task 
 
+        -- broadcasting
+            
+            --- concept: broadcast sends object once per executor, and tasks reuse it
+
+            --- syntax 
+                
+                    col_map_bc = spark.sparkContext.broadcast(col_map)
+                    
+                    rdd_flat = rdd.mapPartitions(lambda it: flatten_partition(it, col_map_bc.value))
+
+                    col_map_bc.unpersist()      # evict the broadcast from memory to free space
 
 
     - syntax general 

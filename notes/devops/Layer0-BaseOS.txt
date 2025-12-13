@@ -2215,6 +2215,47 @@ intro to VI
 
     - editing multiple files 
 
+        -- 'vi fil1 fil2 fil3' - open multiple files for editing by specifying them on the command line
+
+        -- switching between files 
+            
+            --- ':bn' - from one file to the next
+            --- ':bp' - move back to previous file
+
+            --- vi prevents from switching files if the current file has unsaved changes
+                ---- to force swtiching - add '!'
+
+            --- ':buffers'  - view a list of files being edited
+            --- ':buffer n' - switch to another buffer (file) 
+
+        -- opening additional files for editing
+            
+            --- ':e file_name' - open an additional file 
+
+        -- copying content from one file into another
+
+            --- ':buffer 1'     - switching to file 1
+            --- 'yy'            - yank the first line
+            --- ':buffer 2'     - switching to file 2
+            --- 'p'             - paste the line
+
+        -- inserting an entire file into another 
+            
+            --- 'vi file1'      - open file 1
+            --- ':r file2'      - inserts file 2 below the cursor position
+
+        -- save our work 
+            
+            --- 'ZZ'        - save current file and exit vi
+            --- ':w file1'  - save current file as file1 - save an alternative version
+                ---- as you continue to make edits, you are still editing current file, not file1
+            
+
+customizing the prompt
+
+    - anatomy of a prompt 
+
+
         
 
 

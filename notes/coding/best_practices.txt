@@ -30,6 +30,7 @@ type hint
             --- in the dictioanry, the corresponding values for "ColType" key must be in the list 
     
     - optional keys 
+    
         -- with 'NotRequired' from 'typing'
                 from typing import TypedDict, NotRequired
 
@@ -38,6 +39,7 @@ type hint
                     ColType: ColType
                     MetaData: list[MetaDatum]
                     Description: NotRequired[str]   # optional
+                    
         -- whole dict as "NotRequired"
                 class PartialColumn(TypedDict, total=False):
                     ColTitle: str

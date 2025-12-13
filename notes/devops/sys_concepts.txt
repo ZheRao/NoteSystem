@@ -298,53 +298,166 @@ outside world
 
 
 
+search engine
+    
+    - Twilio bot - my design
+        
+        -- goal: find relevant doc by matching user keywords to doc titles
+
+        -- mechanics:
+
+            --- on each query 
+                ---- scan all docs (D) 
+                ---- for each keyword (K), check if doc contains it 
+                ---- build intersection/union sets
+                ---- return matches
+
+        -- shape of data 
+            
+            --- list of docs with small metadata (title + URL)
+            --- no persistent state 
+            --- search logic: substring match on titles
+            --- ranking
+                ---- AND-first
+                ---- otherwise score by # matched keywords
+
+        -- this is the zero-th version of search
+        
+    - Enterprise search 
+        
+        -- this is like 
+            
+            --- Confluence search
+            --- Notion search
+            --- internal wiki search
+            --- GitHub repo search
+
+        -- key upgrade: inverted index
+            --- token -> list of document IDs
+            --- this index sits in memory and is reused for thousands of queries 
+
+        -- retrieval pipeline 
+            
+            1. tokenize query
+            2. look up each token in inverted index
+            3. combine sets (AND/OR)
+            4. rank results using 
+                --- term frequency (TF)
+                --- inverse document frequency (IDF)
+                --- keyword position
+                --- keyword proximity
+                --- title vs. body scores
+
+        -- why this works
+            
+            --- fast retrieval O(1) lookup per token
+            --- instant scaling to millions of documents
+            --- no scanning all documents per query
+
+    - full text search (Elasticsearch, Lucene)
+        
+        -- this is the real jump - now we index not just titles, but full content
+
+        -- index building becomes - for each document
+
+            --- tokenize -> normalize -> stem -> remove stopwords 
+            --- compute term positions
+            --- compute TF-IDF weights
+            --- store posting lists (token -> ordered list of docs w/ positions)
+
+        -- a posting list entry is something like 
+            
+                token = "sprayer"
+                posting list:
+                  doc42: {tf=3, positions=[5,18,30]}
+                  doc91: {tf=1, positions=[11]}
+                  ...
+
+        -- why positions matter:
+            
+            --- if query is "wheat sprayer cleanout", and positions are close together, that doc ranks higher 
+            --- if keyword appears in title, higher boost 
+            --- if keyword appears often, higher TF
+
+        -- query pipline
+            
+            1. parse tokens
+            2. retrieve posting lists
+            3. merge posting lists with smart scoring
+            4. apply ranking algorithms
+            5. serve top results
+
+        -- this is the heart of Lucene, the search library behind
+            
+            --- Elasticsearch
+            --- Solr
+            --- many enterprise search engines
+
+    - Google 
+        
+        -- search engines like Google add many layers on top 
+
+        -- layer 1 - crawling - billions of pages fetched by thousands of crawler machines 
+
+        -- layer 2 - document processing - normalizing
+            
+            --- text extraction
+            --- language detection
+            --- boilerplate removal
+            --- chunking long pages into segments
+            --- deduplication
+            --- canonicalization (merge similar URLs)
+
+        -- layer 3 - massive inverted index - same structure as Elasticsearch - but 
+            
+            --- partitioned across thousands of servers 
+            --- replicated
+            --- optimized for fast merging
+            --- compressed posting lists
+            --- stored in memory + SSDs with clever hardware tricks
+
+        -- layer 4 - PageRank (link-based ranking)
+            
+            --- used to determine "authority" or "importance"
+            --- but this is not about keyword matching
+            --- it is about global ranking influence 
+
+            --- this is one of the many ranking signals
+
+        -- layer 5 - machine learning ranking models - this is where the action is today
+            
+            --- BERT-based re-rankers
+            --- ColBERT
+            --- transformer scoring layers
+            --- query-document semantic similarity
+            --- click-through signals
+            --- personalization signals
+            --- "helpfulness" models
+
+            --- the pipeline is 
+                
+                ---- fast first-stage retrieval - use inverted index to get top 1000 candidates
+                ---- slow re-ranking - use ML models to re-score and filter to top 10
+                ---- this is where Google uses massive ML inference
+
+        -- layer 6 - serving infrasturcture
+            
+            --- Google must answer queries in < 200 ms, worldwide, at huge scale
+
+            --- they use 
+                
+                ---- thousands of replicas
+                ---- caching
+                ---- geographic routing
+                ---- incremental index updates
+                ---- specialized hardware
+                ---- load balancing
+
+
 
         
                 
 
                 
-
-                
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
