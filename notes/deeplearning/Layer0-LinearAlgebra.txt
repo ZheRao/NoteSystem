@@ -1,6 +1,6 @@
 
 
-wx
+what does Wx do?
 
     - a matrix is a recipe for generating new features from your input 
 
@@ -200,6 +200,82 @@ geometric meaning of neural network calculations
         This is why backprop is one of the greatest inventions in history.
 
 
+
+network design
+
+    - gist: 
+        -- linear transformation change perspective
+        -- non-linearities alter realtiy
+
+    - caution in network design
+        -- early irreversible damage cannot be undone later
+        -- early layers must be information-preserving
+        -- non-linearity must be gentle at first
+        -- aggressive warping belongs late, when structure is already extracted
+
+    - difficulty - stacking linear layers alone does nothing 
+        -- deapth adds no expressive power
+        -- only rotate/stretch space
+        -- thus, non-linearity is the only source of representation power, but only source of irreversibility - tension
+
+    - so how do we make gentle non-linearities early, and aggressive ones later
+        
+        -- 1. shape of the non-linearity
+            
+            --- different nonlinearities destroy information at different rates
+
+            --- harsh (early-dangerous)
+                ---- hard ReLU -> zeroes half the space
+                ---- step functions -> obliterate gradients
+                ---- hard clipping
+
+            --- gentle (early-safe)
+                ---- tanh (near-linear around 0)
+                ---- softplus
+                ---- GELU
+                ---- Swish
+                
+                ---- these behave like: f(x) approximately equal x for small x
+
+
+        -- 2. scale of activations
+
+            --- even a harsh non-linearity becomes gentle if inputs stay small
+
+            --- to keep activations in the linear regime early
+                ---- careful weight initialization
+                ---- BatchNorm/LayerNorm
+                ---- residual scaling
+
+            --- same non-linearity, different behavior depending on scale
+
+        -- 3. architectural reversibility
+            
+            --- residual connection means
+                ---- identity path always exists
+                ---- information can flow untouched
+                ---- non-linearity is a perturbation, not a replacement
+
+            --- they enforce
+                ---- non-linearity must earn the right to change identity
+                ---- this is philosophically aligned with Northern Light
+
+    - tiny seed 
+        
+        -- linear transformations
+            --- change coordinatesm not essence
+            --- reversible
+            --- interpretation layers
+
+        -- nonlinear transformations
+            --- change the space itself
+            --- often irreversible
+            --- identity-altering
+
+        -- maps beautifully onto
+            --- working memory vs. long-term identity
+            --- reversible reasoning vs. permanent learning
+            --- "thinking" vs "becoming"
 
 
 

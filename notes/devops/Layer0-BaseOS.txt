@@ -47,6 +47,7 @@ other notes
                 ---- 'tree -P "*.sh" -L 3' - locate shell scripts visually 
 
         -- 'rsync -av src/ dest/'
+        
             --- copies files from 'src/' to 'dest/' efficiently, preserving metadata
 
             --- '-a' - archive mode (a bundle of options): recursive copy + preserve timestamps, perms, owner/group, symlinks, device, etc. 
