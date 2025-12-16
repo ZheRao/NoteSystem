@@ -2256,6 +2256,32 @@ customizing the prompt
 
     - anatomy of a prompt 
 
+        -- default prompt 
+            
+            --- contains
+            
+                ---- username
+                ---- hostname
+                ---- current working directory
+
+            --- defined by an environment variable "PS1" (prompt string 1)
+
+                ---- bash prompt string
+                ---- supports escape sequences expanded at render time (user, host, cwd, time, etc)
+                ---- used to add contextual safety & signal (env, git, prod vs dev)
+        
+        -- modifying prompt design
+            
+            --- add a '$' and a space and a bell to our prompt
+
+                ---- PS1 = "\[\a\]\$ "
+                ---- now we should hear a beep each time the prompt is displayed
+                ---- notice we included '\[' and '\]', because the ASCII bell (\a) does not "print"
+                        -> it does not move the cursor,
+                        -> we need to tell bash so it can correctly determine the length of the prompt
+        
+        
+
 
         
 
@@ -2265,48 +2291,6 @@ customizing the prompt
 
             
             
-
-    
-
-        
-
-
-                
-
-
-
-                    
-
-
-
-
-
-
-
-
-
-
-
-
-                
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2344,59 +2328,6 @@ temp notes
                 ---- put it near the top of your bash script, right after the shebang 
             
             --- useful functions 
-
-
-
-
-
-
-                    
-
-
-
-
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
