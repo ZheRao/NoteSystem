@@ -106,117 +106,69 @@ python system
 
         -- logging 
 
-            --- components 
-
-                ---- logger - this is the "name" you use 
-
-                            import logging
-                            logger = logging.getLogger(__name__)
-                        
-                        -> a logger
-                            --> receives messages 
-                            --> tags them with severity (info/warning/error/etc.)
-                            --> sends them to handlers 
-                        
-                        -> important 
-                            --> a logger does NOT write to files or terminals 
-                            --> it only routes messages 
+            --- 0. one-sentence truth
                 
-                ---- handlers 
+                ---- Python logging is a name-based, hierarchical message routing system where log records propafate upward until they meet handlers
 
-                        -> handlers are the actual "output devices"
-
-                        -> examples 
-                            --> 'StreamHandler'         -> prints to terminal 
-                            --> 'FileHandler'           -> writes to a file 
-                            --> 'RotatingFileHandler'   -> creates daily/size-based log files 
-                            --> 'SMTPHandler'           -> emails logs 
-                            --> 'HTTPHandler'           -> sends logs over the network 
+            --- 1. what a logger is
                 
-                ---- format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+                ---- what it is 
+                        -> a named singleton object return by 'logging.getLogger(name)'
+                        -> identity is only the string name
+                        -> same name -> same logger object
 
-                        -> this is a template for how each log line is printed - the '%(...)' pieces are placeholders that Python's 'logging' module fills in 
+                ---- what it is not
+                        -> not tied to files
+                        -> not tied to modules
+                        -> not passed around (usually)
+                        -> not ordered by creation time
 
-                        -> '%(asctime)s'
-                            --> the timestamp (when the log record was created), as a string 
-                            --> Example: "2025-11-21 09:13:45,123"
+            --- 2. logger hierarchy - how "parent/child" works
+                
+                ---- there is no physical tree in your code 
+
+                ---- hierarchy is built purely by string prefixes split on '.'
                         
-                        -> ' | '
-                            --> literal separator characters, exactly as you see them, to make the log easier to read 
-                        
-                        -> '%(levelname)-8s'
-                            --> the log level name: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
-                            --> '-8s' = format it as a string ('s'), left-justified ('-'), taking up 8 characters 
-                            --> why? so the column lines up nicely 
-                                ---> INFO 
-                                ---> WARNING 
-                                ---> ERROR 
-                            --> that way your logs become visually aligned and easy to scan 
-                        
-                        -> '%(name)s'
-                            --> the name of the logger that produced this message 
-                            --> if you do 'logger = logging.getLogger("qbo.flatten")' then '%(name)s' -> "qbo.flatten"
-                        
-                        -> '%(message)s'
-                            --> the actual log message you passed into logger.info("Flatten started"), possibly after being formatted with arguments
-                        
-                        -> so a real line might look like 
-                                2025-11-21 09:13:45,123 | INFO     | qbo.flatten | Flattening started for company=Monette, year=2024
+                        "sandbox.partition.3"
+                        └── parent: "sandbox.partition"
+                            └── parent: "sandbox"
+                                └── parent: root
+                
+                ---- Python determines parents by repeatedly removing the last segment
+
+            --- 3. propagation
+                
+                ---- what happens when you call 'logger.info(...)'
+                        -> 1. logger creates a LogRecord
+                        -> 2. logger sends record to its own handlers
+                        -> 3. if 'propagate=True' (default)
+                            --> record is sent to parent logger 
+                        -> 4. repeat until root or 'propagate=False'
+
+            --- 4. root logger
+                
+                ---- 'logging.getLogger()' (not name) returns root 
+                ---- root is the final catch-all
+                ---- if you configure root handlers, all loggers propafate into it unless stopped
+                        -> that's why 'logger = logging.getLogger(__name__)' "just works" once root is configured
+
+            --- 5. handlers (what actually writes logs)
+                
+                ---- "FileHandler", "StreamHandler", etc.
+                ---- attached to specific loggers
+                ---- decide 
+                        -> where logs go
+                        -> how they are formatted
+                ---- can be attached anywhere in the hierarchy
+
+                ---- important consequence
+                        -> two loggers writing to the same handler -> same destination
+
+
+
+
 
             
-            --- Spark workflow 
-
-                ---- big picture 
-                        -> there is one driver Python process 
-                        -> there are multiple Python worker processes (started by executors) that run your 'mpPartitions' code 
-                        -> each process needs its own logging configuration (handlers, file, format)
-                
-                ---- driver side 
-                        
-                        -> create directory for logs (both driver and workers can reuse this directory)
-                        
-                        -> define driver logger 
-                            --> choose a log file location for driver logs 
-                            --> 'logging.basicConfig(...)' - configure handers / format / level in the driver process
-                            --> 'logging.getLogger(...)' - get a driver logger
-                                ---> all '.info()', '.debug()', etc. on this logger now go through the driver's handlers (e.g., console + driver log file)
-
-                        -> initialize Spark and use the driver logger 
-                            --> build 'SparkSession'
-                            --> log high-level events to the driver logger:
-                                ---> "Spark started"
-                                ---> "Created DF with N rows / P partitions"
-                                ---> "Starting flatten job for company X / quarter Y"
-                            --> these messages live in driver logs only 
-
-                ---- worker / executor side (inside 'mapPartitions')
-
-                        -> use 'TaskContext' to identify task metadata 
-                            --> 'partitionId()'
-                            --> 'attemptNumber()'
-                            --> optionally, stage id, etc.
-                        
-                        -> define a process (worker) logger in what worker process 
-                            --> descide what file this worker will write to 
-                                ---> one shared executor file (more mushy), or 
-                                ---> one file per worker process (nicer for debugging): includes hostname + PID 
-                            --> attach handlers / format / level here, in the worker 
-                                ---> 'fh = logging.FileHandler(log_file, mode = "a", encoding = "utf-8")'
-                                ---> 'fh.setFormatter(logging.Formatter(
-                                            "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
-                                        ))'
-                                ---> 'logger.addHandler(fh)'
-                                ---> 'logger.setLevel(logging.INFO)'
-                        
-                        -> initialize the process logger with 'logging.getLogger(...)'
-                            --> ensure we only add handlers once per process ('if not logger.handlers:')
-                        
-                        -> use this logger to log partition-level activity 
-                            --> "starting partition X | attempt Y"
-                            --> "processing record k / value v"
-                            --> "finished partition X" or "Error parsing file"
-                            --> all of these messages are written by the worker process to its own log file (or stdout, depending on how you configured the handlers)
-
 
 
 

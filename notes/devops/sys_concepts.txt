@@ -1,9 +1,4 @@
 
-
-
-
-
-
 Python Environments
 
     - environment vs. virtual environment 
@@ -288,6 +283,267 @@ packaging
                 
                 ---- note: pip completely ignores 'poetry.lock', it only trusts '[project].dependencies'
                         -> the lock file is primarily for Poetry to reproduce environments 
+
+
+
+unit test
+
+    - pytest
+        
+        -- typical output
+
+                (venv) $ pytest
+                ============================= test session starts =============================
+                platform win32 -- Python 3.10.5, pytest-7.1.2, pluggy-1.0.0
+                rootdir: ...\effective-python-testing-with-pytest
+                collected 4 items
+
+                test_with_pytest.py .F                                                   [ 50%]
+                test_with_unittest.py F.                                                 [100%]
+
+                ================================== FAILURES ===================================
+                ______________________________ test_always_fails ______________________________
+
+                    def test_always_fails():
+                >       assert False
+                E       assert False
+
+                test_with_pytest.py:7: AssertionError
+                ________________________ TryTesting.test_always_fails _________________________
+
+                self = <test_with_unittest.TryTesting testMethod=test_always_fails>
+
+                    def test_always_fails(self):
+                >       self.assertTrue(False)
+                E       AssertionError: False is not true
+
+                test_with_unittest.py:10: AssertionError
+                =========================== short test summary info ===========================
+                FAILED test_with_pytest.py::test_always_fails - assert False
+                FAILED test_with_unittest.py::TryTesting::test_always_fails - AssertionError:...
+
+                ========================= 2 failed, 2 passed in 0.20s =========================
+
+        -- status of each test
+
+            --- "." means that the test passed
+            --- "F" means that the test has failed
+            --- "E" means that the test raised an unexpected exception
+
+    - TDD
+        
+        -- core philosophy
+            
+            --- tests are executable specifications 
+                
+                ---- a test is not a safety net added after the fact
+                ---- it is a formal, machine-enforced statement of what "correct" means
+                ---- if you cannot write the test, you do not yet understand the requirements
+
+            --- design emerges from constraints, not cleverness
+                
+                ---- clarify inputs and outputs
+                ---- expose hidden assumptions
+                ---- separate concerns
+                ---- define contracts explicitly
+
+            --- separate pure logic from side effects
+                
+                ---- pure functions
+                ---- injected dependencies
+                ---- explicit configuration
+                ---- thin orchestration layers
+                ---- makes code testable and evolvable
+
+        -- connection to CI 
+            
+            --- CI is TDD enforced by machines, continuously, without asking humans for permission
+
+            --- Continuous Integration - answers to "is the system still correct after this change?"
+                
+                ---- take a clean environment
+                ---- install dependencies
+                ---- run tests
+                ---- report pass/fail
+                ---- without local development state - if something passes in CI, it actually works
+
+            --- minimal GitHub Actions CI 
+                    
+                    name: CI
+
+                    on:
+                      push:
+                      pull_request:
+
+                    jobs:
+                      test:
+                        runs-on: ubuntu-latest
+                        steps:
+                          - uses: actions/checkout@v4
+
+                          - uses: actions/setup-python@v5
+                            with:
+                              python-version: "3.11"
+
+                          - name: Install dependencies
+                            run: |
+                              pip install -r requirements.txt
+                              pip install -r requirements-dev.txt
+
+                          - name: Run tests
+                            run: pytest
+
+    - fixtures
+        
+        -- 3 power of fixtures
+            
+            --- resuse - avoid copy/pasting the same dataset
+            --- life cycle - set up once, tear down reliably
+                ---- create temp directories
+                ---- start Spark
+                ---- create test lake layout
+                ---- clean up after
+            --- scoping (performance + correctness) - control how often a dependency is created
+
+        -- pattern 1: "contract + IO" style fixtures
+            
+            --- a test lake root 
+                
+                    @pytest.fixture
+                    def lake_root(tmp_path):
+                        root = tmp_path / "lake"
+                        root.mkdir()
+                        return str(root)
+
+            --- a small silver PL dataframe (for unit tests)
+                    
+                    @pytest.fixture
+                    def pl_rows():
+                        return [
+                            {"TransactionDate": "2025-01-01", "TransactionType": "Invoice", "TransactionID": "1"},
+                            {"TransactionDate": "2025-01-02", "TransactionType": "Bill",    "TransactionID": "2"},
+                        ]
+
+            --- convert those rows to a Spark DF (resource + helper)
+                
+                    @pytest.fixture
+                    def pl_df(spark, pl_rows):
+                        return spark.createDataFrame(pl_rows)
+
+        -- pattern 2: factory fixtures (when you need many variants)
+            
+            --- instead of a single dataset, return a function
+                    
+                    @pytest.fixture
+                    def make_pl_row():
+                        def _make(**overrides):
+                            base = {
+                                "TransactionDate": "2025-01-01",
+                                "TransactionType": "Invoice",
+                                "TransactionID": "1",
+                                "Amount": "10.00",
+                            }
+                            base.update(overrides)
+                            return base
+                        return _make
+
+            --- use it
+                    
+                    def test_amount_parsing(make_pl_row):
+                        row = make_pl_row(Amount="100.25")
+                        ...
+
+        -- pattern 3: autouse fixtures (policy enforcement)
+
+        -- pattern 4: parameterize + fixtures together (best practice)
+
+    - marks: categorizing tests
+        
+        -- core idea: it is a label you attach to tests so you can
+            
+            --- select which tests to run
+            --- change behavior based on declared dependencies
+            --- make test intent explicit
+
+        -- mental model
+            
+            --- 'pytest -m fast'
+            --- discover everything
+            --- run only tests labeled "fast"
+
+        -- steps
+            
+            --- step 1: mark tests
+                    
+                    @pytest.mark.fast
+                    @pytest.mark.mark2_if_needed
+                    def test_parse_date():
+                        assert xxxxxx
+
+                    @pytest.mark.io
+                    ...
+
+                    @pytest.mark.external
+                    ...
+
+            --- step 2: register marks in "pytest.ini" - pytest then warns if you mistype and enforce discipline
+                    
+                    [pytest]
+                    markers = 
+                        fast: pure logic, no I/O
+                        io: filesystem access
+                        external: network or external services
+
+            --- step 3: run subsets - Boolean logic over test intent
+                    
+                    pytest                   # run everything
+                    pytest -m fast            # only fast unit tests
+                    pytest -m "not external"  # skip slow / flaky tests
+                    pytest -m "fast or io"
+                    pytest -m "fast and not io"
+
+        -- example marks
+            
+            --- "unit"          - pure functions, deterministic
+            --- "integration"   - cross-module logic
+            --- "io"            - filesystem
+            --- "spark"         - requires Spark session
+            --- "slow"          - long-running
+            --- "external"      - APIs, network
+            --- "prod_only"     - dangerous / restricted
+
+    - parameterization: combining tests
+
+        -- core idea: parameterization separates test logic from test cases
+
+        -- example - parameterization with descriptive nature
+            
+                @pytest.mark.parametrize(
+                    "maybe_palindrome, expected",
+                    [
+                        ("", True),
+                        ("a", True),
+                        ("Bob", True),
+                        ("abc", False),
+                    ],
+                    ids=[
+                        "empty_string",
+                        "single_char",
+                        "mixed_case",
+                        "not_palindrome",
+                    ],
+                )
+                def test_is_palindrome(maybe_palindrome, expected):
+                    assert is_palindrome(maybe_palindrome) == expected
+            
+            --- now failures say: FAILED test_is_palindrome[mixed_case]
+
+        -- parameterization turns example-based tests into rule-based tests by separating test logic from test cases
+
+
+
+    
+    
 
 
 
