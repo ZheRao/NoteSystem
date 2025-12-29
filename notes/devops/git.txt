@@ -1,6 +1,79 @@
 
 
 
+undo
+    
+    - git restore --staged .
+    - git restore .
+
+
+branching
+    
+    - navigate branches
+
+        -- git branch --show-current    : show current branch
+        -- git branch                   : show all branches
+        -- git branch -a                : include remote branches
+
+        -- git log --oneline --decorate --graph --all -n 20 : see recent commits as a graph
+
+    - make sure base branch is upt to date (main/master)
+
+        -- git switch main              : switch to main (or master)
+        -- git pull                     : pull latest
+
+    - create a new branch
+        
+        -- git switch -c feature/my-change      : '-c' creates a new branch
+        -- naming tips: feature/... fix/... chore/... makes PRs easier to read
+
+    - see the differences
+        
+        -- git diff
+
+    - add & commit & push
+        
+        -- git push -u origin feature/my-change
+            --- '-u' links local branch to origin/feature/my-change, so later just need to run 'git push'
+
+    - after PR merge, clean up
+        
+        -- git switch main
+        -- git pull
+        -- git branch -d feature/my-change              : delete local branch
+        -- git push origin --delete feature/my-change   : delete remote branch
+
+    
+
+
+not tracking/untrack files
+    
+    - untrack file
+        
+        -- git rm --cached file_path
+        -- git commit -m 'untracking file'
+
+    - ignore files
+        
+        -- vim .gitignore
+            
+                # secrets / local configs
+                .env
+                *.env
+                config/local.json
+                secrets/
+
+                # OS / editor junk
+                .DS_Store
+                Thumbs.db
+                .vscode/
+                .idea/
+
+                # Python
+                __pycache__/
+                *.pyc
+                .venv/
+
 
 
 
