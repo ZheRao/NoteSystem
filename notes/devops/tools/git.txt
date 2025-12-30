@@ -1,0 +1,124 @@
+
+init repo and connect remotely
+
+    - one-time SSH set up
+        
+        -- check whether everything is setup
+            
+            --- ssh -T git@github.com       : if authenticated, you are good
+            --- ls -al ~/.ssh               : check for "id_ed25519"
+
+        -- create "id_ed25519"
+            
+            --- ssh-keygen -t ed25519 -C "your_email@example.com"
+            --- eval "$(ssh-agent -s)"
+            --- ssh-add ~/.ssh/id_ed25519
+            --- cat ~/.ssh/id_ed25519.pub
+
+            --- copy printed key -> GitHub -> Settings -> SSH and GPG keys -> New SSH key
+            --- ssh -T git@github.com       : test again
+
+        -- connect to remote repo
+            
+            --- cd /path/to/my-repo
+            --- git init
+            --- git branch -M main          : set default branch to main
+
+            --- create all the files
+
+            --- git add .
+            --- git commit -m 'initial commit'
+            
+            --- git remote add origin git@github.com:YOUR_USERNAME/remote-repo.git
+            --- git push -u origin main
+
+
+common operations
+
+    - undo
+        
+        -- git restore --staged .
+        -- git restore .
+
+
+    - not tracking/untrack files
+        
+        -- untrack file
+            
+            --- git rm --cached file_path
+            --- git commit -m 'untracking file'
+
+        -- ignore files
+            
+            --- vim .gitignore
+                
+                    # secrets / local configs
+                    .env
+                    *.env
+                    config/local.json
+                    secrets/
+
+                    # OS / editor junk
+                    .DS_Store
+                    Thumbs.db
+                    .vscode/
+                    .idea/
+
+                    # Python
+                    __pycache__/
+                    *.pyc
+                    .venv/
+
+
+
+branching
+    
+    - navigate branches
+
+        -- git branch --show-current    : show current branch
+        -- git branch                   : show all branches
+        -- git branch -a                : include remote branches
+
+        -- git log --oneline --decorate --graph --all -n 20 : see recent commits as a graph
+
+    - make sure base branch is upt to date (main/master)
+
+        -- git switch main              : switch to main (or master)
+        -- git pull                     : pull latest
+
+        -- if main brach is modified midway in dev of new branch, have to merge new main into current branch
+            
+            --- git switch feature/new
+            --- git merge main
+
+        -- or without using the initial commands, instead, directly use the remote-tracking branch 
+            
+            --- without swtich main & pull
+            --- git fetch origin
+            --- git switch feature/new
+            --- git rebase origin/main
+
+    - create a new branch
+        
+        -- git switch -c feature/my-change      : '-c' creates a new branch
+        -- naming tips: feature/... fix/... chore/... makes PRs easier to read
+
+    - see the differences
+        
+        -- git diff
+
+    - add & commit & push
+        
+        -- git push -u origin feature/my-change
+            --- '-u' links local branch to origin/feature/my-change, so later just need to run 'git push'
+
+    - after PR merge, clean up
+        
+        -- git switch main
+        -- git pull
+        -- git branch -d feature/my-change              : delete local branch
+        -- git push origin --delete feature/my-change   : delete remote branch
+
+    
+
+
