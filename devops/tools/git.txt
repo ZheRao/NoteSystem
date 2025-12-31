@@ -34,6 +34,8 @@ init repo and connect remotely
 
 
 common operations
+    
+    - git commit -A     : stage all changes
 
     - undo
         
@@ -96,7 +98,7 @@ branching
             --- without swtich main & pull
             --- git fetch origin
             --- git switch feature/new
-            --- git rebase origin/main
+            --- git merge main  or   git rebase origin/main
 
     - create a new branch
         
