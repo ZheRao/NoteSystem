@@ -11,12 +11,10 @@ This repository makes a deliberate transition:
 
 ## Purpose
 
-NoteSystem is not a notebook.
-It is a **retrieval-first thinking system**:
-- Externalize part of my **prefrontal cortex**
-- Knowledge is indexed for *future recall*, not just storage
-- Notes are written to **accelerate compound understanding**
-- Structure is optimized for **navigation, synthesis,** and **resuse**
+NoteSystem is not a notebook. It is
+- a **retrieval-first thinking system**
+- an **externalized prefrontal cortex**
+- a place where thoughts can *live, mature,* and *be revisited* without **occupying working memory**
 
 ## Core Components
 
