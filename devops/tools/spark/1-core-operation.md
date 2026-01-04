@@ -81,3 +81,15 @@
 
 - `df.sample(withReplacement, fraction, seed=None)`
 - `df.randomSplit([w1, w2, ...], seed=None)`
+
+## 7. Missing Data
+
+- `df.na.fill(...)`
+- `df.na.drop(...)`
+- `df.na.replace(...)`
+
+## 8. Write Path (IO)
+
+- `df.write.format(...).mode(...).option(...).save(path)`
+- `.partitionBy("col1", ...)`
+- `.bucketBy(n, "col")` + `.sortBy("col")` *(usually with `.saveAsTable(...)`)*
