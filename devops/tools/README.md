@@ -20,3 +20,10 @@
 10. [UDF](https://github.com/ZheRao/NoteSystem/blob/main/devops/tools/spark/10-UDF.md)
 11. [Other Operations](https://github.com/ZheRao/NoteSystem/blob/main/devops/tools/spark/11-other-operation.md)
 
+## Pandas
+
+1. [I/O & Inspect](https://github.com/ZheRao/NoteSystem/blob/main/devops/tools/pandas/01-io-inspect.md)
+2. [Query & Selection](https://github.com/ZheRao/NoteSystem/blob/main/devops/tools/pandas/02-query-selection.md)
+3. [Modifying Data](https://github.com/ZheRao/NoteSystem/blob/main/devops/tools/pandas/03-modify-data.md)
+4. [Advanced Mechanics](https://github.com/ZheRao/NoteSystem/blob/main/devops/tools/pandas/04-advanced.md)
+5. [String Filter & Regex](https://github.com/ZheRao/NoteSystem/blob/main/devops/tools/pandas/05-regex.md)
