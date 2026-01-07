@@ -110,7 +110,7 @@ pyenv which python
 **4.1 Force venv inside repo**
 
 ```bash
-poetry config --local virtualenv.in-project true
+poetry config --local virtualenvs.in-project true
 ```
 
 Results:
