@@ -147,7 +147,21 @@ This:
 - Uses pyenv's local Python
 - Creates `.venv/` if missing
 
-**5.2 Install dependencies (initially none)**
+**5.2 Tell Poetry what to package (explicit `packages`)**
+
+Modify `pyproject.toml`
+> Assume "src" layout
+
+```toml
+[tool.poetry]
+name = "path-adapter"
+
+packages = [
+  { include = "path_adapter", from = "src" }
+]
+```
+
+**5.3 Install dependencies (initially none)**
 
 ```bash
 poetry install
