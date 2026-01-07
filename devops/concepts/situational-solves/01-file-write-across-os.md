@@ -1,3 +1,15 @@
+# Minimal Build
+
+Requires
+- `pathlib.Path`
+- `out_path` must be a `pathlib.Path` **object**
+
+```python
+tmp = out_path.with_suffix(out_path.suffix + ".tmp")
+df.to_csv(tmp, index=False)
+tmp.replace(out_path)  # atomic-ish rename in same directory
+```
+
 # Publish Gold Tables from WSL to Windows before Azure 
 
 **Problem at hand**:
