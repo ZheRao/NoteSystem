@@ -148,27 +148,7 @@ Spark setup
 
 Twilio setup 
 
-    - install nvm 
 
-        1) Install nvm
-
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-
-            # reload shell (or just close/open terminal)
-            source ~/.bashrc  # or ~/.zshrc depending on your shell
-
-        2) Install a stable Node version
-            nvm install --lts
-
-        3) Use it
-            nvm use --lts
-
-        4) Confirm
-            node -v
-            npm -v
-        
-        5) 
-            npm install -g twilio-cli
 
     - login 
 
@@ -177,9 +157,9 @@ Twilio setup
     - comman operations 
 
         -- create a project 
-            --- 'twilio assets:init --service-name sop-project'
+            --- 'twilio assets:init --service-name sop-docs'
 
-        -- activate profile 
+        -- check and activate profile 
             --- 'twilio profiles:list'
             --- 'twilio profiles:use monette-zhe'
         
@@ -193,8 +173,37 @@ Twilio setup
 
                 cd ~/files
                 for f in *.pdf; do
-                    twilio assets:upload "$f"
+                    twilio assets:upload "$f";
                 done
+        
+        -- nuke assets
+
+            twilio api:serverless:v1:services:remove --sid ZSxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+            --- find sid 
+
+                twilio api:serverless:v1:services:list
+            
+            --- check inside service for presence of functions (identify code services)
+
+                ---- twilio api:serverless:v1:services:functions:list --service-sid ZS_...
+
+            --- after nuking, delete local cached pointers to the old ZID 
+
+                ---- find the file 
+                        grep -R "ZSec9c6a61ec2124949b56da9845c6bbcd" -n ~ 2>/dev/null | head -n 20
+                
+                ---- look for 
+                        ~/.twilio-cli/plugins/@twilio-labs/plugin-assets/config.json
+                        ~/path/to/code/whatsapp-backend/assets/assets_meta.private.js
+                
+                ---- rm both
+        
+        -- recreate service for asset upload 
+
+            --- twilio assets:init --service-name sop-docs
+                note: don't do it inside code directory 
+
         
         -- install serverless plugin 
             --- 'twilio plugins:install @twilio-labs/plugin-serverless'
@@ -234,11 +243,26 @@ curl -X POST http://localhost:3000/whatsapp-reply \
             --- 'twilio logout'
 
 
+- config
+
+
+Linux path:
+files/
+
+win_path="/mnt/c/Users/ZheRao/OneDrive - Monette Farms/Desktop/Work Files/Projects/6-SOP/final/uploads/"
+
+rsync -av "$win_path" files/
+
+twilio assets:list -o json > assets/assets_meta.private.js
 
 
 
+find how many files in directory
+
+ls -1 | wc -l
 
 
+upload < 100 files at a time
 
 
 
