@@ -76,7 +76,7 @@ y_i = \sum_{j=1}^{n} W_{ij} x_j
 ```latex
 \mathbf{w}^\top \mathbf{x}
 ```
-> $ \mathbf{w}^\top \mathbf{x} $
+> $\mathbf{w}^\top \mathbf{x}$
 
 # 3. Transpose, inverse, identity
 
@@ -94,7 +94,7 @@ y_i = \sum_{j=1}^{n} W_{ij} x_j
 ```latex
 \mathbf{W}^\top \mathbf{W} = \mathbf{I}
 ```
-> $ \mathbf{W}^\top \mathbf{W} = \mathbf{I} $
+> $\mathbf{W}^\top \mathbf{W} = \mathbf{I}$
 
 # 4. Norms, distances, magnitudes
 
@@ -104,17 +104,19 @@ y_i = \sum_{j=1}^{n} W_{ij} x_j
 \|\mathbf{x}\|_1
 \|\mathbf{x}\|_\infty
 ```
-> $\|\mathbf{x}\|$  
-> $\|\mathbf{x}\|_2$  
-> $\|\mathbf{x}\|_1$  
-> $\|\mathbf{x}\|_\infty$
+> $$
+> \|\mathbf{x}\|,  
+> \|\mathbf{x}\|_2,  
+> \|\mathbf{x}\|_1,  
+> \|\mathbf{x}\|_\infty
+> $$
 
 **Distance**
 
 ```latex
 \|\mathbf{x} - \mathbf{y}\|
 ```
-> $ \|\mathbf{x} - \mathbf{y}\| $
+> $\|\mathbf{x} - \mathbf{y}\|$
 
 # 5. Functions, mappings, and geometry
 
@@ -123,7 +125,7 @@ y_i = \sum_{j=1}^{n} W_{ij} x_j
 ```latex
 f(\mathbf{x})
 ```
-> $ f(\mathbf{x}) $
+> $f(\mathbf{x})$
 
 **Linear map**:
 
@@ -137,7 +139,7 @@ f(\mathbf{x}) = \mathbf{W}\mathbf{x}
 ```latex
 f(\mathbf{x}) = \mathbf{W}\mathbf{x} + \mathbf{b}
 ```
-> $ f(\mathbf{x}) = \mathbf{W}\mathbf{x} + \mathbf{b}  $
+> $f(\mathbf{x}) = \mathbf{W}\mathbf{x} + \mathbf{b} $
 
 **Activation**
 
@@ -185,8 +187,7 @@ f(\mathbf{x}) = \mathbf{W}\mathbf{x} + \mathbf{b}
 \frac{\partial \mathbf{y}}{\partial \mathbf{x}}
 ```
 > $$
-> \frac{\partial L}{\partial \mathbf{x}}
-> =
+> \frac{\partial L}{\partial \mathbf{x}} =
 > \frac{\partial L}{\partial \mathbf{y}}
 > \frac{\partial \mathbf{y}}{\partial \mathbf{x}}
 > $$
@@ -200,22 +201,22 @@ f(\mathbf{x}) = \mathbf{W}\mathbf{x} + \mathbf{b}
 \mathbb{E}_{x \sim p(x)}[f(x)]
 ```
 
-> $ \mathbb{E}[X] $  
-> $ \mathbb{E}_{x \sim p(x)}[f(x)] $
+> $\mathbb{E}[X]$  
+> $\mathbb{E}_{x \sim p(x)}[f(x)]$
 
 **Variance**
 
 ```latex
 \mathrm{Var}(X)
 ```
-> $ \mathrm{Var}(X) $
+> $\mathrm{Var}(X)$
 
 **Entropy**
 
 ```latex
 H(p) = - \sum_x p(x) \log p(x)
 ```
-> $ H(p) = - \sum_x p(x) \log p(x) $
+> $H(p) = - \sum_x p(x) \log p(x)$
 
 # 8. Common ML symbols
 
@@ -263,7 +264,6 @@ $$
 \frac{\mathbf{w}^\top \mathbf{x}}{\mathbf{w}^\top \mathbf{w}} \mathbf{w}
 ```
 > $$
-> \mathrm{proj}_{\mathbf{w}}(\mathbf{x})
-> =
+> \mathrm{proj}_{\mathbf{w}}(\mathbf{x}) =
 > \frac{\mathbf{w}^\top \mathbf{x}}{\mathbf{w}^\top \mathbf{w}} \mathbf{w}
 > $$
