@@ -137,3 +137,133 @@ f(\mathbf{x}) = \mathbf{W}\mathbf{x}
 ```latex
 f(\mathbf{x}) = \mathbf{W}\mathbf{x} + \mathbf{b}
 ```
+> $ f(\mathbf{x}) = \mathbf{W}\mathbf{x} + \mathbf{b}  $
+
+**Activation**
+
+```latex
+\sigma(\mathbf{W}\mathbf{x} + \mathbf{b})
+```
+> $\sigma(\mathbf{W}\mathbf{x} + \mathbf{b})$
+
+# 6. Derivatives, gradients, Jacobians (deep learning core)
+
+**Scalar derivative**
+
+```latex
+\frac{dL}{dx}
+```
+> $$ \frac{dL}{dx} $$
+
+**Partial derivative**
+
+```latex
+\frac{\partial L}{\partial x}
+```
+> $$ \frac{\partial L}{\partial x} $$
+
+**Gradient (vector)**
+
+```latex
+\nabla_{\mathbf{x}} L
+```
+> $$ \nabla_{\mathbf{x}} L $$
+
+**Jacobian**
+
+```latex
+\frac{\partial \mathbf{y}}{\partial \mathbf{x}}
+```
+> $$ \frac{\partial \mathbf{y}}{\partial \mathbf{x}} $$
+
+**Chain rule (backprop essence)**
+
+```latex
+\frac{\partial L}{\partial \mathbf{x}}
+=
+\frac{\partial L}{\partial \mathbf{y}}
+\frac{\partial \mathbf{y}}{\partial \mathbf{x}}
+```
+> $$
+> \frac{\partial L}{\partial \mathbf{x}}
+> =
+> \frac{\partial L}{\partial \mathbf{y}}
+> \frac{\partial \mathbf{y}}{\partial \mathbf{x}}
+> $$
+
+# 7. Expectations, probability, extropy (later but inevitable)
+
+**Expectation**:
+
+```latex
+\mathbb{E}[X]
+\mathbb{E}_{x \sim p(x)}[f(x)]
+```
+
+> $ \mathbb{E}[X] $  
+> $ \mathbb{E}_{x \sim p(x)}[f(x)] $
+
+**Variance**
+
+```latex
+\mathrm{Var}(X)
+```
+> $ \mathrm{Var}(X) $
+
+**Entropy**
+
+```latex
+H(p) = - \sum_x p(x) \log p(x)
+```
+> $ H(p) = - \sum_x p(x) \log p(x) $
+
+# 8. Common ML symbols
+
+```latex
+\theta      % parameters
+\mathcal{L} % loss
+\arg\min
+\arg\max
+```
+> $\theta$, $\mathcal{L}$, $\arg\min$, $\arg\max$
+
+# 9. Clean multi-line equations (Readbility)
+
+Use `aligned`:
+
+```latex
+$$
+\begin{aligned}
+\mathbf{z} &= \mathbf{W}\mathbf{x} + \mathbf{b} \\
+\mathbf{y} &= \sigma(\mathbf{z})
+\end{aligned}
+$$
+```
+> $$
+> \begin{aligned}
+> \mathbf{z} &= \mathbf{W}\mathbf{x} + \mathbf{b} \\
+> \mathbf{y} &= \sigma(\mathbf{z})
+> \end{aligned}
+> $$
+
+# 10. Inner products, projections (geometry intuition)
+
+**inner product**:
+
+```latex
+\langle \mathbf{w}, \mathbf{x} \rangle
+```
+> $\langle \mathbf{w}$, $\mathbf{x} \rangle$
+
+**Projection**:
+
+```latex
+\mathrm{proj}_{\mathbf{w}}(\mathbf{x})
+=
+\frac{\mathbf{w}^\top \mathbf{x}}{\mathbf{w}^\top \mathbf{w}} \mathbf{w}
+```
+> $$
+> \mathrm{proj}_{\mathbf{w}}(\mathbf{x})
+> =
+> \frac{\mathbf{w}^\top \mathbf{x}}{\mathbf{w}^\top \mathbf{w}} \mathbf{w}
+> $$
