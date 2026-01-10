@@ -32,7 +32,7 @@ Recommended for ML notes: **bold**
 
 ```latex
 \mathbf{x}, \mathbf{w}, \mathbf{y}
-``
+```
 
 > $\mathbf{x}$, $\mathbf{w}$, $\mathbf{y}$
 
