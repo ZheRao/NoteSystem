@@ -267,3 +267,64 @@ $$
 > \mathrm{proj}_{\mathbf{w}}(\mathbf{x}) =
 > \frac{\mathbf{w}^\top \mathbf{x}}{\mathbf{w}^\top \mathbf{w}} \mathbf{w}
 > $$
+
+
+# 11. Matrices, column vectors
+
+**column vectors**
+
+```latex
+$$
+\mathbf{w} =
+\begin{bmatrix}
+w_1 \\
+w_2 \\
+\vdots
+\end{bmatrix}
+$$
+```
+
+> $$
+> \mathbf{w} =
+> \begin{bmatrix}
+> w_1 \\
+> w_2 \\
+> \vdots
+> \end{bmatrix}
+> $$
+
+**matrix as column vectors**
+
+```latex
+$$
+\mathbf{W}
+=
+\begin{bmatrix}
+\mathbf{w}_1 & \mathbf{w}_2 & \cdots & \mathbf{w}_n
+\end{bmatrix},
+\qquad
+\mathbf{w}_i =
+\begin{bmatrix}
+w_{i1} \\
+w_{i2} \\
+\vdots \\
+w_{id}
+\end{bmatrix}
+$$
+```
+
+> $$
+> \mathbf{W}
+> =
+> \begin{bmatrix}
+> \mathbf{w}_1 & \mathbf{w}_2 & \cdots & \mathbf{w}_n
+> \end{bmatrix},
+> \qquad
+> \mathbf{w}_i =
+> \begin{bmatrix}
+> w_{i1} \\
+> w_{i2} \\
+> \vdots \\
+> w_{id}
+> \end{bmatrix}
+> $$
