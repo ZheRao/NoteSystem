@@ -314,8 +314,7 @@ $$
 ```
 
 > $$
-> \mathbf{W}
-> =
+> \mathbf{W} =
 > \begin{bmatrix}
 > \mathbf{w}_1 & \mathbf{w}_2 & \cdots & \mathbf{w}_n
 > \end{bmatrix},
