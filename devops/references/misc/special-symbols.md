@@ -8,6 +8,7 @@
 
 - hard stop: ❌
 - green light: ✅
+- warning: ⚠️
 
 
 
