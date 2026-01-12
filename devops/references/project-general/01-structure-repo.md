@@ -14,6 +14,16 @@ config/
     paths.wsl.json
     paths.prod.json
 
+  contracts/
+    bronze.json
+    silver.json
+    gold.json
+    expectations.json   # null rules, allowed ranges, uniqueness, etc.
+
+  connectors/
+    qbo.json          # base URLs, scopes, realm-id presence rules, pagination strategy
+    fx_rates.json     # provider name, base currency, refresh cadence
+
   domain/                   # “business decisions / logic”
     companies.json          # canonical company list + ids
     mappings/
