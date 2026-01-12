@@ -1,7 +1,8 @@
 # Config & State
 
-```text
+Structure:
 
+```text
 config/
   README.md
 
@@ -43,6 +44,24 @@ state/                      # machine-written (gitignored)
   pipeline_meta.json        # last_load_date, watermark, last_fx_rate_date, etc.
   checkpoints/
   locks/
+```
 
+Location for placement ("production-proof" approach)
 
+```text
+src/path_adapter/
+  __init__.py
+  resources/
+    config/io/paths.win.json
+```
+
+Load it:
+
+```python
+from importlib.resources import files
+import json
+
+def read_paths(name="paths.win.json") -> dict:
+    p = files("path_adapter.resources").joinpath(f"config/io/{name}")
+    return json.loads(p.read_text())
 ```
