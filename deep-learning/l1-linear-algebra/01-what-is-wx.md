@@ -26,6 +26,8 @@ A linear transformation can:
 
 > A neural network layer is not learning *values* — it is learning **axes of interpretation**.
 
+*(detail in Appendix)*
+
 # 2. Dot prouduct = alignment
 
 Each neuron computes
@@ -125,4 +127,190 @@ You are not **changing the object**, only how you *look at it*.
 - In theory: pure "re-labeling of meaning directions"
 
 
-## 2. Projection 
+## 2. Projection — *flattening (information loss)*
+
+**Condition**
+
+$$
+\mathbf{W} \in \mathbb{R}^{k \times n}, \quad k < n
+$$
+
+Often:
+
+$$
+\mathbf{W} = 
+\begin{bmatrix}
+\mathbf{w}^\top_{1} \\
+\mathbf{w}^\top_{2} \\
+\vdots
+\end{bmatrix}
+$$
+
+Each row is a direction you keep.  
+Extracting less number of features compared to number of input dimensions
+
+**What happens geometrically**
+- Some dimensions are **collapsed to zero**
+- Multiple points map to the same output
+- Non-invertible
+
+**Mental anchor**
+> Shadow on a wall — depth is gone forever
+
+**Neural network meaning**
+- Dimensionality reduction
+- Bottlenecks
+- PCA-like behavior
+- Compression layers
+
+> Once projected, **no downstream layer can recover what was destroyed**
+
+That is why bottlenecks are powerful and dangerous.
+
+## 3. Embedding — *extrusion (higher dimension)*
+
+**Condition**
+
+$$
+\mathbf{W} \in \mathbb{R}^{m \times n}, \quad m > n
+$$
+
+Common structure:
+- Rows are **learned features**
+- Columns spread input into multiple channels 
+
+**What happens geometrically**
+- Original space lives inside a higher-D space
+- No new information is created
+- But **structure becomes linearly separable**
+
+**Mental anchor**
+> Lifting a 2D knot into 3D so it can be untangled
+
+**Neural network meaning**
+- Feature expansion
+- Hidden layers
+- Kernel trick (implicitly)
+
+> Embedding $\neq$ adding information  
+> Embedding = **making relationships easier to express**
+
+This is *critical* for expressivity
+
+## 4. Stretch / scale — *emphasize directions*
+
+**Condition**
+
+$$
+\mathbf{W} = diag(\lambda_{1}, \lambda_{2}, ...)
+$$
+
+Or more generally:
+
+$$
+\mathbf{W} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^\top
+$$
+
+**What happens geometrically**
+- Some axes stretched
+- Others shrunk
+- Relative importance changes
+
+**Mental anchor**
+>Turning volume knobs on different traits
+
+**Neural network meaning**
+- Feature weighting
+- Activation sensitivity
+- Gradient amplification or suppression
+
+> Large singular values = dominant learned concepts  
+> Small ones = ignored structure
+
+## 5. Shear / skew — *mix axes asymmetrically*
+
+**Condition**
+
+$$
+\mathbf{W} = 
+\begin{bmatrix}
+1 & k \\
+0 & 1
+\end{bmatrix}
+$$
+
+**What happens geometrically**
+- One axis slides relative to another
+- Angles distorted
+- Parallel lines preserved
+
+**Mental anchor**
+> Pushing the top of a box sideways
+
+**Neural network meaning**
+- Feature interactions
+- Correlated feature mixing
+- Non-orthognal representations
+
+This is where **entanglement begins**
+
+## 6. "Learn new axes" — *the core neural insight*
+
+**Condition**
+
+Each neuron computes:
+
+$$
+y_{i} = \mathbf{w}^\top_{i} \mathbf{x}
+$$
+
+This is **projection onto a learned direction**.
+
+Stacked:
+
+$$
+\mathbf{y} = \mathbf{W} \mathbf{x}
+$$
+
+**What happens geometrically**
+- Each row of $\mathbf{W}$ defines a **concept direction**
+- The layer outputs coordinates *in that concept basis*
+
+**Mental anchor**
+> The network invents its own coordinate system for meaning
+
+This is the key sentence
+> **A neural network layer is a learned basis change + scaling + projection**.
+
+## 7. Why this reframes "learning"
+
+The network is not learning *facts*  
+It is learning **what directions in space matter**
+
+Each neuron asks:
+> "How much does this input align with *my* idea of something meaningful?"
+
+That's:
+
+$$
+\mathbf{w}^\top_{i} \mathbf{x}
+$$
+
+## 8. One unifying view
+
+Every linear layer can be decomposed as:
+
+$$
+\mathbf{W} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^\top
+$$
+
+Meaning:
+1. Rotate into a useful basis (&\mathbf{V}^\top&)
+2. Stretch / suppress dimensions ($\mathbf{\Sigma}$)
+3. Rotate again ($\mathbf{U}$)
+> Every layer = **re-express → emphasize → re-express**
+
+# Final anchor sentence
+
+> Linear algebra is not about numbers.  
+It is about **how information is reshaped, compressed, and reinterpreted in space**.
