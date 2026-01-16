@@ -61,6 +61,7 @@ df["first_name"] = df["name"].str.split(" ").str[0]
 df["col"].str.zfill(2)
 df["col"].str.slice(3, 5)
 df["col"].str.startswith("A")
+df["col"].str.capitalize()
 ```
 
 # 4. Column Management & Copying
