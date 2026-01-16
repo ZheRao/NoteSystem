@@ -33,6 +33,7 @@ empty_df.loc[len(empty_df)] = new_row
 ```python
 df.columns
 list(df.index)
+df.index.name
 
 df.info()
 df.describe()
