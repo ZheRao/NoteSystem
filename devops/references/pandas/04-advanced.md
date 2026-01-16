@@ -1,3 +1,16 @@
+# Create Mapping based on two columns
+
+```python
+mapping = (
+    df[["column1", "column2"]]
+    .dropna()
+    .astype(str)
+    .apply(lambda s: s.str.strip())
+    .set_index("column1")["column2"]
+    .to_dict()
+)
+```
+
 # JSON Handling
 
 **DataFrame → JSON**
