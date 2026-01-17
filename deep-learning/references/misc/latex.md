@@ -275,21 +275,21 @@ $$
 
 ```latex
 $$
-\mathbf{w} =
 \begin{bmatrix}
-w_1 \\
-w_2 \\
-\vdots
+a_{11} & a_{12} & \cdots & a_{1n} \\
+a_{21} & a_{22} & \cdots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mn}
 \end{bmatrix}
 $$
 ```
 
 > $$
-> \mathbf{w} =
 > \begin{bmatrix}
-> w_1 \\
-> w_2 \\
-> \vdots
+> a_{11} & a_{12} & \cdots & a_{1n} \\
+> a_{21} & a_{22} & \cdots & a_{2n} \\
+> \vdots & \vdots & \ddots & \vdots \\
+> a_{m1} & a_{m2} & \cdots & a_{mn}
 > \end{bmatrix}
 > $$
 
@@ -327,3 +327,7 @@ $$
 > w_{id}
 > \end{bmatrix}
 > $$
+
+# 12. Other common expressions
+
+- \neq → $\neq$
