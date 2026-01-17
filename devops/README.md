@@ -18,9 +18,12 @@
 ## 1. Repo & system structure 
 
 - **How repos should be structured**
-  - [Repo and Import](https://github.com/ZheRao/NoteSystem/blob/main/devops/references/project-general/01-structure-repo.md)
-  - [Container Objects for Defaults & Config](https://github.com/ZheRao/NoteSystem/blob/main/devops/references/project-general/02-container-for-defaults.md)
+  - [Repo and Import](https://github.com/ZheRao/NoteSystem/blob/main/devops/references/project-specific/01-structure-repo.md)
   - [Package Data instead of Code](https://github.com/ZheRao/NoteSystem/blob/main/devops/foundations/principles/system-general/03-package-resources.md)
+
+- **Make contracts specific and scalable**
+  - [Container Objects for Defaults & Config](https://github.com/ZheRao/NoteSystem/blob/main/devops/references/project-specific/02-container-for-defaults.md)
+  - [Python Type Hint](https://github.com/ZheRao/NoteSystem/blob/main/devops/references/python-general/09-type-hint.md)
 
 
 ## 2. I/O, files, paths, and JSON
