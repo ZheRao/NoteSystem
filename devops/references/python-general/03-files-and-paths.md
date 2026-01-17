@@ -43,12 +43,13 @@ from pathlib import Path
 
 p = Path("C:/A/B/c.exe")
 
+p.exists()
+p.mkdir(parents=True, exist_ok=True)        # create the file and all parent folders if not exist
 p.parent
 p.parents[1]
 p.name
 p.suffix
 p.parts
-p.exists()
 p.relative_to("C:/A")
 p.unlink(missing_ok=True)
 ```
