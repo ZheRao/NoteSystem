@@ -2,6 +2,8 @@
 
 - Extended dash: —
 - Right arrow: →
+- up arrow: ↑
+- down arrow: ↓
 
 
 # Common signs
@@ -13,12 +15,11 @@
 
 
 
-# Arrow
+# Other Arrows
 
-## Downward Arrow
+## Downward Arrows
 
 ```text
-↓   (U+2193)  simple down arrow
 ⬇   (U+2B07)  bold down arrow
 ⇩   (U+21E9)  heavy down arrow
 ⮟   (U+2B9F)  modern / UI-style
