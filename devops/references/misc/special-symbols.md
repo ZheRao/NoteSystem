@@ -2,6 +2,7 @@
 
 - Extended dash: —
 - Right arrow: →
+    - Double arrow: ⇒
 - up arrow: ↑
 - down arrow: ↓
 
