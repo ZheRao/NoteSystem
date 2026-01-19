@@ -2,7 +2,7 @@
 
 ```text
 ├── __init__.py
-├── common
+├── utils
 │   └── config.py
 ├── io
 │   ├── file_read.py
@@ -42,14 +42,14 @@ src/path_adapter/
     customer_mix.py
     mappings.py             # reference data joins / rules
 
-  common/
+  utils/
     __init__.py
     config.py               # dataclasses for paths/options
     models.py               # IngestResult, TableResult, etc.
     logging.py
 ```
 
-`common/config.py`
+`utils/config.py`
 ---
 - Holds **typed config objects** (paths, CSV read options, silver write options)
 - so the pipeline is driven by explicit inputs instead of notebook globals.
@@ -61,7 +61,7 @@ from pathlib import Path
 from typing import Optional, Dict
 
 @dataclass(frozen=True)
-class CsvReadConfig:
+class csvReadConfig:
     encoding: str = "utf-8-sig"
     delimiter: str = ","
     dtype: Optional[Dict[str, str]] = None
@@ -80,11 +80,18 @@ from pathlib import Path
 from typing import Optional
 import pandas as pd
 
-from path_adapter.common.config import CsvReadConfig
+from path_adapter.utils.config import csvReadConfig
+
+def read_configs(config_type:str, name:str) -> dict:
+    """
+    Reads and return configurations stored in json_configs/config_type/name, e.g., json_configs/io/path.win.json
+    """
+    p = files("path_adapter.json_configs").joinpath(f"{config_type}/{name}")
+    return json.loads(p.read_text())
 
 def read_csv_from_path(
     csv_path: Path,
-    cfg: CsvReadConfig,
+    cfg: csvReadConfig,
 ) -> pd.DataFrame:
     """
     Pure I/O boundary: reads CSV from a path and returns a DataFrame.
@@ -111,12 +118,14 @@ def read_csv_from_path(
 - by re-exporting the few functions/configs you want to be easy to import (`from path_adapter import ...`). 
 - It’s necessary so notebooks + orchestrators don’t reach into internal module paths (which makes refactors painful).
 ```python
-from path_adapter.common.config import CsvReadConfig
+from path_adapter.utils.config import csvReadConfig
 from path_adapter.io.file_read import read_csv_from_path
+from path_adapter.io.file_read import read_configs
 
 __all__ = [
-    "CsvReadConfig",
+    "csvReadConfig",
     "read_csv_from_path",
+    "read_configs"
 ]
 ```
 
@@ -124,23 +133,10 @@ __all__ = [
 ---
 ```python
 from path_adapter import (
-    CsvReadConfig,
+    csvReadConfig,
     read_csv_from_path
 )
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ## 2. Config & State: `src/project_name/json_configs`
@@ -148,42 +144,13 @@ from path_adapter import (
 Structure:
 
 ```text
-config/
-  README.md
-
-  env/                      # “what this run is” (dev/stage/prod, local, etc.)
-    dev.json
-    prod.json
-
-  io/                       # “where stuff is”
-    paths.local.json
-    paths.wsl.json
-    paths.prod.json
-
-  contracts/
-    bronze.json
-    silver.json
-    gold.json
-    expectations.json   # null rules, allowed ranges, uniqueness, etc.
-
-  connectors/
-    qbo.json          # base URLs, scopes, realm-id presence rules, pagination strategy
-    fx_rates.json     # provider name, base currency, refresh cadence
-
-  domain/                   # “business decisions / logic”
-    companies.json          # canonical company list + ids
-    mappings/
-      account_map.json
-      class_map.json
-      location_map.json
-    rules/
-      exclusions.json       # ignore accounts/classes/vendors/etc.
-      normalization.json    # rename rules, standardization, etc.
-
-  runtime/                  # knobs that change behavior but aren’t “business logic”
-    logging.json
-    spark.json
-    performance.json
+json_config/
+├── __init__.py             # enable import
+├── contracts
+│   ├── so.contract.json    # included/excluded columns from raw csv, column rename, memo, schema contract
+│   └── so.mapping.json     # business logic mappings, customer_type, location_mapping, ...
+└── io
+    └── paths.win.json      # path configs
 
 state/                      # machine-written (gitignored)
   pipeline_meta.json        # last_load_date, watermark, last_fx_rate_date, etc.
@@ -196,8 +163,8 @@ Location for placement ("production-proof" approach)
 ```text
 src/path_adapter/
   __init__.py
-  resources/
-    config/io/paths.win.json
+  json_config/
+    io/paths.win.json
 ```
 
 Load it:
@@ -207,6 +174,6 @@ from importlib.resources import files
 import json
 
 def read_paths(name="paths.win.json") -> dict:
-    p = files("path_adapter.resources").joinpath(f"config/io/{name}")
+    p = files("path_adapter.json_config").joinpath(f"io/{name}")
     return json.loads(p.read_text())
 ```
