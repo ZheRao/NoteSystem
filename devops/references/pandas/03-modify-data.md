@@ -59,10 +59,13 @@ df["month_name"] = df["date"].dt.month_name()
 
 ```python
 df["first_name"] = df["name"].str.split(" ").str[0]
-df["col"].str.zfill(2)
 df["col"].str.slice(3, 5)
 df["col"].str.startswith("A")
 df["col"].str.capitalize()
+
+# before - 1, 3, 10, 7
+df["col"] = df["col"].astype(str).str.zfill(2)
+# after -"01", "03", "10", "07"
 ```
 
 # 4. Column Management & Copying
