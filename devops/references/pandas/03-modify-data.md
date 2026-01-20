@@ -1,12 +1,12 @@
 # 1. Simple Operations
 
-**Sorting**
+### Sorting
 
 ```python
 df.sort_values(["col1", "col2"], ascending=[False, True])
 ```
 
-**Column Calculations**
+### Column Calculations
 
 ```python
 df["price"] = np.where(df["item_type"] == "expensive", 999.99, 1.99)
@@ -14,13 +14,13 @@ df["total_price"] = df["units_sold"] * df["cost"]
 df["total_price"] = df["total_price"].round(2)
 ```
 
-**Type Conversion**
+### Type Conversion
 
 ```python
 df = df.astype({"col1": type1, "col2": type2})
 ```
 
-**Clip Values**
+### Clip Values
 
 ```python
 df["Amount"] = df["Amount"].clip(lower=0)
@@ -28,7 +28,7 @@ df["Amount"] = df["Amount"].clip(lower=0)
 
 # 2. Date & Time
 
-**Parse Dates**
+### Parse Dates
 
 ```python
 df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce")
@@ -40,7 +40,41 @@ Common formats:
 - `%Y-%m-%dT%H:%M:%S`
 - `%Y-%m-%d %H:%M:%S%z`
 
-**Date Arithmetic**
+
+**Given** `date_year`, `date_month` as names, `date.day` as columns, composing a date column with
+```python
+df["Date"] = pd.to_datetime(
+    df["date_year"].astype(str) + " " +
+    df["date_month"] + " " +
+    df["date_day"].astype(str),
+    format="%Y %B %d"
+)
+```
+
+### common related codes
+
+**Year**
+
+| Code | Meaning                |
+| ---- | ---------------------- |
+| `%Y` | 4-digit year (`2026`)  |
+| `%y` | 2-digit year (`26`) ⚠️ |
+
+**Month**
+| Code | Meaning                | Example   |
+| ---- | ---------------------- | --------- |
+| `%B` | Full month name        | `January` |
+| `%b` | Abbreviated month name | `Jan`     |
+| `%m` | Month number (01–12)   | `01`      |
+
+**Days**
+| Code | Meaning              |
+| ---- | -------------------- |
+| `%d` | Day of month (01–31) |
+
+
+
+### Date Arithmetic
 
 ```python
 df["date_diff"] = pd.to_timedelta(df["date_diff"])
@@ -48,7 +82,8 @@ df["days_from_monday"] = pd.to_timedelta(df["date"].dt.weekday, unit="D")
 df["date_plus_1"] = df["date"] + pd.Timedelta(days=1)
 ```
 
-**Extract Parts**
+
+### Extract Parts
 
 ```python
 df["year"] = df["date"].dt.year
@@ -101,13 +136,13 @@ df.reset_index(drop=True)
 
 # 7. Aggregation
 
-**Value Counts**
+### Value Counts
 
 ```python
 df["col"].value_counts()
 ```
 
-**GroupBy**
+### GroupBy
 
 ```python
 df.groupby("col1").agg({
@@ -125,7 +160,7 @@ df.groupby("id", as_index=False).agg(
 )
 ```
 
-**Pivot**
+### Pivot
 
 ```python
 df.pivot_table(
@@ -139,13 +174,13 @@ df.pivot_table(
 
 # 8. Missing Values
 
-**Inspect**
+### Inspect
 
 ```python
 df.isna().sum()
 ```
 
-**Fill**
+### Fill
 
 ```python
 df.fillna({"col1": df["col1"].mean(), "col2": 0}, limit=20)
@@ -159,7 +194,7 @@ mapping = df["key"].map(map_series)
 df["target"] = df["target"].fillna(mapping)
 ```
 
-**Drop**
+### Drop
 
 ```python
 df.dropna(subset=["col1", "col2"], how="all")
