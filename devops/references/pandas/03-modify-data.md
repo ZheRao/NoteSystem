@@ -11,6 +11,7 @@ df.sort_values(["col1", "col2"], ascending=[False, True])
 ```python
 df["price"] = np.where(df["item_type"] == "expensive", 999.99, 1.99)
 df["total_price"] = df["units_sold"] * df["cost"]
+df["total_price"] = df["total_price"].round(2)
 ```
 
 **Type Conversion**
