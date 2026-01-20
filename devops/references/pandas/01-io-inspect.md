@@ -44,6 +44,8 @@ df.size
 df.head(n)
 df.tail(n)
 df.sample(n, random_state=seed)
+
+df1.equals(df2) # compare if two data frames are exact same (values + index + column labels + dtypes)
 ```
 
 
