@@ -41,7 +41,7 @@ shutil.copyfile(src, dst)
 ```python
 from pathlib import Path
 
-p = Path("C:/A/B/c.exe")
+p = Path("/data/exports/out.csv")
 
 p.exists()
 p.mkdir(parents=True, exist_ok=True)        # create the file and all parent folders if not exist
@@ -52,4 +52,7 @@ p.suffix
 p.parts
 p.relative_to("C:/A")
 p.unlink(missing_ok=True)
+
+p.with_name("tmp.csv")    # replaces only the filename, keeping the same parent directory.
+# -> Path("/data/exports/tmp.csv")
 ```
