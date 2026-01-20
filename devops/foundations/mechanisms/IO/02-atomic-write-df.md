@@ -23,7 +23,6 @@ Instead of returning bytes, write directly to a temp file path, then `atomic_rep
 Example (CSV path-based):
 
 ```python
-
 def atomic_write_csv(dst: Path, df: pd.DataFrame, **to_csv_kwargs) -> None:
     ensure_dir(dst.parent)
     tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")
@@ -32,6 +31,48 @@ def atomic_write_csv(dst: Path, df: pd.DataFrame, **to_csv_kwargs) -> None:
     df.to_csv(tmp, index=False, **to_csv_kwargs)
 
     # Optional durability: fsync the tmp file
+    with open(tmp, "rb") as f:
+        os.fsync(f.fileno())
+
+    atomic_replace(tmp, dst)
+```
+
+Example (Excel-based):
+```python
+import os
+import uuid
+from pathlib import Path
+import pandas as pd
+
+def atomic_write_xlsx(
+    dst: Path,
+    df: pd.DataFrame,
+    sheet_name: str = "data",
+    engine: str = "openpyxl",
+    **to_excel_kwargs,
+) -> None:
+    """
+    Atomically write df to an .xlsx file:
+    - writes to a temp file in the same directory
+    - fsyncs the temp file
+    - atomically replaces dst
+
+    Notes:
+    - Keep nulls as blank cells by NOT using na_rep unless you truly want sentinel text.
+    - On Windows, replacement can fail if dst is currently open/locked by Power BI/Excel.
+    """
+    ensure_dir(dst.parent)
+    tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")
+
+    # Ensure suffix is .xlsx (optional guard)
+    if tmp.suffix.lower() != ".xlsx":
+        tmp = tmp.with_suffix(".xlsx")
+
+    # Write to temp path
+    with pd.ExcelWriter(tmp, engine=engine) as writer:
+        df.to_excel(writer, index=False, sheet_name=sheet_name, **to_excel_kwargs)
+
+    # Optional durability: fsync tmp file
     with open(tmp, "rb") as f:
         os.fsync(f.fileno())
 
