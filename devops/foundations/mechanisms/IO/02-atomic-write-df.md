@@ -79,6 +79,47 @@ def atomic_write_xlsx(
     atomic_replace(tmp, dst)
 ```
 
+Example (parquet-based):
+```python
+import os
+import uuid
+from pathlib import Path
+import pandas as pd
+
+def atomic_write_parquet(
+    dst: Path,
+    df: pd.DataFrame,
+    engine: str = "pyarrow",
+    compression: str | None = "snappy",
+    **to_parquet_kwargs,
+) -> None:
+    """
+    Atomically write df to a single-file Parquet:
+    - writes to a temp file in the same directory
+    - fsyncs the temp file
+    - atomically replaces dst
+
+    Notes:
+    - For best interoperability, pyarrow + snappy is a good default.
+    - This is for a single .parquet file, not a partitioned dataset directory.
+    """
+    ensure_dir(dst.parent)
+    tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")
+
+    # Ensure suffix is .parquet (optional guard)
+    if tmp.suffix.lower() != ".parquet":
+        tmp = tmp.with_suffix(".parquet")
+
+    # Write to temp path
+    df.to_parquet(tmp, engine=engine, compression=compression, index=False, **to_parquet_kwargs)
+
+    # Optional durability: fsync tmp file
+    with open(tmp, "rb") as f:
+        os.fsync(f.fileno())
+
+    atomic_replace(tmp, dst)
+```
+
 This avoids buffering the entire file in memory.
 
 
