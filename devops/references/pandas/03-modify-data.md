@@ -71,7 +71,10 @@ df = df.drop(columns=["col1", "col2"])
 df = df.rename(columns={"old": "new"})
 df = df.add_prefix("col_")
 
-df["str_col"] = df["str_col"].replace({"old": "new"})
+df["str_col"] = df["str_col"].replace({"old": "new"})           # replace whole string
+df["str_col"] = df["str_col"].str.replace("substring_old", "substring_new", regex=False)    # replace substring
+# or
+df["str_col"] = df["str_col"].replace("substring_old", "substring_new", regex=True)    # replace substring
 ```
 
 ```python
