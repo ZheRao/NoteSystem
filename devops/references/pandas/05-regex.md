@@ -16,6 +16,15 @@ df["col"].str.contains(r"^\d{4}", na=False)
 df["col"].str.contains(r"\.csv$", na=False)
 ```
 
+Note:
+---
+| Where `^` appears                   | Meaning                      |
+| ----------------------------------- | ---------------------------- |
+| **Outside `[]`**                    | **Start of string** (anchor) |
+| **Inside `[]` and first character** | **NOT** (negation)           |
+| **Inside `[]` but *not* first**     | Literal `^`                  |
+
+
 Common pitfall
 - Without anchors, regex matches anywhere in the string
 
