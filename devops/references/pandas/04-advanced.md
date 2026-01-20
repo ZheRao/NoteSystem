@@ -11,6 +11,11 @@ mapping = (
 )
 ```
 
+**Applying a dictionary mapping onto a pandas column**
+```python
+df["new"] = df["old"].map(mapping_table).fillna("Unsuccessful")
+```
+
 # JSON Handling
 
 **DataFrame → JSON**
