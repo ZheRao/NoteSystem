@@ -62,11 +62,10 @@ def atomic_write_xlsx(
     - On Windows, replacement can fail if dst is currently open/locked by Power BI/Excel.
     """
     ensure_dir(dst.parent)
-    tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")
-
     # Ensure suffix is .xlsx (optional guard)
-    if tmp.suffix.lower() != ".xlsx":
-        tmp = tmp.with_suffix(".xlsx")
+    if dst.suffix.lower() != ".xlsx":
+        dst = dst.with_suffix(".xlsx")
+    tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")
 
     # Write to temp path
     with pd.ExcelWriter(tmp, engine=engine) as writer:
@@ -104,11 +103,10 @@ def atomic_write_parquet(
     - This is for a single .parquet file, not a partitioned dataset directory.
     """
     ensure_dir(dst.parent)
-    tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")
-
     # Ensure suffix is .parquet (optional guard)
     if tmp.suffix.lower() != ".parquet":
         tmp = tmp.with_suffix(".parquet")
+    tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")
 
     # Write to temp path
     df.to_parquet(tmp, engine=engine, compression=compression, index=False, **to_parquet_kwargs)
