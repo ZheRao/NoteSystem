@@ -51,7 +51,7 @@ A clean `Value` class
 ### Phase 1 Checklist (Concrete)
 
 **Step 1 — Scalar Value Object**  
-**Goal: Represent a scalar with gradient tracking**
+**Goal**: Represent a scalar with gradient tracking
 
 **Implement**
 - `data: float`
@@ -70,154 +70,121 @@ A clean `Value` class
 
 ---
 **Step 2 — Operator Overloading**  
-**Goal: Build computation graph implicitly**
+**Goal**: Build computation graph implicitly
 
-Implement
-
-+, *, -, /
-
-** (power)
-
-relu()
+**Implement**
+- `+`, `*`, `-`, `/`
+- `**` (power)
+- `relu()`
 
 Each op must:
+- Create a new `Value`
+- Store parents
+- Store a `_backward()` closure with local derivatives
 
-Create a new Value
-
-Store parents
-
-Store a _backward() closure with local derivatives
-
-Done when
-
+**Done when**
+```python
 x = Value(-4)
 y = (x * 2 + 1).relu()
 y.backward()
-
-
+```
 produces correct gradients.
 
-Key insight
+**Key insight**
+> Backward pass is just *the chain rule applied locally*.
 
-Backward pass is just the chain rule applied locally.
+---
+**Step 3 — Topological Backward Pass**  
+**Goal**: Correct gradient propagation order
 
-Step 3 — Topological Backward Pass
+**Implement**
+- Graph traversal (DFS)
+- Reverse topological ordering
+- Accumulate gradients (`+=`)
 
-Goal: Correct gradient propagation order
+**Done when**
+- Any DAG computes correct gradients
+- Shared subgraphs accumulate gradients correctly
 
-Implement
+**LA tie-in**
+- This mirrors how matrix gradients sum contributions from multiple paths
 
-Graph traversal (DFS)
+---
+**Step 4 — Backward() API**  
+**Goal**: Make gradient computation ergonomic
 
-Reverse topological ordering
-
-Accumulate gradients (+=)
-
-Done when
-
-Any DAG computes correct gradients
-
-Shared subgraphs accumulate gradients correctly
-
-LA tie-in
-
-This mirrors how matrix gradients sum contributions from multiple paths
-
-Step 4 — Backward() API
-
-Goal: Make gradient computation ergonomic
-
-Implement
-
+**Implement**
+```python
 def backward(self):
     self.grad = 1.0
     for node in reversed(topo):
         node._backward()
+```
 
+**Done when**
+- Calling `.backward()` on the output computes all leaf grads
 
-Done when
+---
+**Step 5 — Tiny Neural Network**  
+**Goal**: Prove learning emerges from autograd
 
-Calling .backward() on the output computes all leaf grads
-
-Step 5 — Tiny Neural Network
-
-Goal: Prove learning emerges from autograd
-
-Implement
-
-Neuron
-
-Layer
-
-MLP
-
+**Implement**
+- Neuron
+- Layer
+- MLP
 No NumPy. Use Python lists.
 
-Train
+**Train**
+- XOR (binary classification)
 
-XOR (binary classification)
+**Done when**
+- Loss decreases
+- Decision boundary makes sense
 
-Done when
+**Critical realization**
+> Backprop is not a neural network algorithm — it’s a *general gradient engine.*
 
-Loss decreases
+---
+**Step 6 — README (this matters)**
 
-Decision boundary makes sense
+**You must explain**
+- What reverse-mode autodiff is
+- Why topological order matters
+- Why gradients accumulate
+- How this generalizes to tensors
+This is what turns the repo into **signal**, not noise.
 
-Critical realization
+---
+### Phase 1 Exit Criteria (be honest)
 
-Backprop is not a neural network algorithm — it’s a general gradient engine.
-
-Step 6 — README (this matters)
-
-You must explain
-
-What reverse-mode autodiff is
-
-Why topological order matters
-
-Why gradients accumulate
-
-How this generalizes to tensors
-
-This is what turns the repo into signal, not noise.
-
-Phase 1 Exit Criteria (be honest)
-
-You can answer without hesitation:
-
-Why reverse-mode is efficient for NN
-
-Why backprop is graph-based, not layer-based
-
-Why gradients add instead of overwrite
-
+You can answer *without hesitation*:
+- Why reverse-mode is efficient for NN
+- Why backprop is graph-based, not layer-based
+- Why gradients add instead of overwrite
 If yes → Phase 1 complete.
 
-Phase 2 — Tensor Autograd in Python (optional but huge)
+## Phase 2 — Tensor Autograd in Python (optional but huge)
 
-Status: Lean in — core growth
-Timebox: ~2–4 weeks (strictly scoped)
-Outcome: You understand framework-level autograd
+**Status**: Lean in — core growth  
+**Timebox**: ~2–4 weeks (strictly scoped)  
+**Outcome**: You understand framework-level autograd
 
-Phase 2 Mental Model
+---
+### Phase 2 Mental Model
 
 Phase 1 taught you:
-
-Autograd over scalars
+> Autograd over scalars
 
 Phase 2 teaches:
-
-Autograd over linear algebra objects
+> Autograd over **linear algebra objects**
 
 The leap is:
+- Scalars → arrays
+- Local derivatives → **Jacobian structure**
+- Loops → **vectorized math**
 
-Scalars → arrays
-
-Local derivatives → Jacobian structure
-
-Loops → vectorized math
-
-Phase 2 Scope Boundaries (do NOT violate)
+---
+### Phase 2 Scope Boundaries (do NOT violate)
 
 ✔ NumPy allowed (for storage only)
 ✔ Small operator set
@@ -226,115 +193,101 @@ Phase 2 Scope Boundaries (do NOT violate)
 ✘ No GPU
 ✘ No performance obsession
 
-Phase 2 Deliverables
+---
+### Phase 2 Deliverables
 
-Tensor class with .data, .grad
+- `Tensor` class with `.data`, `.grad`
+- Autograd for matrix ops
+- Tiny MNIST MLP (fully connected)
+- Clear gradient correctness tests
 
-Autograd for matrix ops
+---
+### Phase 2 Checklist (Concrete)
 
-Tiny MNIST MLP (fully connected)
+**Step 1 — Tensor Object**
 
-Clear gradient correctness tests
+**Implement**
+- `data: np.ndarray`
+- `grad: np.ndarray`
+- `_prev`, `_op`, `_backward`
 
-Phase 2 Checklist (Concrete)
-Step 1 — Tensor Object
+**Done when**
+- Tensor behaves like Value but with shape
 
-Implement
+**LA tie-in**
+- Gradients now match matrix dimensions
+- You *see* Jacobians implicitly
 
-data: np.ndarray
+---
+**Step 2 — Core Tensor Ops**
 
-grad: np.ndarray
+**Must implement**
+- `add`
+- `mul`
+- `matmul`
+- `sum`
+- `mean`
+- `relu`
 
-_prev, _op, _backward
+Each `_backward()` must:
+- Respect shape
+- Accumulate gradients correctly
 
-Done when
+**Done when**
+- Manual gradient checks pass
 
-Tensor behaves like Value but with shape
+---
+**Step 3 — Loss Functions**
 
-LA tie-in
+**Implement**
+- MSE
+- Softmax + cross entropy (combined, numerically stable)
 
-Gradients now match matrix dimensions
+**Key insight**
+> Loss is just another node in the graph.
 
-You see Jacobians implicitly
+---
+**Step 4 — Training Loop**
 
-Step 2 — Core Tensor Ops
+**Implement**
+- Parameter collection
+- Zero grad
+- Forward
+- Backward
+- SGD
 
-Must implement
+**Done when**
+- MNIST accuracy > random baseline
+- Loss decreases smoothly
 
-add
+---
+**Step 5 — Gradient Sanity Tests (mandatory)**
 
-mul
+**Implement**
+- Finite difference gradient check
+- Compare numerical vs autodiff gradients
 
-matmul
+**If this fails, you don’t understand it yet.**
 
-sum
-
-mean
-
-relu
-
-Each _backward() must:
-
-Respect shape
-
-Accumulate gradients correctly
-
-Done when
-
-Manual gradient checks pass
-
-Step 3 — Loss Functions
-
-Implement
-
-MSE
-
-Softmax + cross entropy (combined, numerically stable)
-
-Key insight
-
-Loss is just another node in the graph.
-
-Step 4 — Training Loop
-
-Implement
-
-Parameter collection
-
-Zero grad
-
-Forward
-
-Backward
-
-SGD
-
-Done when
-
-MNIST accuracy > random baseline
-
-Loss decreases smoothly
-
-Step 5 — Gradient Sanity Tests (mandatory)
-
-Implement
-
-Finite difference gradient check
-
-Compare numerical vs autodiff gradients
-
-If this fails, you don’t understand it yet.
-
-Phase 2 Exit Criteria
+---
+### Phase 2 Exit Criteria
 
 You can:
-
-Explain why d(A @ B) produces two gradient paths
-
-Reason about gradient shapes without guessing
-
-Debug wrong gradients systematically
+- Explain why `d(A @ B)` produces two gradient paths
+- Reason about gradient shapes without guessing
+- Debug wrong gradients systematically
 
 At this point:
+- PyTorch becomes boring — and that’s the goal.
 
-PyTorch becomes boring — and that’s the goal.
+# How This Complements Linear Algebra (Very Important)
+
+| Linear Algebra        | Autograd Track         |
+| --------------------- | ---------------------- |
+| Matrix multiplication | `matmul` backward      |
+| Chain rule            | Backward closures      |
+| Jacobians             | Implicit gradient flow |
+| Vector spaces         | Tensor shapes          |
+| Optimization          | SGD loop               |
+
+You’re **connecting math → mechanism**, not just learning formulas.
