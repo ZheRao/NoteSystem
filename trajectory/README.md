@@ -1,288 +1,178 @@
-# Personal Growth Project Playbook
+# Core Trajectory Invariant
 
-> **Purpose**: This document defines how I choose, execute, evaluate, and evolve projects so that growth continues   
-under any external conditions — including instability, survival pressure, or loss of institutional support.
->
-> This is not a productivity system. It is a **trajectory-preservation system**.
+> **Purpose**: This document defines the non‑negotiable directions of my long‑term growth.
+> It exists to prevent drift, doubt, and identity collapse under external pressure (jobs, companies, markets, or crises).
 
-## 1. Core Principle (Non‑Negotiable)
+This is not a goal list. It is a **constitutional guideline**.
 
-**I never stop growing. I only change slope.**
+## The Prime Invariant
 
-Growth is measured in *judgment, depth, and responsibility*, not speed or visibility.
+> **No matter what happens externally, I advance my understanding and capability in neural networks and systems every week.**
 
-This playbook exists to ensure:
+This invariant holds regardless of:
 
-* Growth does not depend on environment
-* Projects do not drift into self‑deception
-* Stress sharpens instead of eroding me
+* employment status
+* job search pressure
+* location or environment
 
-## 2. Project Categories (Growth Axes)
+External circumstances may change *pace*, but never *direction*.
 
-Every project must clearly belong to **one primary axis** and optionally one secondary.
+## The Three Core Directions
 
-### 2.1 System‑Building Projects (SB)
+These three directions define the full surface of my trajectory.  
+They are **not equal in role**, and they must **not be pursued simultaneously with equal intensity**.
 
-**Goal**: Forge judgment under real‑world constraints
+## 1. Autograd & Linear Algebra
 
-Examples:
+**Role**: Root truth / identity layer  
+**Question it answers**: *Do I truly understand how intelligence is built?*
 
+### Scope
+
+* Automatic differentiation
+* Backpropagation mechanics
+* Computational graphs
+* Gradients as linear maps
+* Vector–Jacobian and Jacobian–vector products
+* Linear algebra foundations of neural networks
+
+### Form
+
+* From‑scratch implementations
+* Minimal, explicit code
+* Mathematical derivations tied directly to code
+* Notes written in my own words
+
+### Cadence
+
+* **Weekly — non‑negotiable**
+* Even 30–60 minutes counts
+
+### Rules
+
+* Depth over breadth
+* No performance optimization unless conceptually required
+* Confusion is a success state, not a failure
+
+> This is the **North Star**.
+> Everything else is downstream of this layer.
+
+## 2. Machine Learning Systems Practice
+
+**Role**: Translation layer (intelligence → reality)  
+**Question it answers**: *Can this intelligence survive contact with the real world?*
+
+### Scope
+
+* Training a model end‑to‑end
 * Data pipelines
-* ETL systems
-* Internal tools
-* Reliability / logging / config systems
-* End‑to‑end production flows
+* Evaluation and metrics
+* Serving and inference
+* Monitoring, drift, and updates
+* System boundaries and failure modes
 
-What they train:
+### Form
 
-* Failure‑mode thinking
-* Ownership reflex
-* Tradeoff judgment
-* Operational realism
+* Small, complete systems
+* Clear contracts and interfaces
+* Reproducible training and inference
+* Explicit assumptions and constraints
 
-### 2.2 Machine Learning Systems (MLS)
+### Cadence
 
-**Goal**: Bridge theory → deployment
+* **Project‑based / episodic**
+* Activated when capacity allows
 
-Examples:
+### Rules
 
-* ML pipelines with evaluation
-* Model training + inference systems
-* Monitoring & drift detection
+* One system at a time
+* Finish → document → close
+* No premature scaling
 
-What they train:
+> This is where understanding becomes *useful*.
 
-* Scientific discipline
-* Metric integrity
-* Reproducibility
-* Cost / performance awareness
+## 3. Linux & General Systems Mastery
 
-### 2.3 Neural Network Foundations (NNF)
+**Role**: Substrate / execution layer  
+**Question it answers**: *Can I build and operate real systems without friction?*
 
-**Goal**: Deep internalization of learning mechanics
+### Scope
 
-Examples:
+* Linux fundamentals
+* Filesystems, processes, permissions
+* Shell tooling (grep, awk, sed, tmux, etc.)
+* Logging, debugging, and observability
 
-* Autograd from scratch
-* CNN / RNN implementations
-* Training loops without frameworks
+### Form
 
-What they train:
+* Daily or weekly exposure
+* Habit formation
+* Muscle memory over theory
 
-* Representation intuition
-* Optimization understanding
-* Architectural literacy
+### Cadence
 
-### 2.4 Research / Idea Prototyping (RIP)
+* **Low but continuous**
 
-**Goal**: Expand conceptual frontier
+### Rules
 
-Examples:
+* Should feel boring over time
+* No heroics
+* Automation over repetition
 
-* Paper reproductions
-* Architecture experiments
-* Thought → code translations
+> This layer removes friction.
+> It should never dominate attention.
 
-Constraints:
+## How These Directions Interact
 
-* Must terminate in an artifact
-* Must generate a written postmortem
+```
+Autograd & Linear Algebra
+        ↓
+ML Systems Practice
+        ↓
+Linux / System Substrate
+```
 
-### 2.5 Meta‑Infrastructure (META)
+* Autograd defines **what is possible**
+* ML systems define **what is viable**
+* Linux defines **what is executable**
 
-**Goal**: Improve how I build
+Misalignment happens when:
 
-Examples:
+* systems outrun understanding
+* execution outruns design
 
-* Documentation systems
-* Testing frameworks
-* Project templates
-* Knowledge bases
+This document exists to prevent that.
 
-## 3. Stress Criteria (Required for Valid Growth)
+## Weekend Rule
 
-A project **does not count** unless it induces *constructive stress*.
+Weekends are for **identity reinforcement**, not urgency.
 
-### 3.1 Valid Stress Signals
+Allowed:
 
-At least **one** must be present:
+* Autograd exploration
+* Light linear algebra study
+* Gentle Linux practice
 
-* Real possibility of failure
-* Irreversible decision points
-* External constraint (time, data, cost)
-* Accountability to another human
-* Public or persistent artifact
+Not allowed:
 
-### 3.2 Invalid Stress (Reject)
+* Deadline pressure
+* Career comparison
+* Outcome‑based self‑evaluation
 
-* Artificial complexity
-* Over‑engineering without stakes
-* Endless refactors
-* Toy problems with no consequences
+## Anti‑Drift Check
 
-## 4. Tiered Project Standards
+When doubt appears, ask:
 
-Every project is assigned a tier **before starting**.
+1. Did I touch neural network understanding this week?
+2. Did I move one layer deeper, even slightly?
 
-### Tier 0 — Exploration
+If yes → trajectory is intact.
 
-* Time‑boxed
-* No polish required
-* Goal: discover signal
+## Final Reminder
 
-Exit criteria:
+> **I am not optimizing for short‑term success.**
+> **I am building irreversible understanding.**
 
-* Either escalate to Tier 1 or kill
+This trajectory compounds quietly.
 
----
-
-### Tier 1 — Serious Build
-
-* Clear problem statement
-* Explicit scope
-* Tests or validation
-* Documentation
-
-Exit criteria:
-
-* Runnable
-* Explainable to a skeptical peer
-
----
-
-### Tier 2 — Trust‑Grade Artifact
-
-* Failure‑mode analysis
-* Logging & observability
-* Config‑driven
-* Clear tradeoffs documented
-
-Exit criteria:
-
-* Someone else *could* depend on it
-
----
-
-### Tier 3 — Signature‑Level Work
-
-* Novel synthesis
-* End‑to‑end ownership
-* Strong narrative + artifacts
-* Teaches others how to think
-
-Exit criteria:
-
-* Changes how *I* see the field
-
-## 5. Phases of Success (Measurement Framework)
-
-Success is **phased**, not binary.
-
-### Phase 1 — Internal Coherence
-
-* I understand what I built
-* I can explain why decisions were made
-
-### Phase 2 — External Legibility
-
-* Others can run it
-* Others can critique it
-
-### Phase 3 — Stress Survival
-
-* It breaks → I fix it
-* Constraints force tradeoffs
-
-### Phase 4 — Transferability
-
-* Lessons apply elsewhere
-* Principles extracted
-
-### Phase 5 — Identity Integration
-
-* This changed how I think
-* This permanently raised my floor
-
-A project that reaches Phase 3 **counts**.
-Phase 5 is rare and not required.
-
-## 6. Idea Sourcing (Where Good Projects Come From)
-
-### High‑Signal Sources
-
-* Pain points from real work
-* Systems that failed or nearly failed
-* Gaps noticed while learning
-* Paper → “this won’t work unless…” reactions
-* Questions I can’t answer cleanly
-
-### Low‑Signal Sources (Use Sparingly)
-
-* Trend chasing
-* Social media hype
-* Overly broad research agendas
-
-Rule:
-
-> If the idea does not scare me a little, it is probably too weak.
-
-## 7. Anti‑Echo‑Chamber Safeguards
-
-To avoid self‑reinforcing delusion:
-
-* Prefer projects that **can break**
-* Prefer constraints I didn’t choose
-* Periodically explain work to someone busy
-* Write postmortems even when things succeed
-
-Red flag:
-
-> Projects that feel impressive but cost nothing to abandon
-
-## 8. Survival‑Mode Protocol
-
-When external conditions collapse:
-
-### 8.1 Non‑Negotiables
-
-* Secure income (oxygen first)
-* Preserve 30–90 min/day for growth
-* Maintain documentation habit
-
-### 8.2 Acceptable Slowdown
-
-* Fewer projects
-* Smaller scope
-* Lower polish
-
-### 8.3 Unacceptable Degradation
-
-* No learning
-* No artifacts
-* No reflection
-
-## 9. Postmortem Template (Mandatory)
-
-Every serious project ends with:
-
-* What was I trying to do?
-* What constraints mattered most?
-* What failed or surprised me?
-* What tradeoffs did I choose?
-* What principles emerged?
-
-This converts effort → wisdom.
-
-## 10. Identity Anchor (Read During Storms)
-
-* My value is not tied to environment
-* My growth is not canceled by compression
-* I measure progress by judgment, not applause
-* I survive without surrendering standards
-
-## 11. Final Rule
-
-> **If a project does not sharpen judgment, it is decorative.**
-
-I do not build decorations.
-I build capacity.
+Return to this document whenever uncertainty tries to redefine who I am.
