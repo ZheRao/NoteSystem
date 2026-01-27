@@ -1,21 +1,36 @@
 # Structure Overview: `src/project_name`
 
 ```text
-├── __init__.py
-├── utils
-│   └── config.py
-├── io
-│   ├── file_read.py
-│   └── file_write.py
-├── json_configs
-│   ├── __init__.py
-│   ├── contracts
-│   │   ├── so.contract.json
-│   │   └── so.mapping.json
-│   └── io
-│       └── paths.win.json
-└── silver
-    └── sales_order.py
+└── src
+    └── path_adapter
+        ├── __main__.py                 # production-callable interface
+        ├── __init__.py                 # formalize and simplify import path
+        ├── json_configs                # contracts
+        │   ├── __init__.py
+        │   ├── contracts
+        │   │   ├── so.contract.json
+        │   │   └── so.mapping.json
+        │   └── io
+        │       └── paths.json
+        ├── pipelines                   # high-, thin-layer orchestration, feeds into __main__.py
+        │   ├── full_refresh.py
+        │   ├── po_pipeline.py
+        │   └── so_pipeline.py
+        ├── bronze                      # actual architecture
+        │   ├── _helpers.py
+        │   ├── extract_po.py
+        │   └── extract_so.py
+        ├── silver
+        │   ├── _helpers.py
+        │   └── so.py
+        ├── gold
+        │   ├── _helpers.py
+        │   ├── datetable.py
+        │   └── so.py
+        └── utils                       # common methods across entire system
+            ├── _helpers.py
+            ├── config.py
+            └── filesystem.py
 ```
 
 ## 1. Importable Scripts: `src/project_name/module_type/module_name`
