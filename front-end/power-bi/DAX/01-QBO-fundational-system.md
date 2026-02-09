@@ -401,3 +401,252 @@ IF(
 * Model is extensible to **Budget vs Actual** or **Multi‑Year** comparisons
 
 *This system forms the foundation of a scalable, perception‑first finance nerve system.*
+
+## 7. Budget Overview Consolidated – Budget vs. Actual Framework
+
+### 7.1 Purpose
+
+The **Budget Overview Consolidated** report extends the finance semantic model to support **dynamic Budget vs. Actual comparisons** without relying on fiscal flags or hard‑coded year logic.
+
+The system allows users to:
+
+* Select **any fiscal year for Budget**
+* Select **any fiscal year for Actuals**
+* Automatically compute variance across the report
+* Calibrate forward budgets (e.g., compare **2026 Budget vs. 2025 Actual**)
+* Maintain a clean, flag‑free semantic model
+
+This design reinforces the platform’s architectural direction: **bounded logic lives in the semantic layer — not in report visuals.**
+
+---
+
+### 7.2 Core Design Principles
+
+#### Independent Year Selection
+
+Unlike the Actual vs. Actual model (which derives min/max years), Budget comparisons require **orthogonal selection paths**:
+
+* Budget year is derived from the **Budget table**
+* Actual year continues to flow from the **Date semantic model** (`SelectedYearMax`)
+
+This separation prevents cross-filter ambiguity and keeps both measures deterministic.
+
+#### No Gold Flags
+
+The system intentionally removes constructs such as:
+
+```
+current_fy
+is_current_year
+budget_switch
+```
+
+Hard-coded governance flags create rigidity and force model rewrites each fiscal cycle. Their removal ensures:
+
+* Forward compatibility
+* Cleaner DAX
+* Reduced model entropy
+
+---
+
+### 7.3 Semantic Model – Root Measure
+
+```DAX
+SelectedYearBudget = MAX(Budget[FiscalYear])
+```
+
+**Role:**
+
+* Establishes the active budget year
+* Mirrors the behavior of `SelectedYearMax`
+* Enables symmetric measure construction
+
+## 7.4 ProfitTypeSummary – Budget vs. Actual Measures
+
+This layer powers the **executive summary view**, where accounting types aggregate into profit categories.
+
+---
+
+### Total Actual
+
+```DAX
+TotalActual =
+VAR _year = [SelectedYearMax]
+RETURN
+CALCULATE(
+    SUM(ProfitTypeSummary[AmountDisplay]),
+    ProfitTypeSummary[FiscalYear] = _year,
+    ProfitTypeSummary[DataType] = "Actual"
+)
+```
+
+---
+
+### Total Budget
+
+```DAX
+TotalBudget =
+VAR _year = [SelectedYearBudget]
+RETURN
+CALCULATE(
+    SUM(ProfitTypeSummary[AmountDisplay]),
+    ProfitTypeSummary[FiscalYear] = _year,
+    ProfitTypeSummary[DataType] = "Budget"
+)
+```
+
+---
+
+### Budget vs. Actual %Δ
+
+```DAX
+TotalBudgetActual%Δ =
+VAR _actual = [TotalActual]
+VAR _budget = [TotalBudget]
+RETURN DIVIDE(_actual-_budget, ABS(_budget), 0)
+```
+
+**Normalization by absolute budget** prevents sign distortion when expense categories carry negative bases.
+
+---
+
+### Per‑Unit Metrics
+
+#### Actual Per Unit
+
+```DAX
+TotalActualPerUnit =
+VAR _year = [SelectedYearMax]
+RETURN
+CALCULATE(
+    DIVIDE(
+        SUM(ProfitTypeSummary[AmountDisplay]),
+        SUM(Unit_PowerBI[Unit]),
+        0
+    ),
+    ProfitTypeSummary[FiscalYear] = _year,
+    ProfitTypeSummary[DataType] = "Actual"
+)
+```
+
+---
+
+#### Budget Per Unit
+
+```DAX
+TotalBudgetPerUnit =
+VAR _year = [SelectedYearBudget]
+RETURN
+CALCULATE(
+    DIVIDE(
+        SUM(ProfitTypeSummary[AmountDisplay]),
+        SUM(Unit_PowerBI[Unit]),
+        0
+    ),
+    ProfitTypeSummary[FiscalYear] = _year,
+    ProfitTypeSummary[DataType] = "Budget"
+)
+```
+
+**Architectural Note:**
+
+Per‑unit symmetry ensures that operational scale changes do not masquerade as financial variance.
+
+## 7.5 Budget Table – Transaction-Level Aggregations
+
+The **Budget table** stores monthly totals across individual accounts for both Budget and Actual data types, enabling FYTD-style rollups.
+
+---
+
+### Budget FYTD
+
+```DAX
+BudgetFYTD =
+VAR _year = [SelectedYearBudget]
+RETURN
+CALCULATE(
+    SUM(Budget[AmountCAD]),
+    Budget[DataType] = "Budget",
+    Budget[FiscalYear] = _year
+)
+```
+
+---
+
+### Actual FYTD
+
+```DAX
+ActualFYTD =
+VAR _year = [SelectedYearMax]
+RETURN
+CALCULATE(
+    SUM(Budget[AmountCAD]),
+    Budget[DataType] = "Actual",
+    Budget[FiscalYear]=_year
+)
+```
+
+---
+
+### Base Measures
+
+```DAX
+Actual =
+CALCULATE(
+    SUM(Budget[AmountCAD]),
+    Budget[DataType] = "Actual",
+)
+```
+
+```DAX
+Budget =
+CALCULATE(
+    SUM(Budget[AmountCAD]),
+    Budget[DataType] = "Budget"
+)
+```
+
+These base measures support reusable slicing patterns across visuals.
+
+---
+
+### FYTD Budget vs. Actual %Δ
+
+```DAX
+BudgetActual%Δ =
+VAR _actual = [ActualFYTD]
+VAR _budget = [BudgetFYTD]
+RETURN DIVIDE(_actual-_budget, ABS(_budget), 0)
+```
+
+## 7.6 Architectural Outcome
+
+The Budget consolidation introduces a **dual-year financial perception system** capable of supporting:
+
+* Forward planning
+* Budget calibration
+* Executive variance analysis
+* Scenario comparisons
+
+Most importantly, it achieves this **without introducing semantic fragility.**
+
+### Structural Gains
+
+* Eliminates fiscal switches
+* Preserves measure symmetry
+* Keeps time logic bounded
+* Enables future extensions (Forecast vs Actual, Multi-scenario planning)
+
+## 7.7 Position in the Finance Nerve System
+
+With this addition, the semantic model now supports:
+
+* Actual vs Actual
+* Budget vs Actual
+
+from the same architectural foundation.
+
+This continues the evolution toward a **perception-first financial nerve system** — where leadership observes reality through stable abstractions rather than brittle report logic.
+
+The model is now materially closer to supporting true organizational intelligence.
+
