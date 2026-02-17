@@ -168,7 +168,8 @@ Ensures denominator consistency regardless of row context.
 VAR _maxFY = [SelectedYearMax]
 VAR _total = CALCULATE(
     SUM(ProfitTypeSummary[AmountDisplay]),
-    ProfitTypeSummary[FiscalYear] = _maxFY
+    ProfitTypeSummary[FiscalYear] = _maxFY,
+    ProfitTypeSummary[DataType] = "Actual"
 )
 VAR _sales = [TotalSales]
 RETURN
@@ -287,7 +288,7 @@ CALCULATE(
 ```DAX
 AmountPYTD =
 VAR _end = DATE(
-    YEAR([EndDateSelected]) - 1,
+    [SelectedYearMin],
     MONTH([EndDateSelected]),
     DAY([EndDateSelected])
 )
