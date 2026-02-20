@@ -11,6 +11,13 @@ mapping = (
 )
 ```
 
+**use `map` to apply different fx_rates**
+
+```python
+rates = {"CAD": 1.0, "USD": fx_rate, "EUR": eur_rate}
+df["AmountCAD"] = df["Amount"] * df["Currency"].map(rates).fillna(1.0)
+```
+
 **Applying a dictionary mapping onto a pandas column**
 ```python
 df["new"] = df["old"].map(mapping_table).fillna("Unsuccessful")
