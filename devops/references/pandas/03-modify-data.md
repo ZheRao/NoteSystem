@@ -103,6 +103,61 @@ df["col"] = df["col"].astype(str).str.zfill(2)
 # after -"01", "03", "10", "07"
 ```
 
+### Efficient Extraction and Concatenation of String Parts
+
+```python
+parts = df["Account"].str.split(" ", n=2, expand=True)
+df["Account_new"] = parts[0] + parts[1]
+```
+
+**Quick Notes**
+
+Why `.str[0]` works on a list object if I do `df["Account"].str.split().str[0]`?
+1. `df["Account"].str.split()` is a Series.
+2. Each element inside the Series is a Python list.
+3. `.str[...]` works on each element of the Series.
+4. It applies __getitem__(0) to every element.
+
+`.str.split()` vs `expand=True`
+1. without `expand=True`, you get
+    ```text
+    0    ['4000', 'Revenue', 'Domestic']
+    1    ['5000', 'Expense', 'Office']
+    ```
+    - Each row is a Python list
+    - The Series dtype is object
+    - You're storing Python objects inside Pandas
+2. with `expand=True`, you get
+    ```text
+             0         1          2
+        0   4000   Revenue   Domestic
+        1   5000   Expense     Office
+    ```
+    - This is a **DataFrame**, not a Series.
+    - No Python lists stored
+    - Each token is stored as a column
+    - Structured tabular representation
+    - Much more Pandas-native
+    - Vectorized operations are cleaner
+3. differences
+    - **Lists inside cells = semi-structured data.**  
+        Columns = structured data.  
+        Structured representations scale better.
+    - **Memory Layout**  
+        Columns are contiguous arrays & Pandas can operate column-wise efficiently   
+        vs.  
+        Each cell is a pointer to a Python list & Operations involve Python-level indexing
+    - **Cleaner Downstream Logic**
+        `parts.str[0] + parts.str[1]`  
+        vs.  
+        `parts[0] + parts[1]`
+
+What `n=2` does
+- Perform at most 2 splits → produce at most 3 columns.
+- If you only care about first two tokens, this avoids unnecessary work.
+- It’s a small optimization, but philosophically correct.
+
+
 # 4. Column Management & Copying
 
 ```python
