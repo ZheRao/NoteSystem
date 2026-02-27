@@ -14,7 +14,6 @@ If invariants are strong, AI **accelerates execution**.
 
 AI is not a foundation — it is a multiplier.
 
----
 ## 2. Reframing the Question
 
 Instead of asking:
@@ -39,7 +38,6 @@ The answer is:
 Automation is not the same as **intelligence**.  
 Authority without audit equals **liability**.
 
----
 ## 3. Phased Adoption Model
 
 There are three practical tiers of AI usage:
@@ -56,7 +54,6 @@ Direct operational control or instruction generation.
 
 Recommendation: Start with Tier 1–2 use cases that are reversible and measurable before exploring Tier 3.
 
----
 ## 4. Governance Before Deployment
 
 Before implementing AI in any critical process, we should define:
@@ -68,7 +65,6 @@ Before implementing AI in any critical process, we should define:
 
 Controlled systems first. AI layered appropriately.
 
----
 ## 5. Strategic Questions
 
 Regardless of vendor or architecture, we should be able to answer:
@@ -100,7 +96,6 @@ Chat is just the UI.
 
 The intelligence sits in how it interacts with structured systems.
 
----
 ## A. Semantic Data Layer
 
 Instead of dashboards only:
@@ -116,7 +111,6 @@ Non-deterministic interface.
 
 Low operational risk.
 
----
 ## B. Cross-Document Reasoning
 
 Example:
@@ -129,7 +123,6 @@ LLMs shine at semantic comparison.
 
 Still Tier 1–2.
 
----
 ## C. Structured + Unstructured Synthesis
 
 Example:
@@ -139,7 +132,6 @@ Example:
 It doesn’t decide.  
 It synthesizes.
 
----
 ## D. Process Bottleneck Detection
 
 If you log enough events:
@@ -150,7 +142,6 @@ This edges into Tier 2.
 
 But it requires strong data infrastructure.
 
----
 ## E. Knowledge Drift Monitoring
 
 Example:
@@ -161,7 +152,6 @@ Very realistic.
 Very useful.  
 Low risk.
 
----
 ## F. Scenario Simulation Assistant
 
 LLM orchestrates deterministic models.
