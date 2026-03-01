@@ -16,6 +16,20 @@ $$
 > y = Wx 
 > $$
 
+# Common Math Modes
+
+Common Options
+- `\mathrm{...}` (Roman): Renders text in an upright, serif font. It is commonly used for multi-letter function names or physical units.
+- `\mathit{...}` (Italic): Forces italics. While math mode is already italic, \mathit uses text-italic spacing, which is better for multi-letter variables.
+- `\mathbf{...}` (Bold): Creates upright bold characters. Note that this often does not work on Greek letters or symbols.
+- `\mathsf{...}` (Sans Serif): Renders text in an upright, sans-serif font.
+- `\mathtt{...}` (Typewriter): Renders text in a monospaced (typewriter) font.
+
+Special Cases
+- `\mathbb{...}` (Blackboard Bold): Used for standard number sets like R (Reals), Z (Integers), or Q (Rationals).
+- `\mathcal{...}` (Calligraphic): A decorative, script-like font typically used for sets, transforms (like the Laplace transform z), or categories.
+- `\mathfrak{...}` (Fraktur): A Gothic-style font often used in advanced algebra or Lie theory.
+
 # 1. Scalars, vectors, matrices
 
 **Scalars**
