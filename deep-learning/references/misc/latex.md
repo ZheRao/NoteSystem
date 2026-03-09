@@ -345,3 +345,4 @@ $$
 # 12. Other common expressions
 
 - \neq → $\neq$
+- \approx -> $\approx$
