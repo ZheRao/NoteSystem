@@ -201,17 +201,192 @@ That’s it.
 Everything else in deep learning flows from that.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 # Branching and Multivariable Chain Rule
 
+Good.
+
+This is exactly the place where backprop stops being “a trick” and becomes a structural law.
+
+You just discovered something fundamental:
+
+***Gradients must accumulate at merge points***.
+
+Let’s go deeper than “use `+=`”.
+
+## 1️⃣ The Branch Example
+
+You gave:
+```text
+b = a + a
+```
+
+So the graph is:
+```text
+      a
+     / \
+    /   \
+   +     (same a)
+    \
+     b
+```
+
+There are two paths from `a` to `b`.
+
+That’s the key.
+
+## 2️⃣ Write It As A Function
+
+Mathematically:
+$$
+b = a + a = 2a
+$$
+
+So:
+$$
+\frac{db}{da} = 2
+$$
+
+But how do we get 2 via chain rule mechanics?
+
+## 3️⃣ Multivariable Chain Rule (The Real One)
+
+If a variable influences the output through multiple intermediate routes, the total derivative is:
+
+$$
+\frac{dL}{da} = \sum_{\text{paths } \mathit{p}} \left( \prod_{\text{edges in } \mathit{p}} \text{local derivatives} \right)
+$$
+
+This is the full invariant.
+
+In branching graphs:  
+***Gradients SUM over independent paths.***
+
+## 4️⃣ Apply It To Your Case
+
+Let’s say:
+$$
+L = b
+$$
+
+and:
+$$
+b = a + a
+$$
+
+Now compute $dL/da$.
+
+There are two paths:
+
+Path 1:
+$$
+a \to (+) \to b
+$$
+Local derivative w.r.t first input = 1
+
+Contribution:
+$$
+1 \cdot dL/db
+$$
+
+Path 2:
+$$
+a \to (+) \to b
+$$
+Local derivative w.r.t second input = 1
+
+Contribution:
+$$
+1 \cdot dL/db
+$$
+
+Total:
+$$
+dL/da = 1 \cdot dL/db + 1 \cdot dL/db
+$$
+
+If $dL/db = 1$:
+$$
+dL/da = 2
+$$
+
+## 5️⃣ Why `=` Is Wrong And `+=` Is Right
+
+When you write:
+```python
+self.grad = local_derivative * out.grad
+```
+you are assuming:
+
+***Only one path contributes to this node***.
+
+That is false in general computational graphs.
+
+When branching exists:  
+Each child contributes partial influence.
+
+So the invariant is:
+```python
+self.grad += local_derivative * out.grad
+```
+Because:
+
+***Total sensitivity = sum of sensitivities from all children***.
+
+## 6️⃣ The Deep Multivariable Chain Rule
+
+In full generality:
+
+If:
+$$
+L = f(x, y)
+$$
+and both x and y depend on a:
+$$
+x = g(a)
+$$
+$$
+y = h(a)
+$$
+Then:
+$$
+\frac{dL}{da} = \frac{\partial L}{\partial x} \frac{dx}{da} + \frac{\partial L}{\partial y} \frac{dy}{da}
+$$
+
+Notice the plus.
+
+This is not optional.
+
+It comes from total derivative definition:
+$$
+dL = \frac{\partial L}{\partial x} dx + \frac{\partial L}{\partial y} dy
+$$
+
+If both $dx$ and $dy$ depend on $da$, their effects add.
+
+This is structural.
+
+## 7️⃣ What You Just Discovered Is Massive
+
+You uncovered:
+- Sequential composition → multiply
+- Parallel influence → sum
+
+This is the entire algebra of computational graphs.
+
+Everything else in deep learning is this repeated millions of times.
+
+## 8️⃣ Even Deeper: Why This Must Be True
+
+Think perturbation again.
+
+If you increase `a` slightly:
+
+It affects b in two independent ways.
+
+Each effect changes L.
+
+The total change in L is the sum of those changes.
+
+Because infinitesimal changes add linearly.
+
+That’s why derivatives are linear operators.
