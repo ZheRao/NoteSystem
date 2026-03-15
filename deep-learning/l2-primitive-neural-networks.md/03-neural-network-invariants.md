@@ -41,8 +41,9 @@ A `Neuron` is the first trainable unit.
 ### Invariant 1 — A neuron is a weighted sum plus bias, optionally followed by nonlinearity
 
 For input $x_1, x_2, ..., x_n$, weights $w_1, w_2, ..., w_n$ and bias $b$:
+
 $$
-\mathit{z} = \sum_{i=1}^{n} \mathit{w_ix_i} + \mathit{b}
+\mathit{z} = \sum_{i=1}^{n} \mathit{(w_i)(x_i)} + \mathit{b}
 $$
 
 This is the irreducible trainable building block.
@@ -75,8 +76,9 @@ That distinction is crucial.
 A neuron compresses an 𝑛-dimensional input into 1 scalar output.
 
 So a neuron is:
+
 $$
-\mathbb{R}^{n} \to \mathbb{R}
+\mathbb{R}^n \to \mathbb{R}
 $$
 
 That scalar is not “the answer.”  
@@ -116,8 +118,9 @@ A layer with input dimension 𝑛 and output dimension 𝑚 is:
 - each neuron has its own parameters
 
 So a layer is:
+
 $$
-\mathbb{R}^{n} \to \mathbb{R}^{m}
+\mathbb{R}^n \to \mathbb{R}^m
 $$
 
 This is just parallelization of the neuron invariant.
@@ -162,11 +165,13 @@ Now we move from one layer to hierarchical feature transformation.
 ### Invariant 8 — An MLP is sequential composition of layers
 
 If each layer is a function:
+
 $$
 f_1, f_2, ..., f_k
 $$
 
 then the MLP is:
+
 $$
 f(x) = f_k(f_{k-1}(...f_2(f_1(x))...))
 $$
@@ -184,6 +189,7 @@ MLP is exactly that.
 ### Invariant 9 — Hidden dimensions define internal representation widths
 
 If input dimension is 5 and hidden sizes are `[7, 8, 9]`, then the network shape is:
+
 $$
 5 \to 7 \to 8 \to 9
 $$
@@ -276,6 +282,7 @@ loss.backward()
 ```
 
 causes every reachable parameter to receive:
+
 $$
 \frac{\partial loss}{\partial parameter}
 $$
@@ -314,6 +321,7 @@ That is a beautiful distinction.
 After backprop, each parameter has a gradient.
 
 Then the optimizer applies an update such as:
+
 $$
 \theta \gets \theta - \eta \frac{\partial L}{\partial \theta}
 $$
@@ -422,6 +430,7 @@ A neural network is a hierarchical composition of trainable differentiable modul
 **Learning invariant**
 
 Training is the repeated cycle:
+
 $$
 \text{parameters}→\text{prediction}→\text{loss}→\text{gradients}→\text{updated parameters}
 $$
