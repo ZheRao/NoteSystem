@@ -4,18 +4,18 @@
 
 Scalar autograd taught:
 
-***how to differentiate a computation***
+> how to differentiate a computation
 
 Primitive neural networks add:
 
-***how to build a learnable computation from repeated trainable primitives***
+> how to build a **learnable computation** from repeated trainable primitives
 
 So the new layer of invariants is not mainly about backprop anymore.  
 Backprop already exists.
 
 The new question is:
 
-***How do we package differentiable computations into reusable trainable modules?***
+> How do we package differentiable computations into reusable trainable modules?
 
 That is what `Neuron`, `Layer`, and `MLP` are.
 
@@ -25,11 +25,11 @@ A neural network is not a special new mathematical object.
 
 It is:
 
-**a hierarchical composition of parameterized scalar operations built on top of autograd.**
+> a hierarchical composition of parameterized scalar operations built on top of autograd.
 
 Or even more compactly:
 
-***Neural network = structured arrangement of trainable `Value`s***
+> **Neural network = structured arrangement of trainable `Value`s**
 
 This matters because nothing fundamentally new is invented after `Value`.  
 Everything else is architecture and organization.
@@ -62,7 +62,7 @@ Because only `Value` objects:
 So the neuron’s weights and bias are not just coefficients.  
 They are:
 
-**trainable differentiable state**
+> trainable differentiable state
 
 This is the first time the graph contains **persistent learnable memory**.
 
@@ -86,7 +86,7 @@ It is one feature response.
 
 This is important because it reframes the neuron:
 
-**A neuron is a learned feature detector**.
+> A neuron is a learned feature detector.
 
 Not a full model.
 
@@ -99,7 +99,7 @@ It is structurally necessary.
 
 Deep invariant:
 
-**Learning requires initial asymmetry**.
+> **Learning requires initial asymmetry**.
 
 Without asymmetry, multiple neurons collapse into one redundant neuron.
 
@@ -134,7 +134,7 @@ So a layer does not introduce new differentiation rules.
 
 It only introduces:
 
-**structured multiplicity**
+> structured multiplicity
 
 This is a major compression insight:
 - `Neuron` = one trainable projection
@@ -154,7 +154,7 @@ Their coupling happens indirectly through:
 
 So a layer is:
 
-**parallel local feature extraction under a common training signal**
+> parallel local feature extraction under a common training signal
 
 This is a deep invariant that survives into CNNs, Transformers, mixture models, everything.
 
@@ -178,11 +178,11 @@ $$
 
 So an MLP is nothing more than:
 
-**repeated application of trainable vector-valued functions**
+> repeated application of trainable vector-valued functions
 
 This connects directly back to your autograd invariant:
 
-**intelligence = compositional function building + local rule propagation**
+> intelligence = compositional function building + local rule propagation
 
 MLP is exactly that.
 
@@ -198,25 +198,25 @@ These numbers are not arbitrary bookkeeping.
 
 They define:
 
-**the width of the internal representational spaces**
+> the width of the internal representational spaces
 
 That is, each layer transforms the input into a new coordinate system of a chosen dimensionality.
 
 This is one of the most important neural-network intuitions:
 
-**hidden layers are not “steps” only — they are learned representational spaces**
+> hidden layers are not “steps” only — they are learned representational spaces
 
 ### Invariant 10 — The final network is still just one differentiable scalar graph
 
 Even though we now think in terms of neurons and layers, under the hood the whole MLP is still only:
 
-**one giant autograd graph of scalar `Value` operations**
+> one giant autograd graph of scalar `Value` operations
 
 So `Neuron`, `Layer`, and `MLP` are not new differentiation engines.
 
 They are:
 
-**graph-construction macros**
+> graph-construction macros
 
 That is a very deep compression.
 
@@ -241,7 +241,7 @@ So:
 
 Deep invariant:
 
-**Optimization requires global visibility over all trainable local states**.
+> **Optimization requires global visibility over all trainable local states**.
 
 ### Invariant 12 — Parameter recursion mirrors architectural hierarchy
 
@@ -254,7 +254,7 @@ So `parameters()` recursively unwraps the same hierarchy used in forward computa
 
 That means:
 
-**architectural composition and parameter aggregation follow the same tree**
+> architectural composition and parameter aggregation follow the same tree
 
 Very clean invariant.
 
@@ -293,7 +293,7 @@ The model does not “know how to improve.”
 
 It only knows:
 
-**how sensitive loss is to each parameter**
+> how sensitive loss is to each parameter
 
 Improvement comes from the update rule.
 
@@ -312,7 +312,7 @@ It protects semantic correctness across steps.
 
 Deep invariant:
 
-**Accumulation is correct across graph paths, but incorrect across unrelated optimization steps**.
+> Accumulation is correct across graph paths, but incorrect across unrelated optimization steps.
 
 That is a beautiful distinction.
 
@@ -349,7 +349,7 @@ Nonlinearity is what makes multilayer networks actually multilayer in function s
 
 Deep invariant:
 
-**Depth becomes meaningful only when separated by nonlinearities**.
+> **Depth becomes meaningful only when separated by nonlinearities**.
 
 This is why `tanh`, `ReLU`, etc. matter so much.
 
@@ -363,7 +363,7 @@ It is simply another operation with:
 
 So from the `Value` perspective, `tanh` and `+` are the same category of thing:
 
-**differentiable local transformations**
+> differentiable local transformations
 
 That is why your autograd foundation is sufficient.
 
@@ -380,7 +380,7 @@ That scalar is essential because reverse-mode autodiff needs a scalar root.
 
 So the loss is:
 
-**the compression of task performance into a differentiable training signal**
+> the compression of task performance into a differentiable training signal
 
 Without loss, no direction for learning exists.
 
@@ -392,7 +392,7 @@ But autograd itself remains unchanged.
 
 This is very important architecturally:
 
-**learning semantics can change while differentiation mechanics stay fixed**
+> learning semantics can change while differentiation mechanics stay fixed
 
 That modularity is why the system scales.
 
@@ -411,7 +411,7 @@ So optimizers are not part of the network itself.
 
 They are:
 
-**policies for converting gradient information into parameter motion**
+> policies for converting gradient information into parameter motion
 
 This separation is critical.
 
@@ -478,11 +478,11 @@ This lecture concludes with a major shift:
 
 In scalar autograd, you learned:
 
-**how a computation can carry derivatives**
+> how a computation can carry derivatives
 
 In primitive neural networks, you learn:
 
-**how a system can contain mutable internal state that is changed by derivatives**
+> how a system can contain mutable internal state that is changed by derivatives
 
 That is the real birth of learning.
 
