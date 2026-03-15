@@ -350,3 +350,5 @@ $$
 - \left( \right) -> $\left( \right)$
 - \lim_{h \to 0} -> $\lim_{h \to 0}$
 - \prod -> $\prod$
+- \gets -> $\gets$
+- \eta -> $\eta$
