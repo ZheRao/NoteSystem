@@ -97,11 +97,13 @@ That’s chain rule.
 ## 4️⃣ Why The “Cancellation Trick” Works
 
 The reason it *looks* like cancellation:
+
 $$
 \frac{dL}{dd} \cdot \frac{dd}{dc}
 $$
 
 is because derivatives are defined as limits of fractions:
+
 $$
 \frac{dL}{dd} = \lim_{h \to 0} \frac{L(d+h) - L(d)}{h}
 $$
@@ -132,11 +134,13 @@ The gradient at `c` is:
 > of (product of local derivatives along the path)
 
 In your case, only one path exists:
+
 $$
 c \to d \to L
 $$
 
 So
+
 $$
 grad_c = grad_d \cdot \frac{\partial d}{\partial c}
 $$
@@ -237,11 +241,13 @@ That’s the key.
 ## 2️⃣ Write It As A Function
 
 Mathematically:
+
 $$
 b = a + a = 2a
 $$
 
 So:
+
 $$
 \frac{db}{da} = 2
 $$
@@ -264,11 +270,13 @@ In branching graphs:
 ## 4️⃣ Apply It To Your Case
 
 Let’s say:
+
 $$
 L = b
 $$
 
 and:
+
 $$
 b = a + a
 $$
@@ -278,33 +286,41 @@ Now compute $dL/da$.
 There are two paths:
 
 Path 1:
+
 $$
 a \to (+) \to b
 $$
+
 Local derivative w.r.t first input = 1
 
 Contribution:
+
 $$
 1 \cdot dL/db
 $$
 
 Path 2:
+
 $$
 a \to (+) \to b
 $$
+
 Local derivative w.r.t second input = 1
 
 Contribution:
+
 $$
 1 \cdot dL/db
 $$
 
 Total:
+
 $$
 dL/da = 1 \cdot dL/db + 1 \cdot dL/db
 $$
 
 If $dL/db = 1$:
+
 $$
 dL/da = 2
 $$
@@ -337,17 +353,23 @@ Because:
 In full generality:
 
 If:
+
 $$
 L = f(x, y)
 $$
+
 and both x and y depend on a:
+
 $$
 x = g(a)
 $$
+
 $$
 y = h(a)
 $$
+
 Then:
+
 $$
 \frac{dL}{da} = \frac{\partial L}{\partial x} \frac{dx}{da} + \frac{\partial L}{\partial y} \frac{dy}{da}
 $$
@@ -357,6 +379,7 @@ Notice the plus.
 This is not optional.
 
 It comes from total derivative definition:
+
 $$
 dL = \frac{\partial L}{\partial x} dx + \frac{\partial L}{\partial y} dy
 $$
