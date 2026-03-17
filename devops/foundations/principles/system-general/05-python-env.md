@@ -206,6 +206,11 @@ Kernel location:
 ~/.local/share/jupyter/kernels/<name>/kernel.json
 ```
 
+To inspect it
+```bash
+cat ~/.local/share/jupyter/kernels/qbo-spark/kernel.json
+```
+
 **7.2 Manage kernels**
 
 ```bash
