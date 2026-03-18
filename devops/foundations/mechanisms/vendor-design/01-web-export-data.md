@@ -92,8 +92,6 @@ Automation implication:
 * login may become much harder without browser automation
 * pure `requests` may not be enough if the flow requires JavaScript or MFA interaction
 
----
-
 ## Stage 2 — Define export scope
 
 The backend must know **what** to export.
@@ -190,8 +188,6 @@ This is why two identical requests may return different files for different logg
 
 **Important invariant:** scope is not always explicit. Sometimes it is partly encoded in the current server-side context.
 
----
-
 ## Stage 3 — Materialize file bytes
 
 This is where the actual CSV gets created.
@@ -261,8 +257,6 @@ How it looks in network tab:
 * final download URL appears later
 
 Your Harvest Profit example fits this pattern.
-
----
 
 ## Stage 4 — Deliver bytes to client
 
@@ -340,8 +334,6 @@ Characteristics:
 * automation may be easier by calling the underlying JSON endpoint directly
 
 This matters because sometimes the “download” is not actually a backend export system.
-
----
 
 ## The five most common real-world architectures
 
@@ -432,8 +424,6 @@ Automation difficulty:
 * variable
 * often easier to call raw data endpoint than reproduce Blob logic
 
----
-
 ## How to reason from the browser network tab
 
 When reverse-engineering a download flow, ask these questions in order.
@@ -489,8 +479,6 @@ Could be:
 
 Once found, polling becomes straightforward.
 
----
-
 ## Invariants specific to GraphQL export systems
 
 GraphQL makes things look unfamiliar, but the same logic still applies.
@@ -527,8 +515,6 @@ So the **real endpoint identity** becomes:
 not just the HTTP path.
 
 This is why headers alone are insufficient.
-
----
 
 ## Common failure modes when vendors change the UI
 
@@ -591,8 +577,6 @@ Interpretation:
 * signed URL must be used immediately
 * logging it for later is insufficient
 
----
-
 ## Practical automation decision tree
 
 ### Case A — Direct CSV response
@@ -633,8 +617,6 @@ Either:
 * call the JSON endpoint directly and reconstruct CSV yourself, or
 * use browser automation as last resort
 
----
-
 ## What makes data extraction truly impossible without vendor cooperation?
 
 Usually, almost nothing makes it truly impossible. It becomes a question of cost, fragility, and legality/permissions.
@@ -668,8 +650,6 @@ Most of the time the real issue is not impossibility. It is:
 * too low priority
 * too dependent on vendor churn
 
----
-
 ## Last-resort weapon mindset
 
 When there is no official extraction path, your fallback weapons are usually:
@@ -683,8 +663,6 @@ When there is no official extraction path, your fallback weapons are usually:
 7. **Manual export with a deliberately documented procedure until priority increases**
 
 This is the hierarchy from simplest to heaviest.
-
----
 
 ## Harvest Profit mapping example
 
@@ -720,8 +698,6 @@ The system still does the same four logical stages:
 Only the transport mechanism changed.
 
 This is the key lesson: **vendor change often alters surface mechanics, not core architecture.**
-
----
 
 ## Debugging checklist for future breakages
 
@@ -786,8 +762,6 @@ Example:
 * keep login and account-switch logic
 * replace email trigger with GraphQL mutation + poll + download
 
----
-
 ## Design lesson for your own systems
 
 A mature export system is not just “a button that downloads CSV.” It is a distributed workflow involving:
@@ -811,8 +785,6 @@ When designing your own systems, think in these layers explicitly.
 * treat export as artifact production, not just response rendering
 
 Email-based export is convenient for humans but weak for reliable automation. Signed artifact delivery after async generation is usually superior.
-
----
 
 ## Final synthesis
 
