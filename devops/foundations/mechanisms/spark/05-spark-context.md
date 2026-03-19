@@ -114,68 +114,65 @@ That is the real reason both of your operations need `sc`.
 ## `SparkSession` vs `SparkContext`
 
 In modern PySpark, you often start from:
-
+```python
 spark = SparkSession.builder.getOrCreate()
 sc = spark.sparkContext
+```
+- `spark` is the higher-level entry point, especially for DataFrames and SQL
+- `sc` is the lower-level entry point for RDD-style operations and cluster primitives
 
-spark is the higher-level entry point, especially for DataFrames and SQL
+If you are doing RDD orchestration with `mapPartitions`, broadcast variables, or custom low-level flows, `sc` is still extremely relevant.
+ Spark’s API reference treats `SparkContext` as the core object for those capabilities.
 
-sc is the lower-level entry point for RDD-style operations and cluster primitives
-
-If you are doing RDD orchestration with mapPartitions, broadcast variables, or custom low-level flows, sc is still extremely relevant. Spark’s API reference treats SparkContext as the core object for those capabilities.
-
-What gets people confused about sc
+## What gets people confused about sc
 
 Three common traps:
 
-1. Thinking broadcast makes mutable shared state
+### 1. Thinking broadcast makes mutable shared state
 
 It does not. Broadcast variables are read-only. Spark explicitly says to avoid modifying the underlying object after broadcasting so all nodes see consistent data.
 
-2. Thinking parallelize is for big source data ingestion
+### 2. Thinking `parallelize` is for big source data ingestion
 
-Usually not. parallelize distributes an already-local Python collection. That means the driver already has the data first. For truly large data, you usually read from storage using Spark readers instead of building a giant local list and parallelizing it. This follows from the API definition itself: it distributes a local collection.
+Usually not. `parallelize` distributes an already-local Python collection. That means the driver already has the data first. 
+For truly large data, you usually read from storage using Spark readers instead of building a giant local list and parallelizing it. 
+This follows from the API definition itself: it distributes a local collection.
 
-3. Forgetting closure shipping cost
+### 3. Forgetting closure shipping cost
 
-Without broadcast, if your partition/row function captures a large local object, Spark may serialize and ship it with tasks repeatedly. Broadcast exists largely to avoid that inefficiency when the same read-only object is needed broadly.
+Without broadcast, if your partition/row function captures a large local object, Spark may serialize and ship it with tasks repeatedly. 
+Broadcast exists largely to avoid that inefficiency when the same read-only object is needed broadly.
 
-Your raw_path case: should it even be broadcast?
+## Your `raw_path` case: should it even be broadcast?
 
-Blunt answer: probably yes only if it is truly shared read-only context and not tiny trivia.
+Blunt answer: **probably yes only if it is truly shared read-only context and not tiny trivia**.
 
 If raw_path is just a short string path like:
-
+```python
 raw_path = "/mnt/raw/harvest_profit"
-
+```
 broadcasting it is usually harmless, but not deeply necessary. A tiny string is cheap to serialize.
 
-If raw_path actually means a larger shared object, for example:
-
-path metadata
-
-config dict
-
-lookup tables
-
-schema maps
-
-endpoint registry
+If `raw_path` actually means a larger shared object, for example:
+- path metadata
+- config dict
+- lookup tables
+- schema maps
+- endpoint registry
 
 then broadcast is much more justified.
 
 So the principle is:
+- **tiny scalar string** → broadcast optional
+- **larger shared read-only object** → broadcast recommended
 
-tiny scalar string → broadcast optional
+Spark itself also notes that Spark automatically broadcasts common data within each stage, 
+so explicit broadcast is most useful when reuse across stages matters or deserialized caching matters.
 
-larger shared read-only object → broadcast recommended
-
-Spark itself also notes that Spark automatically broadcasts common data within each stage, so explicit broadcast is most useful when reuse across stages matters or deserialized caching matters.
-
-Practical pattern for mapPartitions
+## Practical pattern for mapPartitions
 
 A good production-ish pattern is:
-
+```python
 spark = SparkSession.builder.getOrCreate()
 sc = spark.sparkContext
 
@@ -194,41 +191,33 @@ def process_partition(rows):
         }
 
 result = rdd.mapPartitions(process_partition).collect()
+```
 
 Interpretation:
-
-sc.parallelize creates the work units
-
-sc.broadcast creates shared executor-visible read-only context
-
-mapPartitions lets you do setup once per partition
+- `sc.parallelize` creates the work units
+- `sc.broadcast` creates shared executor-visible read-only context
+- `mapPartitions` lets you do setup once per partition
 
 That trio is a very standard low-level orchestration shape.
 
-The strongest intuition to keep
+## The strongest intuition to keep
 
-When you see sc, ask:
+When you see `sc`, ask:
 
-“Am I creating or controlling something that must exist in Spark’s distributed runtime, not just in local Python?”
+**“Am I creating or controlling something that must exist in Spark’s distributed runtime, not just in local Python?”**
 
-If yes, sc is often the right object.
-
-local Python list → sc.parallelize(...)
-
-shared read-only executor data → sc.broadcast(...)
-
-distributed low-level RDD flow → usually starts from sc
+If yes, `sc` is often the right object.
+- local Python list → `sc.parallelize(...)`
+- shared read-only executor data → `sc.broadcast(...)`
+- distributed low-level RDD flow → usually starts from `sc`
 
 That is the clean invariant.
 
-Tiny rule-of-thumb summary
+## Tiny rule-of-thumb summary
+- `sc` = driver’s connection to Spark cluster and low-level distributed runtime.
+- `sc.parallelize` = turn a local Python collection into an RDD.
+- `sc.broadcast` = send one read-only value to executors efficiently.
+- `mapPartitions` = run logic once per partition, great place to consume broadcasts.
 
-sc = driver’s connection to Spark cluster and low-level distributed runtime.
-
-sc.parallelize = turn a local Python collection into an RDD.
-
-sc.broadcast = send one read-only value to executors efficiently.
-
-mapPartitions = run logic once per partition, great place to consume broadcasts.
-
-Lean in — core growth: understanding sc as the boundary object between local orchestration and distributed execution will make a lot of Spark behavior feel much less magical.
+Lean in — core growth: understanding `sc` as the **boundary object between local orchestration and distributed execution** 
+will make a lot of Spark behavior feel much less magical.
