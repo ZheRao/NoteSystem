@@ -230,3 +230,24 @@ If it doesn’t — it’s noise.
 * Never rely on memory for schema — **encode it**
 
 *This document is a living reference. Update it when a new pattern earns its place.*
+
+# Quick Clarifications
+
+## `tuple[str, str]` vs. `dict[str, str]`
+
+### `tuple[str, str]` is "Positional" 
+
+In Python type hints, a tuple's arguments represent **specific positions**. 
+- **Exact Count**: `tuple[str, str]` tells the type checker there are **exactly two** items.
+- **Heterogeneous**: Because each position is typed separately, you can have different types for each spot (e.g., `tuple[str, int, bool]`).
+- **Analogy**: Think of it like a **fixed record** or a row in a spreadsheet where Column A is always "Name" and Column B is always "Email." 
+
+### `dict[str, str]` is "Bulk" 
+
+In contrast, a dictionary's arguments represent the **type of all keys** and the **type of all values**. 
+
+- **Infinite Count**: It doesn't care if you have 1 pair or 1,000,000 pairs.
+- **Homogeneous**: It assumes **every** key will be a string and **every** value will be a string.
+- **Analogy**: Think of it like a **phone book** or a locker room. You don't know how many entries there are, 
+but you know every label is a string and every item inside is a string. 
+
