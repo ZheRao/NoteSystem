@@ -90,6 +90,63 @@
 
 ## 8. Write Path (IO)
 
-- `df.write.format(...).mode(...).option(...).save(path)`
 - `.partitionBy("col1", ...)`
 - `.bucketBy(n, "col")` + `.sortBy("col")` *(usually with `.saveAsTable(...)`)*
+
+### `df.write.format(...).mode(...).option(...).save(path)`
+
+This means:
+1. start from a DataFrame `df`
+2. access its writer via `.write`
+3. tell Spark **what file format** to use with `.format(...)`
+4. tell Spark **what to do if data already exists** with `.mode(...)`
+5. pass extra write settings with `.option(...)`
+6. finally write it to storage with `.save(path)`
+
+**format options**
+```python
+df.write.format("parquet")
+df.write.format("csv")
+df.write.format("json")
+df.write.format("orc")
+df.write.format("delta")   # if Delta Lake is installed
+```
+
+**mode options**
+```python
+.mode("error")                  # fail if path already exists
+.mode("errorifexists")          # fail if path already exists
+.mode("append")                 # adds new files into the existing dataset
+.mode("overwrite")              # replace existing data at that path
+.mode("ignore")                 # if target exists, do nothing
+```
+
+**option**
+
+`.option()` configures format-specific behavior or writer behavior.
+
+Pattern:
+```python
+.option("key", "value")
+```
+You can chain many:
+```python
+df.write.format("csv") \
+    .option("header", "true") \
+    .option("delimiter", ",") \
+    .option("quote", '"') \
+    .save(path)
+```
+
+useful options:
+```python
+.option("header", "true")       # csv
+.option("delimiter", "|")       # csv
+.option("quote", '"')           # important when text fields contain commas or quotes
+.option("escape", '"')          # important when text fields contain commas or quotes
+.option("nullValue", "")        # null handling
+.option("emptyValue", "")       # null handling
+.option("compression", "snappy")    # parquet optional compression
+.option("compression", "gzip")      # common compression for CSV/JSON/Parquet
+.option("compression", "snappy")    # common compression for CSV/JSON/Parquet
+```
