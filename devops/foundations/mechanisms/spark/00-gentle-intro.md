@@ -25,13 +25,16 @@ return df
 ```
 That is the clean Spark pattern.
 
-
-# Pandas $\to$ Spark Scenario
+# Pandas → Spark Scenario
 
 This **is** a bit more abstraction, but it is the **right kind** of abstraction:  
 not “clever framework abstraction,” just **separating engine-specific mechanics from stable transform intent**.
 
 And yes — let’s do a quick Spark tutorial focused exactly on what you need.
+
+## Core Invariant
+
+***Use Pandas to discover invariants. Use Spark to enforce them at scale.***
 
 ## The core mental shift for Spark
 
