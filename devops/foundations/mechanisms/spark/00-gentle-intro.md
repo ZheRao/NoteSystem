@@ -1,4 +1,32 @@
-# Pandas $\to$ Spark
+# How to build Spark functions systematically
+
+When writing a Spark transform, use this checklist:
+
+### Step 1: validate input columns
+```python
+if date_col not in df.columns:
+    raise KeyError(...)
+```
+### Step 2: normalize types if needed
+```python
+df = df.withColumn(date_col, F.to_date(F.col(date_col)))
+```
+### Step 3: build column expressions
+```python
+expr = F.year(F.col(date_col)) + F.when(...).otherwise(...)
+```
+### Step 4: attach result with withColumn
+```python
+df = df.withColumn("fiscal_year", expr)
+```
+### Step 5: return the new DataFrame
+```python
+return df
+```
+That is the clean Spark pattern.
+
+
+# Pandas $\to$ Spark Scenario
 
 This **is** a bit more abstraction, but it is the **right kind** of abstraction:  
 not “clever framework abstraction,” just **separating engine-specific mechanics from stable transform intent**.
@@ -26,7 +54,7 @@ Spark DataFrames are effectively **immutable**.
 You do not modify them in place.  
 Each transformation returns a **new DataFrame**.
 
-That is the first invariant.
+#### That is the first invariant.
 
 ## 1. The three core things you need for Spark transforms
 
@@ -172,7 +200,7 @@ So Spark code is often:
 
 **expression-building**, not imperative mutation.
 
-That is the second invariant.
+#### That is the second invariant.
 
 ## 6. Equivalent mapping: Pandas vs Spark
 
@@ -295,170 +323,95 @@ Expected idea:
 |      2025-01-20|       2025|
 +----------------+-----------+
 ```
-## 9. How to build Spark functions systematically
 
-When writing a Spark transform, use this checklist:
-
-Step 1: validate input columns
-if date_col not in df.columns:
-    raise KeyError(...)
-Step 2: normalize types if needed
-df = df.withColumn(date_col, F.to_date(F.col(date_col)))
-Step 3: build column expressions
-expr = F.year(F.col(date_col)) + F.when(...).otherwise(...)
-Step 4: attach result with withColumn
-df = df.withColumn("fiscal_year", expr)
-Step 5: return the new DataFrame
-return df
-
-That is the clean Spark pattern.
-
-10. Common beginner mistakes in Spark
+## 10. Common beginner mistakes in Spark
 
 These are worth knowing early.
 
-Mistake 1: using df.column_name with dynamic names
+### Mistake 1: using `df.column_name` with dynamic names
 
 Wrong:
-
+```python
 df.date_col
-
+```
 Correct:
-
+```python
 F.col(date_col)
-
+```
 or
-
+```python
 df[date_col]
-Mistake 2: forgetting reassignment
+```
+
+### Mistake 2: forgetting reassignment
 
 Wrong:
-
+```python
 df.withColumn("x", ...)
 return df
+```
 
 Correct:
-
+```python
 df = df.withColumn("x", ...)
 return df
-
+```
 Unless you chain directly.
 
-Mistake 3: writing Python if instead of Spark when
+### Mistake 3: writing Python `if` instead of Spark `when`
 
 Wrong:
-
+```python
 if F.month(F.col(date_col)) >= 11:
     ...
-
+```
 That does not work because that is a Spark column expression, not a Python boolean.
 
 Correct:
-
+```python
 F.when(F.month(F.col(date_col)) >= 11, ...)
-Mistake 4: assuming operations happen immediately
+```
+
+### Mistake 4: assuming operations happen immediately
 
 Spark is lazy.
 
 This:
-
+```python
 df = df.withColumn(...)
-
+```
 does not execute right away.
 
 Execution usually happens at actions like:
-
+```python
 df.show()
 df.count()
 df.collect()
 df.write...
+```
+#### That is the third invariant.
 
-That is the third invariant.
-
-11. Your dispatch pattern with Spark included
-
-Here is the full structure you probably want.
-
-import pandas as pd
-from pyspark.sql import DataFrame as SparkDF
-from pyspark.sql import functions as F
-
-
-def _create_fiscal_year_pandas(
-    df: pd.DataFrame,
-    date_col: str,
-    cut_off: int = 11
-) -> pd.DataFrame:
-    if date_col not in df.columns:
-        raise KeyError(f"{date_col} is not a column in df")
-
-    out = df.copy()
-    out[date_col] = pd.to_datetime(out[date_col])
-    out["fiscal_year"] = out[date_col].dt.year
-    out.loc[out[date_col].dt.month >= cut_off, "fiscal_year"] += 1
-    return out
-
-
-def _create_fiscal_year_spark(
-    df: SparkDF,
-    date_col: str,
-    cut_off: int = 11
-) -> SparkDF:
-    if date_col not in df.columns:
-        raise KeyError(f"{date_col} is not a column in df")
-
-    return (
-        df.withColumn(date_col, F.to_date(F.col(date_col)))
-          .withColumn(
-              "fiscal_year",
-              F.year(F.col(date_col)) +
-              F.when(F.month(F.col(date_col)) >= cut_off, 1).otherwise(0)
-          )
-    )
-
-
-def create_fiscal_year(df, date_col: str, cut_off: int = 11):
-    if isinstance(df, pd.DataFrame):
-        return _create_fiscal_year_pandas(df, date_col, cut_off)
-    elif isinstance(df, SparkDF):
-        return _create_fiscal_year_spark(df, date_col, cut_off)
-    else:
-        raise TypeError(
-            f"Unsupported dataframe type: {type(df)}"
-        )
-
-This is clean, direct, and not over-abstracted.
-
-12. My blunt recommendation
+## 12. My blunt recommendation
 
 For your repo, do not build a grand abstraction system yet.
 
 Use this rule:
-
-one public transform name
-
-one Pandas implementation
-
-one Spark implementation
-
-dispatch by isinstance
-
-write tiny tests for both
+- one public transform name
+- one Pandas implementation
+- one Spark implementation
+- dispatch by `isinstance`
+- write tiny tests for both
 
 That is enough structure to scale without becoming architecture theater.
 
-13. Tiny practice exercise for you
+## 13. Tiny practice exercise for you
 
 A good next step would be to implement these both in Pandas and Spark:
-
-create_fiscal_month
-
-normalize_string_column
-
-add_load_timestamp
-
-select_and_rename_columns
+- `create_fiscal_month`
+- `normalize_string_column`
+- `add_load_timestamp`
+- `select_and_rename_columns`
 
 Those four will force you to internalize the Spark style quickly.
 
-Lean in — core growth.
+Lean in — core growth
