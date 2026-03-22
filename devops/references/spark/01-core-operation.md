@@ -90,10 +90,14 @@
 
 ## 8. Write Path (IO)
 
+- `df.write.format(...).mode(...).option(...).save(path)`
 - `.partitionBy("col1", ...)`
 - `.bucketBy(n, "col")` + `.sortBy("col")` *(usually with `.saveAsTable(...)`)*
 
-### `df.write.format(...).mode(...).option(...).save(path)`
+
+# Detail #1: `.write()` 
+
+## 1.1. `df.write.format(...).mode(...).option(...).save(path)`
 
 This means:
 1. start from a DataFrame `df`
@@ -102,6 +106,65 @@ This means:
 4. tell Spark **what to do if data already exists** with `.mode(...)`
 5. pass extra write settings with `.option(...)`
 6. finally write it to storage with `.save(path)`
+
+## 1.2. partition/repartition
+
+`.repartition(num, column)`
+- not a `write` option, must occur before `.write()`
+- repartition the df into `num` partitions by `column`
+    - ensures records with the same `column` value stay in one partition
+- will create `num` files in `path` without human-readable file names, no folder hierarchy
+- example without controlling partition count
+    ```python
+    (
+        df.repartition("year", "month")
+        .write
+        .format("parquet")
+        .mode("overwrite")
+        .partitionBy("year", "month")
+        .save(path)
+    )
+    ```
+
+### `.partitionBy(column)`
+- is a `write` option, must occur after `.write()`
+- will create separate human-readable folder hierarchy with names like `fiscal_year=2026`
+
+
+
+### `repartition()` vs `coalesce()`
+- `repartition(n)`
+    - full shuffle
+    - redistributes data across cluster
+    - good when you want balanced partitions
+    - can increase or decrease partition count
+
+- Use when:
+    - you need controlled number of output files
+    - current partitioning is bad or unknown
+    - you want repartitioning by column
+
+- `coalesce(n)`
+    - reduces number of partitions
+    - avoids full shuffle in many cases
+    - cheaper, but less balanced
+- Use when:
+    - only reducing partition count
+    - final output is already reasonably distributed
+    - you want fewer files without a big shuffle
+
+- example case of `coalesce()` - Business-friendly CSV export
+    ```python
+    df.coalesce(1) \
+    .write \
+    .format("csv") \
+    .mode("overwrite") \
+    .option("header", "true") \
+    .save(path)
+    ```
+
+
+## 1.3. Options
 
 **format options**
 ```python
@@ -150,3 +213,70 @@ useful options:
 .option("compression", "gzip")      # common compression for CSV/JSON/Parquet
 .option("compression", "snappy")    # common compression for CSV/JSON/Parquet
 ```
+
+## 1.4. Important Remarks
+
+### `AttributeError: 'PosixPath' object has no attribute '_get_object_id'`
+
+This happens because:
+
+👉 Spark’s `.save()` **does NOT understand Python `pathlib.Path` objects**  
+👉 It expects a **plain string**, because it gets passed into the JVM
+
+Under the hood:
+- PySpark → converts arguments → sends to Java (Spark engine)
+- Java side expects a `String` path
+- You passed a Python `Path` object → Py4J tries to treat it like a Java object → fails → `_get_object_id` error
+
+
+# Detail #2: `.read`
+
+## read specific partitions
+
+```python
+from pyspark.sql import functions as F
+
+df = (
+    spark.read.parquet(str(pl_path / "spark"))
+    .filter(F.col("fiscal_year").isin([2024, 2025, 2026]))
+)
+```
+
+### Why this is better
+
+Because Spark understands partitioned datasets.
+
+If `fiscal_year` is a partition column, Spark can often do partition pruning, meaning:
+- it does not read all partition folders fully
+- it only touches the needed ones
+
+So although the code reads from the root path, Spark may intelligently restrict the scan to only:
+```
+fiscal_year=2024/
+fiscal_year=2025/
+fiscal_year=2026/
+```
+That is exactly what partitioning is for.
+
+### Alternative: directly provide multiple paths
+
+You can also read multiple partition paths directly:
+```python
+df = spark.read.parquet(
+    str(pl_path / "spark" / "fiscal_year=2024"),
+    str(pl_path / "spark" / "fiscal_year=2025"),
+    str(pl_path / "spark" / "fiscal_year=2026"),
+)
+```
+This also works.
+
+**When this is useful**
+- when you already know exact partition folders
+- when you want to bypass root scan
+- when you are working with a hand-picked subset of paths
+**Downside**
+- less elegant
+- more manual path-building
+- can get messy if partition selection is dynamic
+
+For most cases, root + filter is cleaner.
