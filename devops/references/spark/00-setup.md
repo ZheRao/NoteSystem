@@ -144,8 +144,11 @@ spark.stop()
 ```
 
 
+# `config` at Initialization vs. After-Running
+
+| Phase                          | Tool               | Meaning                             |
+| ------------------------------ | ------------------ | ----------------------------------- |
+| 🔧 **Before engine starts**    | `builder.config()` | Define how Spark should be built    |
+| ⚙️ **After engine is running** | `spark.conf.set()` | Modify behavior of a running system |
 
 
-
-
-# Logging
