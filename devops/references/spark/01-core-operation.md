@@ -94,6 +94,33 @@
 - `.partitionBy("col1", ...)`
 - `.bucketBy(n, "col")` + `.sortBy("col")` *(usually with `.saveAsTable(...)`)*
 
+## 9. Data Integrity Check
+
+### 1. Completeness
+```python
+df.groupBy("year", "month").count().orderBy("year", "month").show()
+df2.select("fiscal_year").distinct().collect()
+df2.select("fiscal_year").distinct().orderBy("fiscal_year").show()
+```
+👉 Are any months/year missing?
+
+### 2. Distribution sanity
+```python
+df.groupBy("month").count().show()
+```
+👉 Does it look reasonable?
+
+### 3. Range checks
+```python
+df.agg(F.min("date"), F.max("date")).show()
+```
+👉 Does time span match expectations?
+
+### 4. Null checks
+```python
+df.filter(F.col("critical_col").isNull()).count()
+```
+
 
 # Detail #1: `.write()` 
 
