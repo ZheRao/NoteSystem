@@ -191,12 +191,18 @@ poetry add pyspark==3.5.1 pyarrow pandas orjson rich
 **6.2 Add dev-only deps**
 
 ```bash
-poetry add -D ipykernel
+poetry add -D ipykernel jupyter
 ```
 
 Why `-D`:
 - Keeps runtime env lean
 - Dev tooling is optional by design
+
+Why this is better
+- `jupyter` lives inside the project environment
+- `ipykernel` lives inside the same environment
+- your notebook tooling is tied to current package
+- no messy global `pipx` collisions
 
 ## 7. Jupyter / VS Code integration (ipykernel)
 
