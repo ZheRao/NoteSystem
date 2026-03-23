@@ -161,7 +161,20 @@ packages = [
 ]
 ```
 
-**5.3 Install dependencies (initially none)**
+**5.3 Ensure `path_adapter` is a package**
+
+Previous step tells Poetry
+> “There should be an importable package named `path_adapter` inside `src/`.”
+
+For Python tooling, a directory becomes a package when it contains an `__init__.py` file
+
+```text
+└── src
+    └── path_adapter
+        └── __init__.py
+```
+
+**5.4 Install dependencies (initially none)**
 
 ```bash
 poetry install
