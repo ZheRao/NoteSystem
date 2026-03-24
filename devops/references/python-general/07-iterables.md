@@ -1,5 +1,17 @@
 # 1. List-related
 
+### Key Points
+`list` = ordered sequence
+```python
+columns = ["a", "b", "c"]
+```
+- Keeps insertion order
+- Index matters
+- Deterministic
+
+👉 You can say:
+> “column 0 is always `a`”
+
 **Extract scalar values**
 - `.item()`  
     Get a single number from a list/tensor as a native Python `int` or `float`
@@ -34,6 +46,20 @@
 
 # 2. Set-related
 
+### Key Points
+`set` = unordered membership container
+```python
+set(["a", "b", "c"])
+```
+- No guaranteed order
+- No indexing
+- Only guarantees:
+    - uniqueness
+    - fast lookup
+
+👉 You can only say:
+> “`a` is in the set”
+
 **Basic operations**
 - `set_a.add(6)`
 - `b = next(iter(set_a))`  
@@ -59,6 +85,31 @@
 
 **important constraint**
 - Sets **cannot be indexed**
+
+### `set` vs. `list`
+
+```python
+existing = set(columns)
+columns += [x for x in cols if x not in existing]
+```
+
+vs.
+
+```python
+columns += [x for x in cols if x not in columns]
+```
+
+Problem: second is O(n²)
+- `x not in columns` → O(n) (list lookup)
+- You do it for every `x in cols`
+
+So total:
+> O(len(cols) × len(columns))
+
+Complexity for first option:
+- build set → O(n)
+- membership check → O(1)
+- total → O(n + m)
 
 
 # 3. Dictionary
