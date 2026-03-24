@@ -66,6 +66,8 @@ set(["a", "b", "c"])
     Access an arbitrary element
 - `set_a.pop()`  
     Remove and return an arbitrary element
+- `set_a.update(set_b)`  
+    Add another set
 
 **Removal**
 - `set_a.remove(2)`  
