@@ -23,6 +23,15 @@ df["AmountCAD"] = df["Amount"] * df["Currency"].map(rates).fillna(1.0)
 df["new"] = df["old"].map(mapping_table).fillna("Unsuccessful")
 ```
 
+## how Pandas `.map()` is different from Python `map()`
+
+|Feature 	|Pandas series`.map()`	                    |Built-in Python `map()`                        |
+|-----------|-------------------------------------------|-----------------------------------------------|
+|Object	    |Called *on* a Pandas Series.	            |A standalone function.                         |
+|Input Arg	|Function, **Dictionary**, or Series.	    |**Function** only.                             |
+|Returns	|A new Pandas Series.	                    |A "map object" (an iterator).                  |
+|Missing    |Values	Returns `NaN` if a key is missing.	|Throws an error (if using a dict in a function)|
+
 # JSON Handling
 
 **DataFrame → JSON**
