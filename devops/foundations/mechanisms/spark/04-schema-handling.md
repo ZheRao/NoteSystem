@@ -57,7 +57,7 @@ The schema is not optional metadata. It is:
 - the **type system**
 - the **execution hint for Spark**
 
-## 🔑 Core idea
+### 🔑 Core idea
 
 A schema is a **tree structure**:
 ```
@@ -79,7 +79,7 @@ schema = StructType([...])
 - Represents the entire row structure
 - Think: **table definition**
 
-## ✅ StructField → one column
+### ✅ StructField → one column
 ```python
 from pyspark.sql.types import StructField, StringType
 
@@ -90,7 +90,7 @@ Arguments:
 2. type → `StringType()`
 3. nullable → `True` / `False`
 
-## ✅ Primitive types (most common)
+### ✅ Primitive types (most common)
 ```python
 from pyspark.sql.types import *
 
@@ -123,7 +123,7 @@ df = spark.createDataFrame(rdd, schema=schema)
 - TRUST your definition
 - enforce column order
 
-## ⚠️ Critical: column order comes from schema
+### ⚠️ Critical: column order comes from schema
 
 Even if your data is:
 ```python
@@ -198,7 +198,7 @@ but data is `"abc"` → 💥
 
 👉 That’s why your “all string first” approach is smart
 
-## 🔥 4. Nullable = False
+### 🔥 4. Nullable = False
 ```python
 StructField("col1", StringType(), False)
 ```
@@ -301,7 +301,7 @@ We’re going to cover:
 4. `unionByName` **mechanics (VERY important)**
 5. **How to design your pipeline around this**
 
-##🧠 1. What “schema evolution” really is
+## 🧠 1. What “schema evolution” really is
 
 In your case:
 
