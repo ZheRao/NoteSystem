@@ -163,7 +163,7 @@ from pyspark.sql import Row
 
 Row(**record)
 ```
-**Create **
+**Create**
 ```python
 df = spark.createDataFrame(rdd, schema=schema)
 ```
