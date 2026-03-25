@@ -215,6 +215,28 @@ df.groupby("id", as_index=False).agg(
 )
 ```
 
+**`groupby().transform()`**
+- Compute something at the group level, but return it aligned to the original rows
+```python
+df4["inventory_total"] = (
+    df4.groupby(["master_location", "year_month_key"])["inventory_count"]
+       .transform("sum")
+)
+```
+Means:
+- compute the sum of `inventory_count` of each group of unique pairs of `("master_location", "year_month_key")`
+- attach the total back to each record
+
+Under the hood:
+1. build group mapping: e.g., `Group ("Airdrie", 202602) → rows [0, 1]`
+2. Apply function per group: `.transform("sum")` produces
+    ```
+    Group ("Airdrie", 202602):
+    values = [120, 80]
+    sum = 200
+    ```
+3. broadcast back to original indices: `Row 0 → group ("Airdrie", 202602) → assign 200`
+
 ### Pivot
 
 ```python
