@@ -15,8 +15,17 @@ df.loc[:, ["col1", "col2"]]
 df["col1"]
 df.col1
 
-df.at[0, "col1"]        ## fastest calar access
+df.at[row_label, column_name]        ## fastest calar access, e.g. df.at[0, "col1"]
+
+df["col"].max()             # generate max value
+df["col"].idxmax()          # generate the first row_label of the max value occurrence, ignore NaN, if all NaN, returns NaN
 ```
+
+### `.at` vs. `.loc`
+- `.loc` → general-purpose (can return Series/DataFrame)
+- `.at` → optimized for single value access
+
+👉 Faster + more explicit intent
 
 ## Conditional Filtering
 
