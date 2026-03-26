@@ -82,7 +82,26 @@ df["col"].str.contains(r"[A-Za-z]", na=False)
 df["col"].str.contains(r"[^0-9]", na=False)
 ```
 
-### Special characters inside `[]`
+## Important Invariant → `\s|,` vs. `[\s,]`
+
+> Use character classes `[]` when you are defining a set of interchangeable atomic tokens  
+> Use alternation `|` when you are combining structurally different patterns
+
+**Core distinction**
+
+1. `\s|,` → **alternation (logical OR of patterns)**
+    - Think: match pattern A OR pattern B
+    - Engine evaluates **separate branches**
+    - More general (you can OR completely different structures)
+2. `[\s,]` → **character class (set membership)**
+    ```
+    any char in { whitespace, comma }
+    ```
+    - Think: *match any ONE character from this set*
+    - Single operation → more compact + faster
+    - Only works for **single-character matches**
+
+## Special characters inside `[]`
 
 Only three are special:
 - `^` → NOT (only if first)
