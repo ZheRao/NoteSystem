@@ -100,6 +100,15 @@ df["col"].str.contains(r"[^0-9]", na=False)
     - Think: *match any ONE character from this set*
     - Single operation → more compact + faster
     - Only works for **single-character matches**
+3. `[,\s]+`
+    - collapses consecutive matches → fewer replacements → faster
+    - example
+        ```python
+        s = "a ,   b,, c"
+
+        r'[\s,]'        # Matches: ' '  ','  ' '  ' '  ' '  ','  ','  ' ' -> replacement happens one match at a time
+        r'[\s,]+'       # Matches: ' ,'   '   '   ',,'   ' ' -> replacement happens per group
+        ```
 
 ## Special characters inside `[]`
 
