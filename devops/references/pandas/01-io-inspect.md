@@ -10,6 +10,13 @@ df = pd.DataFrame(
 )
 ```
 
+**with fixed column order**
+
+```python
+columns = ["a", "b", "c", "d", "e"]
+df = pd.DataFrame(data).reindex(columns=columns)
+```
+
 ## Read Files
 
 ```python
