@@ -1,178 +1,151 @@
-# Core Trajectory Invariant
+# Trajectory Charter - 202603
 
-> **Purpose**: This document defines the non‑negotiable directions of my long‑term growth.
-> It exists to prevent drift, doubt, and identity collapse under external pressure (jobs, companies, markets, or crises).
+**Core principle**
 
-This is not a goal list. It is a **constitutional guideline**.
+My trajectory is not built by doing everything at once.  
+It is built by maintaining **three long-term pillars** while allowing only **one pillar at a time** to receive full cognitive intensity.
 
-## The Prime Invariant
+The goal is not scattered growth.  
+The goal is **compounding depth with clear activation priority**.
 
-> **No matter what happens externally, I advance my understanding and capability in neural networks and systems every week.**
+## Pillar 1 — System-Architecture Pillar
 
-This invariant holds regardless of:
+### Purpose 
+Build clean, extensible, high-leverage systems that transform messy real-world inputs into reliable operational structure and decision-support capability.
 
-* employment status
-* job search pressure
-* location or environment
+### Focus
+- system architecture
+- contracts and boundaries
+- deterministic logic
+- reusable abstractions
+- semi-structured to structured pipelines
+- product-shaped internal tools
+- auditable and explainable system behavior
 
-External circumstances may change *pace*, but never *direction*.
+### Signature repos
+- `data-platform`
+- `opportunity-engine`
 
-## The Three Core Directions
+### Why this pillar matters
+This is the most immediate source of leverage in my trajectory.  
+It sharpens the exact abilities that make me valuable in real environments:
+- turning ambiguity into structure
+- designing clean system boundaries
+- building reusable internal infrastructure
+- creating systems that can scale in organizational importance
 
-These three directions define the full surface of my trajectory.  
-They are **not equal in role**, and they must **not be pursued simultaneously with equal intensity**.
+### Current status
+**Lean in — core growth**
 
-## 1. Autograd & Linear Algebra
+### Activation rule
+This pillar gets priority whenever there is a direct chance to:
+- remove dependency on employer-specific context
+- produce portable, compounding artifacts
+- design a real system with strong architectural signal
+- create asymmetric career or future-business upside
 
-**Role**: Root truth / identity layer  
-**Question it answers**: *Do I truly understand how intelligence is built?*
+## Pillar 2 — Scale-Engineering Pillar
 
-### Scope
+### Purpose
+Deliberately simulate hostile real-world compute and data conditions in order to harden engineering depth beyond clean local environments.
 
-* Automatic differentiation
-* Backpropagation mechanics
-* Computational graphs
-* Gradients as linear maps
-* Vector–Jacobian and Jacobian–vector products
-* Linear algebra foundations of neural networks
+### Focus
+- scale
+- skew
+- storage layout
+- performance
+- idempotency
+- replay and recovery
+- failure injection
+- concurrency semantics
+- pressure-testing of system assumptions
 
-### Form
+### Signature repo
+- `systems-pressure-lab`
 
-* From‑scratch implementations
-* Minimal, explicit code
-* Mathematical derivations tied directly to code
-* Notes written in my own words
+### Why this pillar matters
+My current environment gives me real architecture problems, but not enough brutal pressure from:
+- extreme data volume
+- distributed failure
+- concurrency
+- storage-layout mistakes
+- unstable operational conditions
 
-### Cadence
+This pillar exists to manufacture those constraints on purpose so my engineering depth becomes forged by reality rather than only design cleanliness.
 
-* **Weekly — non‑negotiable**
-* Even 30–60 minutes counts
+### Current status
+**Park — high future value**
 
-### Rules
+### Activation rule
+This pillar becomes active only when the current frontline architecture work is sufficiently stabilized, 
+or when I specifically need to strengthen missing systems instincts such as:
+- performance under pressure
+- file-layout tradeoffs
+- retry/recovery semantics
+- large-scale execution behavior
 
-* Depth over breadth
-* No performance optimization unless conceptually required
-* Confusion is a success state, not a failure
+### Important constraint
+This pillar is a forge, not a distraction.  
+It should not consume primary energy while higher-leverage architecture artifacts are still under active formation.
 
-> This is the **North Star**.
-> Everything else is downstream of this layer.
+## Pillar 3 — Research Pillar
 
-## 2. Machine Learning Systems Practice
+### Purpose
+Build first-principles understanding of learning systems and compound toward long-horizon intelligence research.
 
-**Role**: Translation layer (intelligence → reality)  
-**Question it answers**: *Can this intelligence survive contact with the real world?*
+### Focus
+- autograd
+- primitive neural networks
+- learning dynamics
+- architecture experiments
+- foundational AI understanding
+- Project Northern Light groundwork
 
-### Scope
+### Signature repo
+- `primitive-neural-networks`
 
-* Training a model end‑to‑end
-* Data pipelines
-* Evaluation and metrics
-* Serving and inference
-* Monitoring, drift, and updates
-* System boundaries and failure modes
+### Why this pillar matters
+This pillar protects the deepest long-term trajectory:  
+not just using systems, but understanding intelligence at the mechanistic level and eventually contributing original architectural ideas.
 
-### Form
+It is not for immediate leverage.  
+It is for foundational depth and future invention.
 
-* Small, complete systems
-* Clear contracts and interfaces
-* Reproducible training and inference
-* Explicit assumptions and constraints
+### Current status
+**Park — high future value**
 
-### Cadence
+### Activation rule
+This pillar remains alive through steady continuity, but should only become primary when near-term architecture leverage is no longer at risk of dilution.
 
-* **Project‑based / episodic**
-* Activated when capacity allows
+### Important constraint
+This pillar must remain grounded in implementation and first principles, not romantic abstraction.
 
-### Rules
+## Repository charter
 
-* One system at a time
-* Finish → document → close
-* No premature scaling
+`data-platform`
 
-> This is where understanding becomes *useful*.
+A reusable data ingestion and transformation platform that separates structure from meaning and encodes system variability through externalized contracts.
 
-## 3. Linux & General Systems Mastery
+`opportunity-engine`
 
-**Role**: Substrate / execution layer  
-**Question it answers**: *Can I build and operate real systems without friction?*
+A decision-support system that combines structured knowledge, deterministic filtering, and LLM-guided reasoning to surface high-quality grant opportunities and recommendations.
 
-### Scope
+`systems-pressure-lab`
 
-* Linux fundamentals
-* Filesystems, processes, permissions
-* Shell tooling (grep, awk, sed, tmux, etc.)
-* Logging, debugging, and observability
+A long-term engineering lab for stress-testing data and compute systems under scale, skew, failure, storage-layout, and concurrency pressure.
 
-### Form
+`primitive-neural-networks`
 
-* Daily or weekly exposure
-* Habit formation
-* Muscle memory over theory
+A first-principles implementation lab for autograd, neural networks, learning dynamics, and future intelligence architecture foundations.
 
-### Cadence
+## Anti-fragmentation rules
+- No new standalone repo unless it clearly strengthens a pillar.
+- No side quest that does not deepen a signature repo or a pillar-specific capability.
+- No “equal attention” across all pillars.
+- No letting long-term beautiful ideas steal energy from current leverage.
+- No confusing compounding value with immediate activation.
 
-* **Low but continuous**
+## Operating sentence
 
-### Rules
-
-* Should feel boring over time
-* No heroics
-* Automation over repetition
-
-> This layer removes friction.
-> It should never dominate attention.
-
-## How These Directions Interact
-
-```
-Autograd & Linear Algebra
-        ↓
-ML Systems Practice
-        ↓
-Linux / System Substrate
-```
-
-* Autograd defines **what is possible**
-* ML systems define **what is viable**
-* Linux defines **what is executable**
-
-Misalignment happens when:
-
-* systems outrun understanding
-* execution outruns design
-
-This document exists to prevent that.
-
-## Weekend Rule
-
-Weekends are for **identity reinforcement**, not urgency.
-
-Allowed:
-
-* Autograd exploration
-* Light linear algebra study
-* Gentle Linux practice
-
-Not allowed:
-
-* Deadline pressure
-* Career comparison
-* Outcome‑based self‑evaluation
-
-## Anti‑Drift Check
-
-When doubt appears, ask:
-
-1. Did I touch neural network understanding this week?
-2. Did I move one layer deeper, even slightly?
-
-If yes → trajectory is intact.
-
-## Final Reminder
-
-> **I am not optimizing for short‑term success.**
-> **I am building irreversible understanding.**
-
-This trajectory compounds quietly.
-
-Return to this document whenever uncertainty tries to redefine who I am.
+My trajectory advances by giving full force to the highest-leverage active pillar, while preserving the other two 
+as disciplined long-term compounding lines rather than uncontrolled distractions.
