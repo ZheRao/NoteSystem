@@ -47,6 +47,40 @@ df.query('countery == "USA" and state == "New York"')
 df[df["name"].str.contians("fire", case=False, regex=False, na=False)]
 ```
 
+**clean multi-regex slicing**
+
+```Python
+mask_feedlot = df["Class"].str.contains(
+    r"\bfeedlot\b",
+    case=False,
+    na=False,
+)
+
+mask_cow = (
+    df["Class"].str.contains(
+        r"\bcow\s*[/-&]?\s*calf\b",
+        case=False,
+        na=False,
+    )
+)
+
+mask_classified = mask_feedlot | mask_cow
+
+df_class_feedlot = df.loc[mask_feedlot].copy()
+df_class_cow = df.loc[mask_cow].copy()
+df = df.loc[~mask_classified].copy()
+```
+Why this is better:
+- each rule is named
+- you only evaluate each regex once
+- the exclusion logic becomes explicit
+- much easier to debug counts like:
+    ```python
+    mask_feedlot.sum()
+    mask_cow.sum()
+    mask_classified.sum()
+    ```
+
 # 2. Membership & Null Checks
 
 ```python
