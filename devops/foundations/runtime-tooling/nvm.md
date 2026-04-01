@@ -1,1 +1,0 @@
-# `nvm` — Node Version Manager
