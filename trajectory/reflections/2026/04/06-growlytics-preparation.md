@@ -243,9 +243,18 @@ Let that sit.
 > In areas where consistency and exactness matter — like financial calculations or how numbers tie together — I’d be cautious using AI directly, because even small inconsistencies can break trust.
 > 
 > Where AI tends to be more useful is around interpretation — things like summarizing, explaining results, or helping guide analysis.
+> 
+> So I’d see it more as a supporting tool on top of a well-defined system, rather than the system itself.”
 
-So I’d see it more as a supporting tool on top of a well-defined system, rather than the system itself.”
+**Refined version of my answer #2**
 
+> “I’d frame that as a trade-off question.
+> 
+> It’s less about whether AI can replace the process, and more about what you’re willing to trade off.
+> 
+> In financial systems, consistency and control are usually critical — so I’d be cautious using AI in those parts.
+> 
+> Where AI tends to work well is on the interpretation side — things like summarizing or guiding analysis — where a bit of variability is acceptable.”
 
 ### Question 3 — “We tried this before and it got expensive”
 
@@ -279,3 +288,11 @@ Refine it slightly:
 You just:
 - avoided selling yourself
 - positioned yourself as decision partner
+
+### Question 5 — “Excel vs. pipeline systems?”
+
+> Excel is great for exploration — it lets you move fast and test ideas — like a "workshop"
+> 
+> The challenge is that as things grow, that same flexibility makes it harder to maintain consistency and trust, especially when multiple people are using it.
+> 
+> Data pipelines are more like a production system — once the logic is defined, it runs the same way every time, and you can rely on the outputs — like an "assembly line"
