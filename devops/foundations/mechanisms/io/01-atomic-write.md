@@ -23,18 +23,54 @@ Atomic write guarantees **integrity**, not **freshness**.
 ### Canonical Implementation
 
 ```python
+import os
+import uuid
+from pathlib import Path
+
+def ensure_dir(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+
+def atomic_replace(src: Path, dst: Path) -> None:
+    os.replace(src, dst)
 
 def atomic_write_bytes(dst: Path, data: bytes) -> None:
     """
-    Write bytes atomically: write temp file in same directory then rename.
+    Atomically write bytes to `dst` by writing a temp file in the same
+    directory, fsyncing it, then replacing the destination.
     """
     ensure_dir(dst.parent)
-    tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")
-    with open(tmp, "wb") as f:
-        f.write(data)
-        f.flush()
-        os.fsync(f.fileno())
-    atomic_replace(tmp, dst)
+    tmp = dst.with_name(f".{dst.name}.{uuid.uuid4().hex}.tmp")  # create temp file name
+
+    try:
+        with open(tmp, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        atomic_replace(tmp, dst)
+    except Exception as e:
+        raise RuntimeError(f"Atomic write failed for {dst}") from e
+    finally:
+        if tmp.exists():
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
+
+# JSON example
+def atomic_write_json(dst: Path, obj: dict[str, Any]) -> None:
+    """
+    Serialize JSON fully in memory, then atomically replace destination.
+    """
+    payload = (
+        json.dumps(
+            obj,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        ) + "\n"
+    ).encode("utf-8")
+
+    atomic_write_bytes(dst, payload)
 ```
 
 ## Step-by-Step Mechanics
