@@ -1,3 +1,110 @@
+# Growlytics Meeting Weapon
+
+## 1. Current State (What they are doing today)
+
+* Inputs: crop plans, financials (QBO), hail rates, benchmarking data
+* Processing: Excel templates (formulas, lookups, manual adjustments)
+* Output: reports, summaries, benchmarking charts
+
+**Core Issue**
+
+> Excel is handling data storage, logic, and reporting all in one place.
+
+
+
+## 2. Structural Translation (Your Core Message)
+
+### Data Layer — Source of Truth
+
+* Clean, structured inputs
+* No logic, no transformations
+* Examples: crop plans, financials, hail rates, benchmarking data
+
+### Logic Layer — Consistent Engine
+
+* Deterministic calculations
+* Examples:
+
+  * forecasting logic
+  * hail rate selection + constraints
+  * benchmarking metrics
+
+### Presentation Layer — Output / Product
+
+* Reports, dashboards, client views
+* Built on top of stable data + logic
+
+**Key Line**
+
+> Separate data, logic, and presentation so outputs are consistent and traceable.
+
+
+
+## 3. Why This Matters (Their Pain)
+
+* Manual copy/paste
+* Hidden logic in Excel
+* Error-prone validation
+* Hard to scale across clients
+
+
+
+## 4. End State (Simple Vision)
+
+* Inputs entered once
+* Logic runs consistently
+* Outputs generated cleanly
+* Every number is traceable
+
+
+
+## 5. Client-Facing Product (Simple Framing)
+
+### 1. Dashboard (See)
+
+* Current state, key metrics
+
+### 2. Scenario Explorer (Interact)
+
+* Adjust inputs → see impact
+
+### 3. Explanation Layer (Understand)
+
+* Why results change
+
+**Key Line**
+
+> Not just a report — an interactive decision system.
+
+
+
+## 6. Execution Principle (Important)
+
+> We don’t need to build everything upfront — start with one use case and expand.
+
+
+
+## 7. 3 Questions to Guide Conversation
+
+1. Where do errors or manual adjustments happen most today?
+2. Which parts change most often (rates, rules, assumptions)?
+3. What outputs are most critical for client decisions?
+
+
+
+## 8. 30-Second Version
+
+> Excel is currently handling data, logic, and reporting all together. That works for exploration, but becomes hard to scale.
+>
+> We can separate it into:
+>
+> * data as a source of truth
+> * logic as a consistent engine
+> * presentation as a clean layer
+>
+> That makes outputs consistent, traceable, and easier to scale over time.
+
+
 # Core Philogophy - Data + Logic + Representation
 
 Yes — this is the moment where your thinking can **snap their entire world into place**.
