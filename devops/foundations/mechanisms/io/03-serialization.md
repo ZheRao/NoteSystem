@@ -106,3 +106,53 @@ This creates a clean separation:
 | Serialization | format validity        |
 | Write         | durability             |
 
+# `read` instead of `write`
+
+When reading in binary mode, `f.read()` returns raw bytes from disk.
+
+```py
+with open(path, "rb") as f:
+    raw = f.read()
+
+text = raw.decode("utf-8")
+obj = json.loads(text)
+```
+
+In this flow:
+1. `f.read()` loads the file contents as bytes
+2. `.decode("utf-8")` converts bytes into a Python str
+3. `json.loads(...)` parses the JSON string into Python objects
+
+## Text Mode Alternative
+
+Opening with `"r"` performs decoding implicitly:
+```py
+with open(path, "r", encoding="utf-8") as f:
+    obj = json.load(f)
+```
+This is valid, but the decoding step is hidden inside the file object.
+
+## If using `orjson`
+
+Your instinct is good. `orjson` makes this cleaner because it naturally works at the bytes boundary.
+
+Write:
+
+```python
+import orjson
+
+payload = orjson.dumps(obj, option=orjson.OPT_INDENT_2)
+atomic_write_bytes(path, payload + b"\n")
+```
+
+Read:
+```py
+raw = path.read_bytes()
+obj = orjson.loads(raw)
+```
+That removes the explicit:
+```py
+.decode("utf-8")
+.encode("utf-8")
+```
+because orjson directly serializes to bytes and deserializes from bytes.
