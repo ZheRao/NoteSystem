@@ -207,3 +207,116 @@ git config user.email "your-company_1-email@example.com"
 
 > In multi-environment setups, **the remote URL chooses the SSH key**, not Git.
 
+# One Local Repo Linking to Multiple Remote Repo
+
+A local repo can have multiple remotes, each with its own:
+- URL
+- SSH alias (→ different keys)
+- purpose
+
+## 🔧 Example setup
+**Check current remotes**
+```bash
+git remote -v
+```
+You’ll usually see:
+```
+origin  git@github-company:company/company-platform.git (fetch)
+origin  git@github-company:company/company-platform.git (push)
+```
+
+**Add another remote** (different repo, possibly different key)
+```bash
+git remote add backup git@github-personal:zherao/company-platform-backup.git
+```
+Now:
+```
+origin  → company (company)
+backup  → personal repo (or another system)
+```
+
+## 🔑 SSH key handling
+
+Each remote uses its own SSH alias:
+
+| Remote | URL                 | SSH key used   |
+| ------ | ------------------- | -------------- |
+| origin | `github-company`    | Company key    |
+| backup | `github-personal`   | Personal key   |
+
+
+👉 This works because of your `~/.ssh/config`
+
+## 🚀 Usage
+**Push to company** (normal)
+```
+git push origin main
+```
+**Push to backup repo**
+```
+git push backup main
+```
+
+## 🧠 Real-world use cases
+
+### 1) Backup / mirror
+```
+Company repo ←→ Personal backup
+```
+### 2) Migration
+```
+Old repo → New repo
+```
+### 3) Multi-deployment
+```
+GitHub → Azure → internal mirror
+```
+
+# `git config`
+
+Git has 3 scopes:
+
+| Scope  | Command     | Applies to              |
+| ------ | ----------- | ----------------------- |
+| System | `--system`  | entire machine (rare)   |
+| Global | `--global`  | all repos for your user |
+| Local  | *(no flag)* | current repo only       |
+
+## 🔍 What YOU did
+
+When you ran:
+```bash
+git config user.email "zhe@company.ca"
+```
+👉 That is **LOCAL to the current repo**
+
+So:
+- company repo → uses company email
+- Personal repos → unchanged
+
+## ✅ Best practice for your situation
+
+You want:
+
+**Global default = personal**
+```bash
+git config --global user.name "Zhe Rao"
+git config --global user.email "zheraoeminem@gmail.com"
+```
+**Then override per repo**
+
+Inside company repo:
+```bash
+git config user.email "zhe@company.ca"
+```
+
+## 🔍 How to verify
+
+In any repo:
+```bash
+git config user.email
+```
+To see all levels:
+```bash
+git config --list --show-origin
+```
