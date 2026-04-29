@@ -252,6 +252,13 @@ Under the hood:
     ```
 3. broadcast back to original indices: `Row 0 → group ("Airdrie", 202602) → assign 200`
 
+**multiple operations on single column**
+
+```py
+df_summary = df.groupby(by=["week_num"]).agg({"date": ["min", "max"]}).reset_index()     # produce multi-index columns
+df_summary.columns = ["week_num", "min_date", "max_date"]                                # flatten columns into one dimension
+```
+
 ### Pivot
 
 ```python
