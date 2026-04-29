@@ -271,6 +271,22 @@ df.pivot_table(
 )
 ```
 
+**much cleaner appraoch with automatic new column naming**
+
+```python
+df_summary = (
+    df.groupby("week_num")
+      .agg(
+          min_date=("date", "min"),
+          max_date=("date", "max"),
+          total_sales=("sales", "sum"),
+          avg_sales=("sales", "mean"),
+          num_customers=("customer_id", "nunique")
+      )
+      .reset_index()
+)
+```
+
 # 8. Missing Values
 
 ### Inspect
