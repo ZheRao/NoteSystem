@@ -347,7 +347,8 @@ $$
 - \neq → $\neq$
 - \approx -> $\approx$
 - \cdot -> $\cdot$
-- \left( \right) -> $\left( \right)$
+- \left( and \right) -> $\left( \text{and} \right)$
+- \left\lfloor and \right\rfloor -> $\left\lfloor \text{and} \right\rfloor$
 - \lim_{h \to 0} -> $\lim_{h \to 0}$
 - \prod -> $\prod$
 - \gets -> $\gets$
