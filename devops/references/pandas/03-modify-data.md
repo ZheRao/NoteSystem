@@ -28,6 +28,16 @@ df["Amount"] = df["Amount"].clip(lower=0)
 
 # 2. Date & Time
 
+### Generate Dates
+
+```py
+from datetime import date
+import pandas as pd
+START = date(2025,11,1)
+END = date(2026,10,31)
+df = pd.DataFrame(pd.date_range(start=START,end=END,freq="D"), columns=["date"])
+```
+
 ### Parse Dates
 
 ```python
