@@ -38,6 +38,11 @@ END = date(2026,10,31)
 df = pd.DataFrame(pd.date_range(start=START,end=END,freq="D"), columns=["date"])
 ```
 
+**Compute dynamic days differ from a fixed date**
+```py
+df["days_delta"] = (df["date"] - pd.Timestamp(START)).dt.days
+```
+
 ### Parse Dates
 
 ```python
