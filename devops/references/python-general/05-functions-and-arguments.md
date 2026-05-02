@@ -29,6 +29,19 @@ def fn(x, **kwargs):
     print(kwargs)
 ```
 
+**Forcing Kyeward Arguments**
+---
+```py
+def validate_required_keys(
+    config,
+    required_shape,
+    *,
+    config_name,
+    path="",
+):
+```
+- everything after `*` must be passed as keyword arguments, not positional arguments.
+
 **Type Hints (`typing`)**
 ---
 
