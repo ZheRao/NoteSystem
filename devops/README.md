@@ -58,6 +58,7 @@ These documents explain:
 * [02-atomic-write-df](./foundations/mechanisms/io/02-atomic-write-df.md)
 * [03-serialization](./foundations/mechanisms/io/03-serialization.md)
 * [04-read-write](./foundations/mechanisms/io/04-read-write.md)
+* [05-path](./foundations/mechanisms/python/05-path.md)
 
 
 #### OS
