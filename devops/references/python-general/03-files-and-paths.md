@@ -55,4 +55,6 @@ p.unlink(missing_ok=True)
 
 p.with_name("tmp.csv")    # replaces only the filename, keeping the same parent directory.
 # -> Path("/data/exports/tmp.csv")
+
+Path("~/data").expanduser() # expand from user home
 ```
