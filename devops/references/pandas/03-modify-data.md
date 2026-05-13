@@ -259,18 +259,6 @@ df_summary = df.groupby(by=["week_num"]).agg({"date": ["min", "max"]}).reset_ind
 df_summary.columns = ["week_num", "min_date", "max_date"]                                # flatten columns into one dimension
 ```
 
-### Pivot
-
-```python
-df.pivot_table(
-    index="row",
-    columns="col",
-    values="val",
-    aggfunc="sum",
-    fill_value=0
-)
-```
-
 **much cleaner appraoch with automatic new column naming**
 
 ```python
@@ -284,6 +272,18 @@ df_summary = (
           num_customers=("customer_id", "nunique")
       )
       .reset_index()
+)
+```
+
+### Pivot
+
+```python
+df.pivot_table(
+    index="row",
+    columns="col",
+    values="val",
+    aggfunc="sum",
+    fill_value=0
 )
 ```
 
