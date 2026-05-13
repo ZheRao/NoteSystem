@@ -72,6 +72,7 @@ These documents explain:
 * [02-file-system](./foundations/mechanisms/pandas/02-file-system.md)
 * [03-pandas-series](./foundations/mechanisms/pandas/03-pandas-series.md)
 * [04-memory-lifecycle](./foundations/mechanisms/pandas/04-memory-lifecycle.md)
+* [05-io](./foundations/mechanisms/pandas/05-io.md)
 
 
 #### Python
