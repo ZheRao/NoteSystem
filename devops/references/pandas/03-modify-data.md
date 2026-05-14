@@ -287,6 +287,52 @@ df.pivot_table(
 )
 ```
 
+**Example**: for every `output_key`, for every `crop`, I need `quantity_inventory` and `unit_price` columns to compute `inventory_value`
+- right now everything is a flattened record
+    - `value` holds the actual value for each flattened record
+- `quantity_inventory` and `unit_price` are column values of `input_type` column
+- `output_key` and `crop` are separate columns
+
+```python
+output_v2 = input_v2.pivot(
+    index=["output_key", "crop"],
+    columns="input_type",
+    values="value"
+)
+# output_v2 = output_v2.reset_index()
+# output_v2.columns.name = None
+```
+produces multi-index
+
+```python
+.reset_index()
+```
+convert it to a "normal-looking" flat DataFrame with a weird named column axis `input_type`, when you do 
+
+```python
+columns="input_type"
+```
+
+Pandas preserves metadata and displays it above headers, so when you do
+
+```python
+output_v2.columns
+```
+
+you get
+
+```python
+Index(
+    ['output_key', 'crop_system', 'quantity_inventory', 'unit_price'],
+    name='input_type'
+)
+```
+
+so just need to do 
+```python
+output_v2.columns.name = None
+```
+
 # 8. Missing Values
 
 ### Inspect
