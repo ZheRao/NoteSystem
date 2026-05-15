@@ -118,3 +118,107 @@ df["rank"] = df["score"].rank(ascending=False)
 df["cumsum"] = df["revenue"].cumsum()
 ```
 
+# `itertuples()` — Row Iteration Pattern
+
+`itertuples()` converts each row into a lightweight tuple-like object.
+
+Example:
+
+```python
+for row in revisions.itertuples(index=False):
+    print(row)
+```
+
+Output:
+
+```python
+Pandas(input_revision_id='2026_01', revision_num=1)
+Pandas(input_revision_id='2026_02', revision_num=2)
+```
+
+Each row becomes an object with attributes:
+
+```python
+row.input_revision_id
+row.revision_num
+```
+
+instead of repeated dataframe lookups.
+
+### Important detail: `index=False`
+
+Without:
+
+```python
+itertuples(index=False)
+```
+
+you get:
+
+```python
+Pandas(Index=0, input_revision_id='2026_01', revision_num=1)
+```
+
+Usually you don't want dataframe index mixed into business logic rows.
+
+So:
+
+```python
+index=False
+```
+
+keeps iteration cleaner.
+
+# Collect → Concat Once
+
+### What actually happens internally
+
+DataFrames are not dynamically growing arrays.
+
+Each `concat` typically creates a NEW dataframe.
+
+So this:
+
+```python
+A = concat(A, B)
+```
+
+roughly means:
+
+1. allocate new memory
+2. copy old dataframe
+3. copy new dataframe
+4. discard old dataframe
+
+Every iteration repeats this.
+
+### Better Pattern: Collect → Concat Once
+
+Instead:
+
+```python
+frames = []
+
+for ...:
+    frames.append(input_v2)
+
+versioned_inputs = pd.concat(frames, ignore_index=True)
+```
+
+### Why this is better
+
+Now:
+1. each dataframe is created independently
+2. list append is cheap
+3. concat happens ONE time
+
+Pandas can:
+- calculate final shape once
+- allocate memory once
+- copy data once
+
+This is much more scalable.
+
+
+
+
