@@ -219,6 +219,50 @@ Pandas can:
 
 This is much more scalable.
 
+# `.assign` - Spark equivalent style
 
+**syntax**
+
+```py
+.assign(
+    new_col = function(dataframe)
+)
+```
+
+means: 
+> Create a modified dataframe where `new_col` is computed from the dataframe
+
+**Example**
+
+```py
+.assign(revision_num=lambda x: pd.to_numeric(x["revision_num"]))
+```
+
+is equivalent to
+```py
+revisions["revision_num"] = pd.to_numeric(revisions["revision_num"])
+```
+
+- but written in a chainable functional style
+- and it receives the entire dataframe `x`, not individual rows; then `x["revision_num"]` is a whole Series.
+- then `pd.to_numeric(...)` operates vectorized over the Series, no Python-level loop over rows
+
+**Then**
+
+```py
+revision_timeline = list(
+    revisions.itertuples(index=False, name=None)
+)
+```
+
+produces
+
+```py
+[
+    ("abc123", 1),
+    ("def456", 2),
+    ("ghi789", 3),
+]
+```
 
 
