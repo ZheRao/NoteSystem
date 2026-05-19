@@ -265,4 +265,53 @@ produces
 ]
 ```
 
+# Chained Filtering with `.loc[]` and `.query()`
 
+`.loc` case
+
+```py
+.loc[lambda x: condition]
+```
+
+means
+
+```py
+temp = previous_dataframe
+temp.loc[condition_using_temp]
+```
+
+**Example with `.loc`**
+
+```py
+bill = (
+    bill
+    .assign(
+        TransactionDate=lambda x: pd.to_datetime(x["TransactionDate"])
+    )
+    .loc[lambda x: x["TransactionDate"] >= dt.datetime(2024, 11, 1)]
+    .drop(columns=["TransactionDate"])
+    .drop_duplicates()
+    .reset_index(drop=True)
+)
+```
+
+Note
+- `bill[bill["TransactionDate"] >= ...]` creates a temporary filtered dataframe
+- `.loc[lambda x: ...]` keeps the whole thing composable and pipeline-friendly
+
+`.query()` case (with actual example)
+
+```py
+bill = (
+    bill
+    .assign(
+        TransactionDate=lambda x: pd.to_datetime(x["TransactionDate"])
+    )
+    .query("TransactionDate >= @dt.datetime(2024,11,1)")
+    .drop(columns=["TransactionDate"])
+    .drop_duplicates()
+    .reset_index(drop=True)
+)
+```
+
+But for datetime logic, `.loc[]` is usually clearer and safer.
