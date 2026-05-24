@@ -118,6 +118,22 @@ df["col"] = df["col"].astype(str).str.zfill(2)
 # after -"01", "03", "10", "07"
 ```
 
+### Extract last part of the split with `rsplit`
+
+```py
+versions["output_key"].str.rsplit("_", n=1).str[-1]
+```
+
+`.str.rsplit("_", n=1)` produces
+```py
+[
+    ["c0001_2026_prior_inventory_barley", "1-qbo-phase"],
+    ["c0001_2026_direct_sales_wheat", "3-pre-seeding-phase"]
+]
+```
+
+then `.str[-1]` means: 'for each list, get the last element'
+
 ### Efficient Extraction and Concatenation of String Parts
 
 ```python
@@ -134,6 +150,10 @@ Why `.str[0]` works on a list object if I do `df["Account"].str.split().str[0]`?
 4. It applies __getitem__(0) to every element.
 
 `.str.split()` vs `expand=True`
+```py
+.str.split(..., expand=False)  -> Series[list]
+.str.split(..., expand=True)   -> DataFrame
+```
 1. without `expand=True`, you get
     ```text
     0    ['4000', 'Revenue', 'Domestic']
