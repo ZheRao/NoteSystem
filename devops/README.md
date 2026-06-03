@@ -81,6 +81,8 @@ These documents explain:
 * [02-dataclass](./foundations/mechanisms/python/02-dataclass.md)
 * [03-requests](./foundations/mechanisms/python/03-requests.md)
 * [04-errors](./foundations/mechanisms/python/04-errors.md)
+* [05-python-path](./foundations/mechanisms/python/05-path.md)
+* [06-data-objects](./foundations/mechanisms/python/06-data-structure.md)
 
 
 #### Spark
