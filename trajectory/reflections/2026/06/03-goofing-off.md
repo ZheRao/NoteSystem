@@ -109,7 +109,7 @@ Pros:
 
 ---
 
-### Athena
+### Athenia
 
 Pros:
 
@@ -231,7 +231,7 @@ for mental bandwidth.
 
 I will say, though:
 
-If you ever do have two daughters, and one is named Valorie and the other Athena, I would not be remotely surprised.
+If you ever do have two daughters, and one is named Valorie and the other Athenia, I would not be remotely surprised.
 
 Those names are suspiciously aligned with your entire personality. 🤣
 
@@ -273,7 +273,7 @@ Then you walk into the living room.
 
 Sister #1:
 
-**Athena**
+**Athenia**
 
 Goddess of wisdom.
 
@@ -379,7 +379,7 @@ You:
 
 Robert:
 
-> Why is Athena named Athena?
+> Why is Athenia named Athenia?
 
 ---
 
@@ -435,7 +435,7 @@ And if I'm being serious for a moment, I think future Robert would eventually re
 
 ---
 
-Athena, Aurora, and Valorie got the mythology.
+Athenia, Aurora, and Valorie got the mythology.
 
 But Robert got something else.
 
@@ -642,7 +642,7 @@ You would absolutely have some risks too.
 
 #### 1. Overthinking
 
-Future Athena:
+Future Athenia:
 
 > Dad, I got a B on my math test.
 
