@@ -399,3 +399,625 @@ The thing that excites me most about what you wrote is that for the first time, 
 
 That's a much bigger jump than learning React.
 
+# Concrete Mental Map
+
+Yes. Locally, it works almost exactly like Azure conceptually. The only difference is that all services run on your own machine instead of cloud machines.
+
+Think of your PC as a tiny local cloud.
+
+```text
+Your PC
+│
+├── Frontend server
+│   └── React website running at http://localhost:5173
+│
+├── Backend / serving layer
+│   └── FastAPI running at http://localhost:8000
+│
+└── Local data
+    └── CSV / Parquet / SQLite files on disk
+```
+
+The frontend and backend are two separate running programs.
+
+The frontend waits for the user.
+
+The backend waits for API requests.
+
+The CSV files just sit on disk until the backend reads them.
+
+### The communication flow
+
+User opens browser:
+
+```text
+http://localhost:5173
+```
+
+React page loads.
+
+React asks the backend:
+
+```text
+GET http://localhost:8000/warnings/upcoming-expenses
+```
+
+FastAPI receives the request.
+
+FastAPI reads local CSV files:
+
+```python
+pd.read_csv("../data/crop_input_streams.csv")
+```
+
+FastAPI computes warnings.
+
+FastAPI returns JSON:
+
+```json
+[
+  {
+    "month": "2026-05",
+    "category": "Fertilizer",
+    "amount": 420000,
+    "severity": "high"
+  }
+]
+```
+
+React receives that JSON and displays it as cards/table/warnings.
+
+That is the whole mental model.
+
+### Minimal local structure
+
+```text
+growlytics-platform-demo/
+│
+├── data/
+│   ├── crop_input_streams.csv
+│   ├── output.csv
+│   └── input_output_linkage.csv
+│
+├── backend/
+│   └── main.py
+│
+└── frontend/
+    └── React app
+```
+
+### Backend example
+
+```python
+# backend/main.py
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
+from pathlib import Path
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+DATA_ROOT = Path(__file__).resolve().parents[1] / "data"
+
+
+@app.get("/warnings/upcoming-expenses")
+def upcoming_expenses():
+    df = pd.read_csv(DATA_ROOT / "crop_input_streams.csv")
+
+    warnings = (
+        df[df["amount"] > 100000]
+        .sort_values("amount", ascending=False)
+        .head(20)
+    )
+
+    return warnings.to_dict(orient="records")
+```
+
+Run it:
+
+```bash
+uvicorn main:app --reload
+```
+
+Backend is now waiting at:
+
+```text
+http://localhost:8000
+```
+
+### Frontend call example
+
+```javascript
+const response = await fetch("http://localhost:8000/warnings/upcoming-expenses");
+const data = await response.json();
+```
+
+That is how the frontend talks to the serving layer.
+
+### Important realization
+
+The backend is not “called” by you manually.
+
+It is a long-running process.
+
+You start it once:
+
+```bash
+uvicorn main:app --reload
+```
+
+Then it sits there waiting.
+
+Same with React:
+
+```bash
+npm run dev
+```
+
+Then it sits there waiting.
+
+So locally you have:
+
+```text
+Terminal 1: FastAPI backend running
+Terminal 2: React frontend running
+Browser: user interface
+Data folder: CSV files
+```
+
+### Where SQLite fits
+
+CSV version:
+
+```text
+FastAPI reads files directly
+```
+
+SQLite version:
+
+```text
+FastAPI queries local database file
+```
+
+Example:
+
+```text
+data/growlytics.db
+```
+
+Then backend does:
+
+```python
+SELECT * FROM crop_input_streams WHERE amount > 100000
+```
+
+CSV is simpler for first prototype.
+
+SQLite is better when you want app-like behavior: saved notes, user settings, warning status, comments, approvals.
+
+### Your local version maps directly to Azure later
+
+Local:
+
+```text
+React localhost:5173
+FastAPI localhost:8000
+CSV files on disk
+```
+
+Azure later:
+
+```text
+React static web app / app service
+FastAPI app service / container app
+Database / blob storage / data lake
+```
+
+Same idea. Different hosting.
+
+So yes, you can build the full conceptual platform locally. The first milestone should be tiny:
+
+```text
+CSV → FastAPI endpoint → React page
+```
+
+Once that works, the whole architecture becomes visible.
+
+# Deeper Mechanics Behind Web Communication
+
+You're actually very close, but you're mixing together three concepts:
+
+1. **The machine** (localhost)
+2. **The process** (React / FastAPI)
+3. **The port** (5173 / 8000)
+
+Let's break it down.
+
+---
+
+## First: What is `localhost`?
+
+When you type:
+
+```text
+http://localhost:8000
+```
+
+you're saying:
+
+> "Talk to my own computer."
+
+`localhost` is just a special DNS name that resolves to:
+
+```text
+127.0.0.1
+```
+
+which means:
+
+```text
+This machine.
+```
+
+So:
+
+```text
+http://localhost:5173
+```
+
+and
+
+```text
+http://localhost:8000
+```
+
+both point to the same computer.
+
+---
+
+## Then why 5173 vs 8000?
+
+Because your computer can run many services simultaneously.
+
+Think of your apartment building.
+
+```text
+123 Main Street
+```
+
+is the building.
+
+But:
+
+```text
+Apartment 101
+Apartment 102
+Apartment 103
+```
+
+are different apartments.
+
+Similarly:
+
+```text
+localhost
+```
+
+is the building.
+
+And:
+
+```text
+5173
+8000
+5432
+3000
+```
+
+are apartment numbers.
+
+These are called **ports**.
+
+---
+
+## Example
+
+Suppose:
+
+```text
+localhost:5173
+```
+
+belongs to React.
+
+```text
+localhost:8000
+```
+
+belongs to FastAPI.
+
+```text
+localhost:5432
+```
+
+belongs to PostgreSQL.
+
+All on the same machine.
+
+---
+
+## What happens when you run
+
+```bash
+uvicorn main:app --reload
+```
+
+This is where things get interesting.
+
+You're basically telling Python:
+
+```text
+Start a web server.
+Load FastAPI application called app
+from file main.py.
+Listen for incoming requests.
+```
+
+Suppose:
+
+```python
+# main.py
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/hello")
+def hello():
+    return {"message":"hello"}
+```
+
+You run:
+
+```bash
+uvicorn main:app --reload
+```
+
+Uvicorn does:
+
+```text
+Start process
+Open port 8000
+Wait forever
+```
+
+Now your computer is listening on:
+
+```text
+http://localhost:8000
+```
+
+---
+
+## What does "waiting forever" mean?
+
+Imagine:
+
+```text
+Frontend: "Hey backend!"
+```
+
+Backend:
+
+```text
+"I'm listening."
+```
+
+Someone opens:
+
+```text
+http://localhost:8000/hello
+```
+
+Request arrives.
+
+FastAPI executes:
+
+```python
+hello()
+```
+
+Returns:
+
+```json
+{
+  "message":"hello"
+}
+```
+
+Response goes back.
+
+Then FastAPI returns to waiting.
+
+---
+
+## So what is React doing?
+
+React is another server.
+
+When you run:
+
+```bash
+npm run dev
+```
+
+React does:
+
+```text
+Start development server
+Open port 5173
+Wait forever
+```
+
+Now:
+
+```text
+http://localhost:5173
+```
+
+serves:
+
+```html
+GrowLytics website
+```
+
+---
+
+## The communication
+
+```text
+Browser
+   │
+   ▼
+localhost:5173
+(React)
+   │
+   ▼
+fetch(...)
+   │
+   ▼
+localhost:8000
+(FastAPI)
+   │
+   ▼
+CSV files
+```
+
+This is your future GrowLytics stack.
+
+---
+
+## Why 5173?
+
+No special reason.
+
+Vite (React tooling) picked it.
+
+Could be:
+
+```text
+3000
+5000
+5173
+9000
+```
+
+Anything available.
+
+---
+
+## Why 8000?
+
+No special reason either.
+
+FastAPI/Uvicorn convention.
+
+Many Python developers use:
+
+```text
+8000
+```
+
+for local APIs.
+
+---
+
+## Then what changes in Azure?
+
+Very little conceptually.
+
+Locally:
+
+```text
+localhost:5173
+localhost:8000
+```
+
+Azure:
+
+```text
+growlytics.com
+api.growlytics.com
+```
+
+Instead of:
+
+```text
+your PC
+```
+
+hosting them,
+
+Azure VMs host them.
+
+---
+
+## The biggest conceptual breakthrough
+
+I think this is the piece that's about to click for you.
+
+You currently think:
+
+```text
+Power BI
+   ↓
+reads data
+   ↓
+shows data
+```
+
+But web platforms are:
+
+```text
+User
+   ↓
+Frontend
+   ↓
+API
+   ↓
+Business Logic
+   ↓
+Data
+```
+
+Your forecast engine already occupies:
+
+```text
+Business Logic
+   ↓
+Data
+```
+
+You have spent months building that layer.
+
+Now you're starting to see:
+
+```text
+Frontend
+   ↓
+  API
+```
+
+which sits on top of everything you've already built.
+
+That's why your brain lit up. You're not starting over. You're building the missing half of the platform.
+
+
