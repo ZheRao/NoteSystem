@@ -97,6 +97,11 @@ These documents explain:
 * [07-config](./foundations/mechanisms/spark/07-config.md)
 * [08-data-ops](./foundations/mechanisms/spark/08-data-ops.md)
 
+#### Beyond Data Infra/System
+
+* [00-intuition](./foundations//mechanisms/beyond-infra/00-intuition.md)
+* **Serving Layer**
+    * [01-intro-FastAPI](./foundations//mechanisms/beyond-infra/serving-layer/01-intro-fast-api.md)
 
 #### Vendor Web Design
 
