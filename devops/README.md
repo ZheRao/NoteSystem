@@ -101,7 +101,8 @@ These documents explain:
 
 * [00-intuition](./foundations//mechanisms/beyond-infra/00-intuition.md)
 * **Serving Layer**
-    * [01-intro-FastAPI](./foundations//mechanisms/beyond-infra/serving-layer/01-intro-fast-api.md)
+    * [01-SQLite](./foundations/mechanisms/beyond-infra/serving-layer/01-sqlite.md)
+    * [02FastAPI](./foundations//mechanisms/beyond-infra/serving-layer/02-fastapi.md)
 
 #### Vendor Web Design
 
