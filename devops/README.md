@@ -125,6 +125,8 @@ Focuses on:
 * production readiness
 * organizational leverage
 
+#### Cloud Migration
+* [01-path-and-config](./foundations/principles/cloud-migration/01-path-config.md)
 
 #### Consumer Facing
 
