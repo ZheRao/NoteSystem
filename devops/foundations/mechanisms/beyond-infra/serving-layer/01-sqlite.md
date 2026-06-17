@@ -207,3 +207,458 @@ The CSV→SQLite load (`connect`, `to_sql`, the index, `commit`) is a **batch / 
 The three query functions are a **stand-in for the serving layer's logic**. Right now they print to a terminal so you can verify the shapes with `python build_db.py` — no browser, no network needed. When you add FastAPI, each function moves behind an HTTP route almost unchanged; you wrap it in an endpoint, set `conn.row_factory = sqlite3.Row`, and add the one `dict(row)`→JSON step. The SQL itself barely moves.
 
 So the progression from here is small and concrete: keep the load step as a batch job, lift the three query functions behind three FastAPI endpoints, return JSON instead of printing, then build a frontend whose three interactions call those three endpoints. If you'd like, I can show you one of those functions converted into a FastAPI endpoint end to end — request in, JSON out — so you can see the tuple-to-JSON hop in real code.
+
+# Pandas vs. SQLite
+
+Great set of questions — they're all circling the same core confusion, which is that several of these technologies live at *different layers* and solve *different problems*, but they get mentioned together so it's natural to assume they're alternatives. Let me untangle them.
+
+## The fundamental thing: a library vs. a system
+
+The single most useful distinction to internalize is this:
+
+**Pandas is a library.** It's Python code that runs *inside your one process*, operating on data that lives *in that process's memory (RAM)*. When your script ends, the DataFrame is gone.
+
+**A database (SQLite, Postgres, MySQL) is a system.** It manages data *on disk*, it *persists* across restarts, and critically, it *mediates access* so that many clients can read and write the same data safely at the same time.
+
+Everything else follows from that distinction. Pandas can absolutely load, filter, aggregate, and transform — and for a single analyst working on a static dataset that fits in RAM, it's often the *better* tool. But the moment you're building something that serves data over time, several gaps open up:
+
+**Concurrency.** A DataFrame lives in one process's memory. If two things try to use it at once, there's no coordinator. A database is built around exactly this problem — locking, transactions, isolation levels — so that if two writes hit the same row simultaneously, the result is well-defined rather than corrupt.
+
+**Persistence and durability.** A DataFrame vanishes when the process dies. To keep it you serialize to a file (parquet/CSV) and reload, but if you crash *mid-write*, you can corrupt that file. Databases write with guarantees (write-ahead logs, fsync) so a crash never leaves the data in a broken half-state. This is the "ACID" property.
+
+**Memory ceiling.** Pandas loads *everything* into RAM. 100 GB of data on a 16 GB machine simply won't load. A database streams pages from disk and only holds what it needs.
+
+**Indexes and a query planner.** `df[df.user_id == 5]` in Pandas is a full linear scan — it checks every row, O(n). A database with an index on `user_id` finds matches in O(log n) via a B-tree, and a query *planner* decides the smartest way to execute a complex query (which index, which join order). On large data this is the difference between milliseconds and minutes.
+
+So the rule of thumb: **Pandas for analysis (a person exploring a snapshot); a database for a system of record (the durable, shared source of truth that many things read and write).**
+
+## Batch vs. continuous — the mechanical difference
+
+This is less about Pandas vs. SQLite and more about two *modes of running a program*. The mechanical difference is whether the process **runs to completion and exits**, or **stays alive waiting**.
+
+**Batch** processing operates on a *bounded* chunk of data. The program starts, reads all its input, does the work, writes output, and **the process terminates.** A nightly report, an ETL job, a Pandas script you run on a CSV — these all have a defined beginning and end. They work on data "at rest" (a fixed snapshot). Latency is measured in minutes or hours, and nobody is waiting in real time.
+
+**Continuous / serving** (also called "online") is a *long-running process that never terminates* on its own. Mechanically, it sits in an **event loop**: it blocks on a network socket, waiting for a request to arrive. When one comes in, it wakes up, does a tiny bit of work (e.g., run a query, return the answer), sends the response, and goes *right back to waiting*. A web server is the canonical example. Latency is measured in milliseconds, and the whole point is responsiveness.
+
+That waiting-on-a-socket loop *is* the "live connection" you mentioned. When FastAPI is running, it holds a connection open to the database, and for each incoming HTTP request it queries the *current* state and replies. The batch job has no such loop — there's no external party to wait for; it just chews through known data and exits.
+
+So the fundamental difference in mechanics is: **a batch job's lifecycle is "do all the work, then die"; a serving process's lifecycle is "stay alive forever, react to each event as it arrives."**
+
+## "Why not just put a Pandas DataFrame behind FastAPI?"
+
+You actually *can*, and for a **read-only, small, static** dataset it's a completely legitimate pattern — people serve precomputed lookup tables this way all the time. So this isn't forbidden; it's a question of where it breaks down.
+
+Here's the catch. A production FastAPI server typically runs *multiple worker processes* to handle concurrent traffic. Each worker is a separate Python process, so **each one holds its own separate copy of the DataFrame.** That immediately causes problems:
+
+- **Writes don't propagate.** If a request modifies the DataFrame in worker A, workers B and C never see the change. There's no shared source of truth. A database sits *outside* all the workers, so they all query the same state.
+- **No durability.** Restart the server and every DataFrame is gone — so you needed a persistent store underneath anyway.
+- **Memory multiplies.** Four workers = four full copies of the data in RAM.
+- **Race conditions.** If two requests modify data, there's nothing making those updates atomic.
+- **Every request is a full scan.** No index, so filtering is O(n) per request.
+
+SQLite neatly solves these *without* requiring you to run a separate server: it's an *embedded* database — a single file on disk that all workers open and share, with real transactions and indexes. You reach for Postgres/MySQL instead when you need a heavy-duty *server* process handling many simultaneous writers, network access from multiple machines, etc. SQLite is the "one file, one machine, modest concurrency" option; Postgres is the "real server, lots of concurrent writers" option.
+
+## Where REST and GraphQL come in
+
+These are at a *completely different layer* than the database — they're about the **contract between the frontend and your server**, not about how data is stored. They're orthogonal to the Pandas-vs-DB question.
+
+Picture the stack as three layers:
+
+**Frontend** (browser/app) ⟷ **API server** (FastAPI) ⟷ **Data layer** (database or Pandas)
+
+**FastAPI** is the *web framework* — it's the thing that runs the continuous serving loop, speaks HTTP, and routes incoming requests to your Python functions. By itself it doesn't dictate the *style* of your API.
+
+**REST** and **GraphQL** are two *styles* for designing what that HTTP interface looks like:
+
+- **REST** models your data as *resources addressed by URLs*, manipulated with HTTP verbs: `GET /users/5`, `GET /users/5/orders`, `POST /orders`. Each endpoint returns a fixed shape. It's simple, ubiquitous, and easy to cache. The downside is you sometimes need several round trips (fetch the user, *then* fetch their orders), or an endpoint gives you more fields than you need (over-fetching) or too few (under-fetching).
+
+- **GraphQL** exposes a *single* endpoint where the client sends a query describing *exactly* the data and nested relationships it wants, and gets precisely that shape back in one request. It solves over/under-fetching and multiple round trips, at the cost of more server complexity and harder caching.
+
+The crucial point: **REST/GraphQL are independent of your storage choice.** You can put a REST API over a Pandas DataFrame, or a GraphQL API over Postgres, or any combination. They define the *interface*; the database defines the *data*; FastAPI is the *server* that connects the two.
+
+Here's the whole picture in one view:  
+Here's the layered architecture — where each technology you mentioned actually sits, and what crosses each boundary:
+
+![alt text](images/image4.png)
+
+## Putting it together for your case
+
+So to answer your "why not just Pandas?" directly: **for a read-only dashboard over a small static dataset, Pandas behind FastAPI is a perfectly legitimate choice** — don't let anyone tell you it's wrong. You reach for SQLite the moment any of these become true:
+
+The data needs to **survive restarts** as the authoritative copy. The app has **writes** and therefore **concurrency** (multiple FastAPI workers, multiple users). The data **outgrows RAM**. Or you need **fast filtered lookups** (indexed queries instead of per-request full scans).
+
+SQLite is the gentlest way to get all of that — it's still just a file on disk, no separate server to run — which is exactly why it's the usual "graduate from Pandas" step. Postgres/MySQL come later, when you need a real server process handling heavy concurrent writes across machines.
+
+And REST vs GraphQL is a decision you make *regardless* of that storage choice — it's purely about how the frontend asks for data. Start with REST (it's simpler and you clearly already think in terms of resources); reach for GraphQL only when you feel the pain of too many round trips or over-fetching.
+
+If it'd help, I can sketch a tiny concrete example — say, the same "list users, filter by name" endpoint implemented both as Pandas-behind-FastAPI and SQLite-behind-FastAPI — so you can see exactly where the mechanics diverge in code.
+
+
+# Pandas-behind-FastAPI vs. SQLite-behind-FastAPI
+
+
+Here's the same tiny API — list users with an optional name filter, plus an endpoint to add one — written both ways. I've kept them as close as possible so the *only* differences are the mechanics.
+
+**Version A — Pandas in the process's memory:**
+
+```python
+from fastapi import FastAPI
+import pandas as pd
+
+app = FastAPI()
+
+# Created once at startup. Lives in THIS process's RAM for the app's whole life.
+users = pd.DataFrame({
+    "id":   [1, 2, 3, 4],
+    "name": ["Alice", "Bob", "Carol", "Dave"],
+    "city": ["Regina", "Toronto", "Regina", "Calgary"],
+})
+
+@app.get("/users")
+def list_users(name: str | None = None):
+    df = users
+    if name is not None:
+        df = df[df["name"].str.contains(name, case=False)]  # full scan, O(n)
+    return df.to_dict(orient="records")
+
+@app.post("/users")
+def add_user(id: int, name: str, city: str):
+    global users
+    users = pd.concat([users, pd.DataFrame([{"id": id, "name": name, "city": city}])])
+    return {"ok": True}
+```
+
+**Version B — SQLite on disk:**
+
+```python
+from fastapi import FastAPI
+import sqlite3
+
+app = FastAPI()
+
+def db():
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Run once. The table and index live on disk, outside any process.
+with db() as conn:
+    conn.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, city TEXT)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_name ON users(name)")
+
+@app.get("/users")
+def list_users(name: str | None = None):
+    with db() as conn:
+        if name is not None:
+            rows = conn.execute(
+                "SELECT * FROM users WHERE name LIKE ?", (f"%{name}%",)  # can use idx_name
+            ).fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM users").fetchall()
+    return [dict(r) for r in rows]
+
+@app.post("/users")
+def add_user(id: int, name: str, city: str):
+    with db() as conn:
+        conn.execute("INSERT INTO users (id, name, city) VALUES (?, ?, ?)", (id, name, city))
+        conn.commit()  # atomic + durable: written to disk before this returns
+    return {"ok": True}
+```
+
+They look almost identical. The divergence is entirely in *where the data lives and what a write does*.
+
+**1. Where state lives.** In A, `users` is a Python object in the server process's heap. In B, the data is in `users.db`, a file the process merely opens and closes. This sounds like a detail; it's the root of everything below.
+
+**2. What a write does.** In A, the POST reassigns a module-level global — it mutates *this process's* copy and nothing else, and `pd.concat` rebuilds the entire frame each time. In B, the INSERT plus `commit()` writes to disk atomically; if the server crashes the instant after `commit()` returns, the row is still there.
+
+**3. What a restart does.** Restart Version A and you're back to Alice/Bob/Carol/Dave — every added user is gone, because RAM is wiped. Restart Version B and the data is exactly as you left it.
+
+**4. The multi-worker problem — the one that actually bites people.** In production you run something like `uvicorn app:app --workers 4`, which starts *four separate processes*. Watch what happens to Version A:
+
+- `POST /users` adding "Erin" gets routed to worker #2 → Erin is added to worker #2's DataFrame only.
+- The next `GET /users` gets routed to worker #1, which has never heard of Erin.
+- Erin appears and vanishes depending on which worker answers. There is no single source of truth.
+
+Version B has four processes too, but all four open the *same* `users.db` file, so the moment one commits Erin, the other three see her on their next query. That's the whole reason a database exists: it's the shared, durable thing that sits *outside* the workers so they can agree on reality.
+
+**5. The filter.** A's `str.contains` checks every row in Python — O(n), every request. B's `WHERE name LIKE ?` goes through SQLite, which can consult the `idx_name` B-tree. On four rows it's irrelevant; on four million it's the difference between instant and sluggish.
+
+One honest caveat so you have the full picture: SQLite serializes writers — only one write can happen at a time; concurrent writers wait for a brief lock. For a single app with modest write traffic that's fine. When you have many clients hammering writes simultaneously, that lock becomes the bottleneck, and *that's* the moment you graduate to Postgres, which handles many concurrent writers with finer-grained locking. (It's also where the "keep a connection alive in a pool" pattern comes in — with Postgres you don't open/close per request like my SQLite example does; you borrow a live connection from a pool and return it.)
+
+So the code barely changes — but the guarantees underneath it change completely. Want me to extend Version B with a GET-by-id endpoint and show how the same thing would look as a GraphQL query instead of REST, so you can see that layer swap too?
+
+
+
+# Code Appendix
+
+## `config.py`
+
+```py
+"""
+config.py — the single source of "where things live" (Invariant 9).
+
+Nothing here is hardcoded into the loader or the future API. Both sides import
+these values, so moving from your laptop to a teammate's machine or to the
+cloud is a change of environment variables, not a change of code.
+
+    Local default      -> a file path on disk
+    Cloud (later)      -> set GROWLYTICS_STORE_PATH / a DSN via the environment
+
+Run-by-nobody: this module is imported by the build-time loader and by the
+run-time API. It is never executed on its own.
+"""
+
+import os
+from pathlib import Path
+
+# Project root = the directory that contains this file.
+PROJECT_ROOT = Path(__file__).resolve().parent
+
+# Where the data system drops its output tables (one file per table).
+## `os.environ` is a dictionary containing environment variables, e.g., `os.environ["HOME"]`
+## the following means: "Give me the value of the environment variable GROWLYTICS_STORE_PATH. If it doesn't exist, use default_value instead."
+INPUT_DIR = Path(
+    os.environ.get("GROWLYTICS_INPUT_DIR", PROJECT_ROOT / "data" / "warehouse_exports")
+)
+
+# The serving store this loader WRITES and the API will later READ.
+STORE_PATH = Path(
+    os.environ.get("GROWLYTICS_STORE_PATH", PROJECT_ROOT / "forecast.sqlite")
+)
+
+# Format the data system exports in: "csv" or "parquet".
+INPUT_FORMAT = os.environ.get("GROWLYTICS_INPUT_FORMAT", "csv").lower()
+
+# If true, the loader aborts when referential-integrity checks find orphan keys.
+# Default false so a first run is informative rather than fatal.
+STRICT_INTEGRITY = os.environ.get("GROWLYTICS_STRICT_INTEGRITY", "false").lower() == "true"
+```
+
+## `build_serving_store.py`
+
+```py
+"""
+build/build_serving_store.py — Phase 0, the build-time loader.
+
+WHAT THIS IS
+    The first process of the serving layer. It takes the output tables produced
+    by the data system and projects them into a single read-optimized SQLite
+    file (the "store") that the FastAPI layer will later read.
+
+WHERE IT SITS (the invariants this file protects)
+    1  Build vs serve are separate triggers. This runs in BATCH, off the request
+       path. A user click must never reach this file.
+    2  The store is a disposable, rebuildable projection. Re-running is safe:
+       every table is dropped and replaced, so the output is identical each time.
+    3  Exactly one writer. This loader is it. The API only ever reads.
+    7  Every servable slice is addressable by stable keys; the join/filter keys
+       are indexed here so drill-downs are cheap.
+    8  Row-level grain and lineage are preserved. We load the normalized tables
+       as-is and let queries aggregate at serve time — nothing is pre-summarized.
+
+HOW TO RUN
+    From the project root:
+        python build/build_serving_store.py
+    Point it at your real exports by setting environment variables (see config.py):
+        GROWLYTICS_INPUT_DIR=/path/to/data_system/exports python build/build_serving_store.py
+
+WHAT IT DOES NOT DO
+    It does not define the drill-down queries. Those live in queries.py (next
+    step). This file only loads and indexes.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+import sys
+from pathlib import Path
+
+import pandas as pd
+
+# Make the project root importable so `import config` works regardless of the
+# directory you launch from. (build/ is one level below the root.)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import config  # noqa: E402
+
+
+# --------------------------------------------------------------------------- #
+# 1. Declarative table plan.
+#    One entry per output table from the data system. Adding a table later is a
+#    data change here, not new code below. `indexes` lists the column-tuples to
+#    index — chosen from the keys the serving layer will FILTER or JOIN on.
+# --------------------------------------------------------------------------- #
+TABLE_SPECS: dict[str, dict] = {
+    # input table — exposes a unique input_output_key
+    "crop_plan": {
+        "file": "crop_plan",
+        "indexes": [("input_output_key",)],
+    },
+    # annualized output (pre-allocation) — exposes a unique output_key
+    "output": {
+        "file": "output",
+        "indexes": [("output_key",)],
+    },
+    # link table: output_key (many->1 to output) and input_output_key (many->1 to crop_plan)
+    "input_output_linkage": {
+        "file": "input_output_linkage",
+        "indexes": [("output_key",), ("input_output_key",)],
+    },
+    # the fact table: monthly allocated cash-flow streams (the grain)
+    "crop_input_streams": {
+        "file": "crop_input_streams",
+        "indexes": [
+            ("orchestration_key", "month", "source"),  # the level 0 -> 1 drill path
+            ("output_key",),                            # join out to linkage / lineage
+            ("client_id",),                             # client control panel
+            ("orchestration_key",),                     # revision control panel
+        ],
+    },
+    # control panels
+    "clients": {
+        "file": "clients",
+        "indexes": [("client_id",)],
+    },
+    "versions": {
+        "file": "versions",
+        "indexes": [("orchestration_key",)],
+    },
+}
+
+# --------------------------------------------------------------------------- #
+# 2. Relationships, as (child_table, child_col) -> (parent_table, parent_col).
+#    Used only for a build-time integrity check: catching a broken key here is
+#    far better than a silently empty drill-down at serve time.
+# --------------------------------------------------------------------------- #
+FOREIGN_KEYS: list[tuple[str, str, str, str]] = [
+    ("input_output_linkage", "input_output_key", "crop_plan", "input_output_key"),
+    ("input_output_linkage", "output_key", "output", "output_key"),
+    ("crop_input_streams", "output_key", "input_output_linkage", "output_key"),
+    ("crop_input_streams", "client_id", "clients", "client_id"),
+    ("crop_input_streams", "orchestration_key", "versions", "orchestration_key"),
+]
+
+READERS = {"csv": pd.read_csv, "parquet": pd.read_parquet}
+
+
+# --------------------------------------------------------------------------- #
+# Helpers
+# --------------------------------------------------------------------------- #
+def _source_path(spec: dict) -> Path:
+    return config.INPUT_DIR / f"{spec['file']}.{config.INPUT_FORMAT}"
+
+
+def read_table(spec: dict) -> pd.DataFrame:
+    """Read one export file into a DataFrame. Fail loudly if it is missing."""
+    if config.INPUT_FORMAT not in READERS:
+        raise ValueError(
+            f"Unsupported GROWLYTICS_INPUT_FORMAT={config.INPUT_FORMAT!r}; "
+            f"expected one of {sorted(READERS)}"
+        )
+    path = _source_path(spec)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Expected export not found: {path}\n"
+            f"Set GROWLYTICS_INPUT_DIR to the data system's export directory."
+        )
+    return READERS[config.INPUT_FORMAT](path)
+
+
+def create_indexes(conn: sqlite3.Connection, table: str, spec: dict) -> None:
+    """Build the indexes for one table. IF NOT EXISTS keeps re-runs clean."""
+    for cols in spec["indexes"]:
+        index_name = f"idx_{table}__{'_'.join(cols)}"
+        col_list = ", ".join(f'"{c}"' for c in cols)
+        conn.execute(
+            f'CREATE INDEX IF NOT EXISTS "{index_name}" ON "{table}" ({col_list})'
+        )
+
+
+def _columns(conn: sqlite3.Connection, table: str) -> set[str]:
+    return {row[1] for row in conn.execute(f'PRAGMA table_info("{table}")')}
+
+
+# --------------------------------------------------------------------------- #
+# The build
+# --------------------------------------------------------------------------- #
+def build() -> sqlite3.Connection:
+    """Load every table from the data system into the store. Returns the open
+    connection so callers (or the integrity check) can inspect the result."""
+    config.STORE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(config.STORE_PATH)
+
+    for table, spec in TABLE_SPECS.items():
+        df = read_table(spec)
+        # if_exists="replace" makes the whole build idempotent (Invariant 2).
+        df.to_sql(table, conn, if_exists="replace", index=False)
+        create_indexes(conn, table, spec)
+        print(f"  loaded {table:<22} {len(df):>6} rows")
+
+    conn.commit()
+    return conn
+
+
+def check_integrity(conn: sqlite3.Connection) -> list[str]:
+    """Report child keys that have no matching parent (orphans). Returns a list
+    of human-readable problems; empty means every relationship resolves."""
+    problems: list[str] = []
+    for child_t, child_c, parent_t, parent_c in FOREIGN_KEYS:
+        edge = f"{child_t}.{child_c} -> {parent_t}.{parent_c}"
+        if child_c not in _columns(conn, child_t) or parent_c not in _columns(conn, parent_t):
+            problems.append(f"  ?  {edge:<55} skipped (column not present)")
+            continue
+        orphans = conn.execute(
+            f'SELECT COUNT(*) FROM "{child_t}" c '
+            f'WHERE c."{child_c}" IS NOT NULL '
+            f'AND c."{child_c}" NOT IN (SELECT DISTINCT "{parent_c}" FROM "{parent_t}")'
+        ).fetchone()[0]
+        if orphans:
+            problems.append(f"  X  {edge:<55} {orphans} orphan key(s)")
+        else:
+            print(f"  ok {edge:<55} all keys resolve")
+    return problems
+
+
+def summary(conn: sqlite3.Connection) -> None:
+    """Print the tables and the indexes that were created on the store."""
+    print("\nStore tables:")
+    tables = [
+        r[0]
+        for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        )
+    ]
+    for t in tables:
+        count = conn.execute(f'SELECT COUNT(*) FROM "{t}"').fetchone()[0]
+        idx = [
+            r[0]
+            for r in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='index' "
+                "AND tbl_name=? AND name NOT LIKE 'sqlite_%' ORDER BY name",
+                (t,),
+            )
+        ]
+        print(f"  {t:<22} {count:>6} rows   indexes: {', '.join(idx) or '(none)'}")
+
+
+if __name__ == "__main__":
+    print(f"Building store at: {config.STORE_PATH}")
+    print(f"Reading exports from: {config.INPUT_DIR} (*.{config.INPUT_FORMAT})\n")
+
+    conn = build()
+    summary(conn)
+
+    print("\nReferential integrity:")
+    problems = check_integrity(conn)
+    if problems:
+        print("\n".join(problems))
+        if config.STRICT_INTEGRITY:
+            conn.close()
+            raise SystemExit("Aborting: orphan keys found and STRICT_INTEGRITY is on.")
+        print("\n(Warnings only. Set GROWLYTICS_STRICT_INTEGRITY=true to make these fatal.)")
+    else:
+        print("  every relationship resolves cleanly.")
+
+    conn.close()
+    print(f"\nDone. {config.STORE_PATH} is ready for queries.py.")
+
+```
