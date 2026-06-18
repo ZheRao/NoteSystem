@@ -333,6 +333,104 @@ From the frontend, each interaction is one `fetch` to one of these URLs — pick
 
 You now have a complete, tested local serving layer: loader → store → queries → connection door → API. The natural next steps are `tests/test_queries.py` to lock the query shapes (the blueprint's smoke test, formalized), closing the authorization seam, or starting the frontend `apiClient.ts` against these endpoints. Want me to take the tests next, since they protect everything you've built so far?
 
+# Flow of Establishing Connection per Request
+
+Excellent questions — these three confusions are the exact things that make FastAPI feel like magic until they click. Let me build it from the foundation up, because once you see *who actually calls your route function*, all three answers fall out of that one fact.
+
+## The one idea that unlocks FastAPI: you never call your route functions
+
+In a normal script, you write a function and then you call it. In FastAPI you write the function and **the framework calls it for you**, once per matching HTTP request. You hand FastAPI a *specification* — your function's signature — and FastAPI reads that signature to figure out how to build the arguments and then invokes the function.
+
+The pieces:
+
+`app = FastAPI()` creates the application object. `@app.get("/clients")` is a decorator that registers your function in a routing table: "when an HTTP GET arrives at `/clients`, call `get_clients`." Uvicorn is the server process (`uvicorn api:app`) that actually owns the network socket — it receives the raw HTTP bytes, parses them, and calls into FastAPI, which matches the route and runs your function. Your function never touches sockets or HTTP text.
+
+The part that feels magical: FastAPI **introspects your signature** — the parameter names, type annotations, and defaults — and from that alone decides where each argument's value comes from and validates it. That's why `month: str = Query(...)` with no value sent back a 422 automatically: you *declared* month as a required string, so FastAPI enforced it before your code ran. Here's the whole mapping a newcomer needs:
+
+| How you declare the parameter | Where FastAPI gets its value |
+|---|---|
+| name matches a `{placeholder}` in the path | from the URL path |
+| a plain type, not in the path (e.g. `month: str`) | from the query string (`?month=...`) |
+| a Pydantic model | from the JSON request body |
+| `= Depends(something)` | by resolving that dependency (see below) |
+
+And `response_model=` works in the other direction: after your function returns, FastAPI validates the return value against that model, drops anything extra, coerces types (that's why your integer sums came back as `120000.0`), serializes to JSON, and uses the same models to build the live docs at `/docs`.
+
+So your route function is half ordinary Python, half a form you fill out telling FastAPI what you need.
+
+## Why `conn` is a parameter with `= Depends(...)` instead of created in the body
+
+Now your first question answers itself. Since **FastAPI calls your function**, the only way to make it *give* you something is to declare it in the signature. `Depends(store.get_conn)` in the parameter's default slot is you telling FastAPI: "before you call me, resolve `store.get_conn` and pass the result in as `conn`."
+
+A crucial clarification about that "default value": it is **not a real default** that Python would use if you called the function normally. It's *metadata* FastAPI reads off the signature. If you ever called `get_clients()` yourself in plain Python, `conn` would literally be a `Depends` object — useless. But you never call it; FastAPI does, and it replaces that marker with the actual resolved connection. (The function's parameter default is just a convenient place Python lets you attach that marker. Modern FastAPI also lets you write it more honestly as `conn: Annotated[sqlite3.Connection, Depends(store.get_conn)]`, which keeps the type and the marker separate and drops the fake-default oddity — same behaviour, clearer intent.)
+
+Could you instead write `with store.connect() as conn:` inside the body? Yes — it would work and be correct. As with the inline-SQL question earlier, the body approach isn't *wrong*; `Depends` buys you four things the body can't:
+
+It removes repetition — every route needs a connection, and `Depends` references the one acquire/release routine instead of wrapping every handler body in a `with`. It makes the dependency **overridable for tests** — `app.dependency_overrides[store.get_conn] = lambda: my_test_conn` swaps the real store for a test database without editing a single route, which a hardcoded body call can't give you. It **composes** — dependencies can depend on other dependencies (an `auth` check that itself needs the connection, a `current_user`, etc.), and FastAPI resolves that whole graph per request. And it lets the framework own the **lifecycle timing** correctly, which is the bridge to your third question.
+
+One small caution while we're here: you pass `Depends(store.get_conn)` — the function itself, no parentheses. `Depends(store.get_conn())` would call it too early and be wrong.
+
+## The `yield` — same keyword, completely different job
+
+Here's the reframing that dissolves the confusion: `yield` has **two unrelated uses** that happen to share one keyword.
+
+The use you know is **producing a sequence** — yield many times, the caller loops, each `yield` hands out the next value:
+
+```python
+def rows(cursor):
+    for r in cursor:
+        yield r          # runs repeatedly, emits a stream
+```
+
+The use here is **suspending a function so code can run around a section** — yield *once*, which splits the function into "before" (setup) and "after" (teardown):
+
+```python
+def managed_file():
+    f = open("data.txt")   # SETUP — before the yield
+    try:
+        yield f            # PAUSE — hand f out, then wait
+    finally:
+        f.close()          # TEARDOWN — after the caller is done
+```
+
+This second pattern isn't about streaming at all. The single `yield` is a **pause point**: the function runs up to it, lends out the value, and *waits*; when whoever borrowed the value is finished, the function resumes and runs the cleanup after the `yield`. Both uses rely on the same underlying ability of a generator — to suspend and resume — but streaming exploits "resume to produce the next item," while resource management exploits "resume to clean up."
+
+Why `yield` and not `return`? Because `return` *ends* the function immediately. If `connect()` did `return conn`, there would be no later moment at which to close it — you'd have to either close it before returning (handing back a dead connection) or never close it (a leak). `yield` is the only construct that lets one function run code at **two separate times** — once before lending the resource, once after it's no longer needed — which is exactly where `conn.close()` must live.
+
+That is precisely what `@contextmanager` formalizes. Your `connect()`:
+
+```python
+@contextmanager
+def connect():
+    conn = _open_readonly()   # setup
+    try:
+        yield conn            # pause: `with connect() as conn:` borrows this
+    finally:
+        conn.close()          # teardown: runs when the with-block ends, even on error
+```
+
+And FastAPI's "yield dependencies" use the *same* protocol. `get_conn` is a generator; FastAPI drives it like a context manager spread across the request: it runs up to `yield conn` (opening the connection), injects the yielded connection into your route, lets the route run, and then — **after the response has been sent** — resumes the generator past the `yield`, running the cleanup that closes the connection. If your route raised, FastAPI throws the exception back into the generator at the `yield`, so the `finally` still closes it.
+
+Here's the full per-request timeline, which is the thing that's hard to see from the code alone:Notice the shape of it: the connection opens *before* the pause, the route does all its work *during* the pause, and the connection closes *after* the pause — and "after" is genuinely after the response has gone out. The `yield` is the hinge between "open" and "close," with the entire request living in the gap.
+
+Your two files are just this pattern nested twice. `connect()` owns the *what* — open read-only, close in `finally`. `get_conn()` owns the *when for FastAPI* — it wraps `connect()` and re-yields, so FastAPI can drive the open/close across the request lifecycle:
+
+```python
+def get_conn():
+    with connect() as conn:   # connect() opens here
+        yield conn            # FastAPI borrows conn for the whole request
+    #                         # connect()'s finally closes it when FastAPI resumes
+```
+
+So the single sentence to keep: **`yield` here doesn't stream anything — it marks the line where the function pauses to lend out a resource, and the code after it is the cleanup that runs once the borrower is done.** `Depends` is what tells FastAPI to be that borrower, and declaring `conn` as a parameter is the only way to ask the framework — which calls your function — to hand it in.
+
+If it would help cement it, the fastest experiment is to drop a `print("opening")` before the `yield` in `connect()` and `print("closing")` after it, then hit one endpoint: you'll see "opening" before the response and "closing" after it, every request. When you're ready, the next build step is still `tests/test_queries.py`, which will lean on exactly this — overriding `get_conn` to point at a throwaway test store.
+
+
+
+
+
+
 
 # Code Appendix
 
