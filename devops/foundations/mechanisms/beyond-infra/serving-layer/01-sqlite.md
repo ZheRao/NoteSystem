@@ -388,6 +388,92 @@ One honest caveat so you have the full picture: SQLite serializes writers — on
 So the code barely changes — but the guarantees underneath it change completely. Want me to extend Version B with a GET-by-id endpoint and show how the same thing would look as a GraphQL query instead of REST, so you can see that layer swap too?
 
 
+# Seperating `query.py`
+
+Great question — this is exactly the confusion that trips people up, and the short version is reassuring: **your inline version isn't wrong.** It produces byte-for-byte the same response a `queries.py`-based version would. The difference isn't correctness; it's about managing *change* as the system grows. Let me unpack it properly, then draft the file.
+
+## The inline route is doing two jobs at once
+
+Look at your handler again with fresh eyes. It contains two completely different kinds of logic braided together:
+
+```python
+@app.get("/users")                          # ── HTTP concern
+def list_users(name: str | None = None):    # ── HTTP concern (parse the query param)
+    with db() as conn:                       # ── data concern (connection lifecycle)
+        if name is not None:                 # ── data concern (which SQL to run)
+            rows = conn.execute("SELECT ... LIKE ?", (f"%{name}%",)).fetchall()  # ── data
+        else:
+            rows = conn.execute("SELECT * FROM users").fetchall()               # ── data
+    return [dict(r) for r in rows]           # ── HTTP concern (serialize to JSON)
+```
+
+These are the two "languages" from our earlier conversation. The route's actual job is to translate *HTTP ⇄ rows*: read the request, hand back JSON. But the SQL — the data logic — has moved *into* the translator. `queries.py` exists to pull the data logic out, so the route only translates and the query only queries.
+
+Refactored, the exact same behaviour splits cleanly:
+
+```python
+# queries.py  — knows SQL, knows nothing about HTTP
+def search_users(conn, name=None):
+    if name is None:
+        return _run(conn, "SELECT * FROM users")
+    return _run(conn, "SELECT * FROM users WHERE name LIKE ?", (f"%{name}%",))
+
+# api.py  — knows HTTP, knows nothing about SQL
+@app.get("/users")
+def list_users(name: str | None = None):
+    with db() as conn:
+        return queries.search_users(conn, name)
+```
+
+Notice the `if name / else` branching — the optional-filter logic — went *with the SQL*, into the data layer, because that's what it is. The route got boring, which is the goal.
+
+## Why bother, concretely
+
+For a single endpoint, honestly, you don't have to — inline is simpler. The separation earns its keep the moment any of these become true (and for your platform, all of them will):
+
+The biggest one for you, coming from ETL: **testing.** `search_users(conn, name)` is a pure function — connection in, rows out. You can test it the way you test a pandas transform: call it against a built store and assert the shape, with no web server, no `TestClient`, no network. Inline SQL can only be exercised by booting the whole app and making HTTP calls. Your `level0/1/2` functions are exactly the kind of thing you'll want to assert on directly.
+
+**One definition, many callers.** The lineage query won't only serve one endpoint — it may also back an export, a debug script, a build-time smoke test, and later maybe a scheduled report. If the SQL lives inline in one route, reuse means copy-paste, and copies drift. In `queries.py` there's one source of truth per question.
+
+**The query surface becomes legible.** Open `queries.py` and you see, in one screen, every question the system can answer about the data — that *is* the serving layer's capability list (Invariant 4). Scattered across twenty route handlers, you'd have to read every route to know what's queryable, which also matters for security review ("which queries touch client data?").
+
+**The cloud migration touches one file.** When SQLite → Postgres, the SQL and any dialect tweaks all live in `queries.py`. If SQL is sprinkled across your routes, the migration becomes a twenty-file scavenger hunt. This is the payoff of Invariant 9 — but it only pays off if the SQL is collected in one place.
+
+## The line: what goes where
+
+| Lives in `queries.py` | Lives in the route (`api.py`) |
+|---|---|
+| SQL text + `?` parameter binding | Parsing/validating HTTP query & path params |
+| The aggregation/join logic | Authorizing the caller (e.g. may they see this `client_id`?) |
+| Returning plain `list[dict]` rows | Status codes (empty result → 200 `[]` or 404?) |
+| Nothing about HTTP, JSON, FastAPI | Mapping rows to the response model, returning JSON |
+| **Receives** a connection | **Owns** the connection lifecycle (acquires from `store.py`, releases) |
+
+That last row is the subtle, important one. `queries.py` does **not** open its own connection — it *receives* one as its first argument. Your inline example opens `with db() as conn` inside the handler; in our design `store.py` provides the connection and the route passes it in. That keeps the query functions pure (so a test can pass a test connection), and lets the route or `store.py` control whether that connection is a per-request file handle now or a pooled cloud connection later — without `queries.py` ever knowing.
+
+And the return type is `list[dict]` — plain, JSON-ready Python — not `sqlite3.Row` objects or a FastAPI `Response`. That's what makes `queries.py` backend-neutral and the route trivial.
+
+## Where each query aggregates (the M:M point I flagged)
+
+This is the one place the SQL has to be deliberate, and it's why writing these as named, reviewable functions matters. The level-0 chart and level-1 source breakdown aggregate **at the stream grain — with no join to `input_output_linkage`** — because joining to the linkage table multiplies rows (the many-to-many) and would double-count your cash flow. Only **level 2** joins out to the linkage and plan tables, because there the fan-out is the whole point: you *want* to see each input the stream traces to. To keep the numbers honest there, I expose both the raw `stream_value` and `allocated_value = value × perc`; the allocated portions sum back to the stream's value, so re-aggregation stays correct.
+
+Let me write it and run it against the store from last turn.Works, and notice the level-2 proof: the two allocated portions (−15000 + −15000) sum back to the −30000 stream value, so the fan-out is honest. Let me demonstrate the double-counting trap concretely, since that's the one thing that bites people:There's the trap in numbers: joining the linkage table at level 1 doubles every figure, because `out_003` has two linkage rows and the join produces a row per pairing. That's precisely why levels 0 and 1 stay at the stream grain and only level 2 fans out. Let me hand you the file.To close the loop on your original question: the reason this lives in `queries.py` rather than inline isn't that inline would break — it's that you now have five named, pure functions you can test with `python queries.py` today (no FastAPI in sight), reuse from any caller, review in one place to see the whole query surface, and carry to Postgres by editing one file. The route handlers you write next get to be three boring lines each.
+
+When you move to the FastAPI step, `api.py` will do nothing but: read the HTTP params, authorize the `client_id`, get a connection from `store.py`, call the matching function here, and return what it gives back. For example, conceptually:
+
+```python
+@app.get("/forecast/{orchestration_key}/monthly")
+def monthly(orchestration_key: str):
+    with store.connect() as conn:
+        return queries.level0_monthly(conn, orchestration_key)
+```
+
+That's the entire endpoint — because all the real work already lives in `queries.py`.
+
+Two small notes on what I built. The `_run` helper converts rows to `list[dict]` using `cursor.description`, so the functions return JSON-ready Python no matter what row factory the connection has — that's the same tuples-to-dict shape we discussed a few turns ago, made into one reusable line. And `list_orchestrations` shows how an optional filter (the `client_id`) is handled cleanly in the data layer, which is where your inline example's `if name / else` branch really belonged.
+
+The natural next step is `store.py` — the tiny connection-provider that both the smoke test and `api.py` will use to hand a connection to these functions — and then the first FastAPI route. Want me to draft `store.py` next, or go straight to standing up one endpoint over what you already have?
+
 
 # Code Appendix
 
@@ -415,8 +501,6 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent
 
 # Where the data system drops its output tables (one file per table).
-## `os.environ` is a dictionary containing environment variables, e.g., `os.environ["HOME"]`
-## the following means: "Give me the value of the environment variable GROWLYTICS_STORE_PATH. If it doesn't exist, use default_value instead."
 INPUT_DIR = Path(
     os.environ.get("GROWLYTICS_INPUT_DIR", PROJECT_ROOT / "data" / "warehouse_exports")
 )
@@ -432,6 +516,14 @@ INPUT_FORMAT = os.environ.get("GROWLYTICS_INPUT_FORMAT", "csv").lower()
 # If true, the loader aborts when referential-integrity checks find orphan keys.
 # Default false so a first run is informative rather than fatal.
 STRICT_INTEGRITY = os.environ.get("GROWLYTICS_STRICT_INTEGRITY", "false").lower() == "true"
+
+# Browser origins allowed to call the API (the frontend dev server, etc.).
+# A browser on a different origin cannot call this API unless it is listed here.
+CORS_ORIGINS = os.environ.get(
+    "GROWLYTICS_CORS_ORIGINS",
+    "http://localhost:5173,http://localhost:3000",
+).split(",")
+
 ```
 
 ## `build_serving_store.py`
@@ -660,5 +752,216 @@ if __name__ == "__main__":
 
     conn.close()
     print(f"\nDone. {config.STORE_PATH} is ready for queries.py.")
+
+```
+
+## `query.py`
+
+```py
+"""
+queries.py — the fixed, parameterized question surface of the serving layer.
+
+WHAT THIS IS
+    Every question the platform can ask of the store, defined once, as plain
+    Python functions. The FastAPI layer will call these; it will not write SQL
+    of its own.
+
+THE CONTRACT (why these functions look the way they do)
+    * They RECEIVE a connection; they never open one. The caller (a route via
+      store.py, or a test) owns the connection lifecycle. This keeps every
+      function pure and testable, and lets the backend change (SQLite -> a
+      pooled cloud database) without touching this file.
+    * They take plain Python parameters and bind them with `?` placeholders.
+      The query STRUCTURE is fixed here (build time); only the VALUES arrive at
+      run time. That placeholder is the seam between the two.
+    * They return list[dict] — JSON-ready Python — not sqlite3.Row objects and
+      nothing HTTP-shaped. The route turns that into a response; this file knows
+      nothing about HTTP, FastAPI, or status codes.
+
+    Invariants protected: 4 (fixed parameterized surface) and 5 (this layer
+    speaks SQL/rows only, never pixels or HTTP).
+
+AGGREGATION GRAIN (the many-to-many trap)
+    crop_input_streams <-> input_output_linkage is many-to-many on output_key,
+    so joining them multiplies rows. Therefore:
+      * level 0 and level 1 aggregate at the STREAM grain, with NO linkage join,
+        so cash flow is never double counted.
+      * level 2 is the ONLY query that joins out to linkage/plan, because the
+        fan-out IS the lineage. It exposes allocated_value = value * perc, which
+        sums back to the stream value, so re-aggregation stays honest.
+"""
+
+from __future__ import annotations
+
+import sqlite3  # used only for the type hint; any DB-API 2.0 connection works
+
+
+def _run(conn: sqlite3.Connection, sql: str, params: tuple = ()) -> list[dict]:
+    """Execute a SELECT and return rows as plain dicts (JSON-ready).
+
+    Column names come from cursor.description, so this does not depend on any
+    row_factory being set on the connection.
+    """
+    cur = conn.execute(sql, params)
+    columns = [d[0] for d in cur.description]
+    return [dict(zip(columns, row)) for row in cur.fetchall()]
+
+
+# --------------------------------------------------------------------------- #
+# Control panels — populate the UI's pickers (clients, then revisions).
+# --------------------------------------------------------------------------- #
+def list_clients(conn: sqlite3.Connection) -> list[dict]:
+    """Every client, for the client selector."""
+    return _run(
+        conn,
+        """
+        SELECT client_id, client_name
+        FROM clients
+        ORDER BY client_name
+        """,
+    )
+
+
+def list_orchestrations(conn: sqlite3.Connection, client_id: str | None = None) -> list[dict]:
+    """Available orchestration revisions, optionally scoped to one client.
+
+    `versions` holds only orchestration_key + revision_name, so the client a
+    revision belongs to is recovered from the streams (and named via clients).
+    The optional filter is handled here, in the data layer, not in the route.
+    """
+    sql = """
+        SELECT DISTINCT v.orchestration_key,
+               v.revision_name,
+               s.client_id,
+               c.client_name
+        FROM versions v
+        JOIN crop_input_streams s ON s.orchestration_key = v.orchestration_key
+        JOIN clients c            ON c.client_id         = s.client_id
+        {where}
+        ORDER BY s.client_id, v.revision_name
+    """
+    # {where} is a controlled internal fragment, never user input. The value
+    # itself still travels through a `?` placeholder.
+    if client_id is None:
+        return _run(conn, sql.format(where=""))
+    return _run(conn, sql.format(where="WHERE s.client_id = ?"), (client_id,))
+
+
+# --------------------------------------------------------------------------- #
+# The drill-down: the chart and its two click-throughs.
+# --------------------------------------------------------------------------- #
+def level0_monthly(conn: sqlite3.Connection, orchestration_key: str) -> list[dict]:
+    """LEVEL 0 — the chart. One row per month: inflow, outflow, net.
+
+    Aggregated at the stream grain (no linkage join), so nothing double counts.
+    """
+    return _run(
+        conn,
+        """
+        SELECT month,
+               month_num,
+               SUM(CASE WHEN value > 0 THEN value ELSE 0 END) AS inflow,
+               SUM(CASE WHEN value < 0 THEN value ELSE 0 END) AS outflow,
+               SUM(value)                                     AS net
+        FROM crop_input_streams
+        WHERE orchestration_key = ?
+        GROUP BY month, month_num
+        ORDER BY month_num
+        """,
+        (orchestration_key,),
+    )
+
+
+def level1_sources(conn: sqlite3.Connection, orchestration_key: str, month: str) -> list[dict]:
+    """LEVEL 1 — click a month. The source breakdown for that month.
+
+    Still at the stream grain (no linkage join).
+    """
+    return _run(
+        conn,
+        """
+        SELECT source,
+               SUM(value) AS amount
+        FROM crop_input_streams
+        WHERE orchestration_key = ? AND month = ?
+        GROUP BY source
+        ORDER BY amount
+        """,
+        (orchestration_key, month),
+    )
+
+
+def level2_lineage(
+    conn: sqlite3.Connection, orchestration_key: str, month: str, source: str
+) -> list[dict]:
+    """LEVEL 2 — click a source. The streams behind it, fanned out to the inputs
+    that produced them, each tagged with the revision that produced it.
+
+    This is the ONLY level that joins out to linkage/plan, so it is the only
+    place the many-to-many fan-out appears. Both the raw `stream_value` and
+    `allocated_value = value * perc` are returned; the allocated portions sum
+    back to the stream value, so use allocated_value if you re-aggregate.
+    """
+    return _run(
+        conn,
+        """
+        SELECT s.output_key,
+               o.output_name,
+               l.input_output_key,
+               p.crop_sys,
+               v.revision_name,
+               s.value                    AS stream_value,
+               l.perc,
+               ROUND(s.value * l.perc, 2) AS allocated_value
+        FROM crop_input_streams s
+        JOIN versions v             ON v.orchestration_key = s.orchestration_key
+        JOIN output o               ON o.output_key        = s.output_key
+        JOIN input_output_linkage l ON l.output_key        = s.output_key
+        JOIN crop_plan p            ON p.input_output_key  = l.input_output_key
+        WHERE s.orchestration_key = ? AND s.month = ? AND s.source = ?
+        ORDER BY s.value, l.input_output_key
+        """,
+        (orchestration_key, month, source),
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Dev smoke test: prove the whole drill path with no FastAPI and no network.
+#   python queries.py
+# This block is the only place that opens a connection or imports config; the
+# functions above stay pure.
+# --------------------------------------------------------------------------- #
+if __name__ == "__main__":
+    import config
+
+    conn = sqlite3.connect(config.STORE_PATH)
+    try:
+        print("clients:")
+        for c in list_clients(conn):
+            print("  ", c)
+
+        print("\norchestrations for c0001:")
+        for v in list_orchestrations(conn, "c0001"):
+            print("  ", v)
+
+        monthly = level0_monthly(conn, "c0001_2026_3-pre-harvest")
+        print("\nLEVEL 0 — monthly cash flow:")
+        for r in monthly:
+            print("  ", r)
+
+        if monthly:
+            month = monthly[0]["month"]
+            sources = level1_sources(conn, "c0001_2026_3-pre-harvest", month)
+            print(f"\nLEVEL 1 — sources for {month}:")
+            for r in sources:
+                print("  ", r)
+
+            if sources:
+                source = sources[0]["source"]
+                print(f"\nLEVEL 2 — lineage behind {month} / {source}:")
+                for r in level2_lineage(conn, "c0001_2026_3-pre-harvest", month, source):
+                    print("  ", r)
+    finally:
+        conn.close()
 
 ```
