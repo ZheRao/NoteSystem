@@ -100,9 +100,12 @@ These documents explain:
 #### Beyond Data Infra/System
 
 * [00-intuition](./foundations//mechanisms/beyond-infra/00-intuition.md)
+* [01-frontend-and-serving-layer-communication](./foundations/mechanisms/beyond-infra/01-system-communication.md)
 * **Serving Layer**
     * [01-SQLite](./foundations/mechanisms/beyond-infra/serving-layer/01-sqlite.md)
     * [02-FastAPI](./foundations//mechanisms/beyond-infra/serving-layer/02-fastapi.md)
+* **Frontend**
+    * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
 
 #### Vendor Web Design
 
