@@ -33,13 +33,126 @@ Read the renderers (`renderChart`, `renderSources`, `renderLineage`) alongside t
 When you want to take the real step, the natural next move is wiring one actual React (or plain-fetch) page to your running FastAPI, starting with the chart against `/monthly`. Want me to build that against the real endpoints next?
 
 
+# Deeper Machanics of Rendering and Communication
+
+Now we're at the real mechanics — and the reason this feels hard is that the browser works on a fundamentally different model than Python or Power BI. Let me build that model up, because once it's in place, "where do clicks go," "call vs no-call," and "why React" all answer themselves.
+
+## The core shift: the screen is a live tree, and your data lives somewhere else
+
+In Python you call `plt.plot(df)` and get back a finished image — you hand over the whole frame, the library loops it internally, done. In Power BI a visual is *bound* to a dataset, and the engine silently redraws it whenever a filter changes. Both hide the loop and the redraw from you.
+
+The browser hides nothing. Two separate things exist:
+
+The **DOM** is the page as a live tree of element objects (`<svg>`, `<circle>`, `<div>`…). The browser paints this tree to pixels and keeps it on screen. It's persistent and mutable — you can change a node at any moment and the browser repaints.
+
+Your **data** lives separately, in ordinary JavaScript variables in memory (in the demo, `state.monthly`). 
+
+The crucial fact: **the DOM is a *projection* of your data, not the same thing as your data.** Changing the array in memory does **not** change the screen by itself. Something has to *re-project* the array into DOM elements. That projection is a function you write (or a framework writes): `render(data) → DOM`. This one idea is the whole answer to "how do the values get allocated to the right places" — they don't, automatically; a render function reads the array and places each element.
+
+```
+JS memory (source of truth)          the DOM (a projection)            screen
+  state.monthly = [ {…}, {…}, {…} ] ──render(data)──► <svg><circle/>…  ──paint──► chart
+        ▲                                                                            │
+        │   setState(newData) / re-render   ◄──── click handler ◄──── user clicks ───┘
+        └────────────── re-run render with new data → DOM rewritten → screen updates
+```
+
+Data flows one way into the DOM; user events flow back out; a change re-runs the projection. "Dynamic" is nothing more than *re-running render when the data changes.*
+
+## "Each point has its own coordinates" — that's the render loop, and it uses *all* the data at once
+
+Let me correct one thing directly, because it's the source of the confusion. The points are **not** independently fetched or independently cached. The whole array is in one variable, and the chart's render function loops over *all* of it in one pass, computing each point's coordinates from a **scale function** that maps data-space to pixel-space. From your demo's `renderChart`:
+
+```js
+const y = v => H-pad - (v-lo)/((hi-lo)||1)*(H-2*pad);   // a scale: a net value → a pixel y
+const dots = data.map((d,i) => `<circle cx="${xs[i]}" cy="${y(d.net)}" .../>`).join("");
+```
+
+`xs[i]` and `y(d.net)` are exactly what Power BI's axes do internally — turn a value into a position. The reason each circle "has its own coordinates" is just that the loop computes a position *per datum*; they're all produced together from the single array, in one render. Nothing is independent or piecemeal — it's one array, one loop, one projection.
+
+## Where you enable a user action: attach a listener to the rendered element
+
+Interactivity is added *after* an element is rendered, by attaching an **event listener** to that specific element. The browser then calls your function whenever the user clicks that node. From the demo:
+
+```js
+el("chart").querySelectorAll(".pt").forEach(c => {
+  const p = data[+c.dataset.i];                 // the datum THIS circle represents
+  c.addEventListener("click", () => selectMonth(p));   // ← action enabled here
+});
+```
+
+The key is the closure: each circle's handler captures `p`, the specific point it stands for. So "where do I enable clicking a monthly point?" → on each rendered point, with a handler that remembers which point it is. That handler is your doorway from "the user did something" back into your code.
+
+## Where you decide call-vs-no-call: *inside* the handler
+
+The handler is just plain code, and the branch you asked about lives there. Some handlers render from data already in memory; some fetch then render; some do both. Your `selectMonth` does both, on purpose:
+
+```js
+async function selectMonth(p){
+  renderMonthDetail(p);                          // NO CALL — p already holds inflow/outflow/net
+  const rows = await api.getSources(orch, p.month);  // CALL — the breakdown is new data
+  renderSources(rows);                           // render the fetched array
+}
+```
+
+The decision rule is exactly what we covered last turn, now located precisely: **inside the handler, ask "is the data I need already in a variable I hold?" If yes → render it (no call). If no → fetch, then render.** That's the entire logic of an interactive view, and it's ordinary `if`/sequence code — nothing framework-specific.
+
+## So where does "caching" come in?
+
+Two different things, worth separating. The array sitting in `state.monthly` is **in-memory state** — that's why clicking around the points you already have is instant and call-free; the data is right there in a variable. That's distinct from **HTTP caching** (last turn's topic), which is about not re-calling the *server* for a request you already made. Here, the in-memory array is the source of truth, and the DOM is a disposable projection you regenerate from it whenever something changes.
+
+## How React fits — and why HTML "already did everything"
+
+You're right that plain HTML/JS did everything. It always can — React ultimately compiles down to the same DOM operations (`createElement`, listeners, etc.). React isn't more *powerful*; it's more *maintainable*, and it brings back the thing you miss from Power BI: **automatic re-projection.**
+
+Look at what you had to do manually in the vanilla demo: build DOM strings, inject `innerHTML`, re-attach listeners every render, and remember to re-run the right render when the right piece of state changes. For three views that's manageable; for a real product (dozens of views, forms, shared selections) that manual bookkeeping is where bugs live — stale handlers, a panel you forgot to update, rebuilding the whole tree when one number changed.
+
+React replaces "imperatively update the DOM" with "**declare the UI as a function of state**." You write what the UI should look like for any given state; when state changes, React re-runs your function and **patches only the DOM that actually differs**. Same data→projection model — but you stop writing the projection plumbing by hand. Here's your `selectMonth` flow in React:
+
+```jsx
+function Dashboard({ orch }) {
+  const [monthly, setMonthly]   = useState([]);
+  const [selected, setSelected] = useState(null);   // the clicked point — in memory
+  const [sources, setSources]   = useState(null);
+
+  useEffect(() => { api.getMonthly(orch).then(setMonthly); }, [orch]);  // one call → chart
+
+  async function onPointClick(p) {
+    setSelected(p);                                  // NO CALL — re-renders the trio from memory
+    setSources(await api.getSources(orch, p.month)); // CALL — re-renders the bars
+  }
+
+  return (
+    <>
+      <LineChart data={monthly} onPointClick={onPointClick} />
+      {selected && <MonthTrio point={selected} />}   {/* from memory, no call */}
+      {sources  && <SourceBars data={sources} />}    {/* from the fetched array */}
+    </>
+  );
+}
+
+function LineChart({ data, onPointClick }) {
+  return (
+    <svg>
+      {data.map((p, i) => (
+        <circle key={p.month} cx={x(i)} cy={y(p.net)} onClick={() => onPointClick(p)} />
+      ))}
+    </svg>
+  );
+}
+```
+
+Notice what changed and what didn't. The **decision logic is identical** — `onPointClick` still renders the trio from memory (no call) and fetches sources (call); that's your app, not the framework. What disappeared is the plumbing: `data.map` *is* the render loop, `onClick` replaces `addEventListener`, and `setSelected`/`setSources` replace every manual `innerHTML` rewrite — calling a setter changes state, and React automatically re-runs the projection and updates the screen. That's the Power BI feeling — "data changed, view updated" — restored, plus reusable components (`<LineChart>`, `<MonthTrio>`) you can compose.
+
+So the honest summary: for a one-page demo, vanilla is fine and clearer for learning. React earns its place the moment you have real interactivity and shared state, because it removes the manual data↔DOM synchronization that becomes the bug factory — it is the declarative binding layer the raw browser lacks.
+
+If you'd like to *feel* the difference, I can rebuild that same demo as a single runnable React file (CDN-loaded, no build step) so you can put the two side by side — same behavior, and you'll see exactly which lines vanish. Want me to?
 
 
 
+# Appendix code
 
-
-
-## Appendix code
+## `demo.HTML`
 
 ```HTML
 <!doctype html>
