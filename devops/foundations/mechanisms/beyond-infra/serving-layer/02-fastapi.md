@@ -427,9 +427,124 @@ So the single sentence to keep: **`yield` here doesn't stream anything — it ma
 If it would help cement it, the fastest experiment is to drop a `print("opening")` before the `yield` in `connect()` and `print("closing")` after it, then hit one endpoint: you'll see "opening" before the response and "closing" after it, every request. When you're ready, the next build step is still `tests/test_queries.py`, which will lean on exactly this — overriding `get_conn` to point at a throwaway test store.
 
 
+# Design Pattern `query.py` & `schema.py` 
 
+This is the missing key, and you've put your finger on exactly the right thing: **you can't design the query until you know how its result gets consumed.** So let me flip the direction and teach you the frontend patterns first — once you see how a chart eats data and how a click becomes a request, the query shapes design themselves. Your two examples have clean answers, and I'll resolve both as we go.
 
+## Reframe: the unit of an API call is a *view*, not a data point
 
+Here's the answer to your first question straight away: **one line chart is one API call that returns all 12 points** — never 12 calls. The reason is brutal and physical: every API call is a network round trip, and round trips cost real time (tens to hundreds of milliseconds each). Twelve calls to draw one chart would be twelve sequential waits. One call returns an array of twelve objects, and the chart draws them all.
+
+So the mental unit you design around is a **view** — a chunk of the screen that fills together. The line chart is one view. Its API call returns *the whole dataset that view needs*, shaped as an array where **each element is one visual mark**.
+
+## How a chart actually consumes data
+
+A charting library (Recharts, Chart.js, Plotly — they all work this way) takes an **array of objects** and maps each object to one mark on screen. Concretely, in a React library it looks like:
+
+```jsx
+<LineChart data={monthlyArray}>          {/* the whole array from ONE fetch */}
+  <Line dataKey="net" />                 {/* draw a line using each object's `net` */}
+  <XAxis dataKey="month" />              {/* label x-axis from each object's `month` */}
+</LineChart>
+```
+
+`monthlyArray` is exactly your `MonthlyPoint[]`. Each element is one vertex of the line. The library loops the array for you. **That's why `level0_monthly` returns all months in one shot** — the array *is* the chart's input. You designed it right; you just hadn't seen the consumer yet.
+
+This gives you a direct dictionary from "what visual" to "what array shape," which is the thing you were missing:
+
+| Visual | Array shape it wants | Your model |
+|---|---|---|
+| Line / area chart | `[{x, y1, y2, …}]` — one object per point | `MonthlyPoint[]` (x=`month`, y=`net`…) |
+| Bar chart | `[{category, value}]` — one object per bar | `SourceAmount[]` |
+| Stacked / grouped bars | `[{category, seriesA, seriesB}]` | (a new model) |
+| Table | `[{col1, col2, …}]` — one object per row | `LineageRow[]` |
+| Single KPI number | one object `{value}` (not an array) | (a small model) |
+| Dropdown / picker | `[{id, label}]` | `Client[]`, `Orchestration[]` |
+
+Design rule that falls out: **the API returns data at the exact granularity the visual consumes, pre-aggregated.** The chart wants per-month inflow/outflow/net already summed — so you `GROUP BY` on the server and return the small shaped result. You never ship 997 raw stream rows and sum them in JavaScript; that's slow, duplicates your business logic in the browser, and ships data the user never sees.
+
+## How interaction works: the frontend holds state, the server stays stateless
+
+Now your second question — clicking a month. The pattern across essentially all interactive UIs:
+
+The **frontend remembers the selections** (which orchestration, which month, which source) in component state. The **server remembers nothing** — it just answers parameterized questions (this is invariant 10 from earlier, made concrete). When the user does something that needs new data, the frontend fires a fetch with the current selections as parameters, and re-renders when the answer arrives.
+
+In React terms the drill-down is a chain of `state → fetch → render`:
+
+```jsx
+const [month, setMonth] = useState(null);
+
+// when `month` changes, fetch that month's breakdown (one call)
+const { data: sources } = useQuery(["sources", orch, month], () =>
+  api.getSources(orch, month), { enabled: month !== null }
+);
+
+<LineChart data={monthly}>
+  <Line dataKey="net" onClick={(p) => setMonth(p.month)} />  {/* click sets state */}
+</LineChart>
+{sources && <BarChart data={sources} />}                      {/* render when it arrives */}
+```
+
+Clicking a point calls `setMonth`, the changed state triggers the `/sources` fetch, and the bar chart renders the returned array. Each user action that needs new data = one state change = one fetch = one of your query functions.
+
+**But here is the nuance that's tangling your example** — and it's an important design decision in its own right. You said clicking a month should show that month's *inflow, outflow, netflow*. Look closely: **that data is already in the point the user clicked.** A `MonthlyPoint` already carries `inflow`, `outflow`, and `net`. So showing those three numbers needs **no API call at all** — the frontend already has them in hand from the chart's data; it just displays the clicked object. A call is only needed for *genuinely new* data — the breakdown **by source**, which the monthly payload doesn't contain. That's what `/sources` is for.
+
+So your interaction actually splits into two different mechanisms:
+
+```
+click a month → show its inflow/outflow/net   → NO call (already in MonthlyPoint)
+click a month → show the SOURCE breakdown      → ONE call to /sources?month=…
+```
+
+This is a general, reusable design lever: **include-in-parent vs fetch-on-demand.** If a detail is small and always wanted, fold it into the parent payload so the drill is instant and call-free. If it's larger or only sometimes wanted, leave it out and fetch it lazily when the user drills. You're constantly making this trade, and naming it is half the battle.
+
+Here's the whole interaction mapped to calls:Here's that interaction as a compact map (view on the left, its single call on the right, clicks drilling downward):
+
+```text
+Line chart          ── filled by 1 call ──►  GET /…/monthly   → MonthlyPoint[]  (whole series)
+   │  click a month  →  month=2026-03
+   ▼
+Source breakdown    ── filled by 1 call ──►  GET /…/sources   → SourceAmount[]  (all sources)
+   │  click a source →  source=fertilizer
+   ▼
+Lineage table       ── filled by 1 call ──►  GET /…/lineage   → LineageRow[]    (all rows)
+
+one view = one call returning the full array · the frontend holds the selections
+```
+
+## The common patterns that shape your API design
+
+These are the recurring frontend behaviors, each with the API-design consequence it forces:
+
+**One call per view (granularity).** Your number of endpoints roughly equals your number of distinct views/levels, and each returns a complete, ready-to-render collection. This is the antidote to the "12 calls" instinct.
+
+**Fetch lazily, on interaction — not everything upfront (chatty vs chunky).** Two failure modes sit at the extremes. *Too chatty*: many tiny calls (the 12-calls mistake, or fetching a list and then one call per item — the classic "N+1"). Latency stacks and the UI feels slow. *Too chunky*: one giant call that returns all months, all sources for every month, and all lineage upfront — you pay to fetch lineage for months the user never clicks, and the first paint is slow. The sweet spot, which your drill-down naturally is: fetch each level's data only when the user drills into it. The chart loads immediately; the breakdown loads when a month is clicked; lineage loads when a source is clicked.
+
+**Every fetch has three states the UI must handle: loading, data, empty/error.** This lightly shapes your API. An *empty but valid* result should be a `200` with `[]` so the UI can cleanly show "no data for this month," while a *nonexistent resource* is a `404` (which is exactly why `level0_monthly` returns 404 for an unknown orchestration but `/sources` happily returns `[]` for a month with no streams). Designing that distinction deliberately saves the frontend from guessing.
+
+**Caching keyed by parameters.** Data-fetching libraries (TanStack Query / React Query, SWR are the common ones) cache each response under a key built from the endpoint + its parameters. So if the user clicks March, then February, then March again, March is served from cache — no second call. This is a hidden reason your fixed-query-plus-runtime-values design matters: stable parameterized endpoints *are* good cache keys. Arbitrary, ad-hoc queries wouldn't cache cleanly.
+
+**Aggregate on the server.** The browser should receive the smallest shaped result the visual needs, with the math already done. Summing, grouping, and computing `allocated_value` happen in SQL, not JS — one source of truth, less data on the wire.
+
+**Independent data loads in parallel; dependent data is a deliberate waterfall.** The client picker and the revision picker don't depend on each other, so fetch them at the same time. But level 1 genuinely can't load until the user picks a month — that's a *user-driven* waterfall, which is fine and expected. The pattern to avoid is an *accidental* waterfall where you serialize calls that could have run together.
+
+**Paginate only when a list is unbounded.** Your data is small and bounded, so returning the whole array is correct. If a lineage view could ever return thousands of rows, you'd add `limit`/`offset` parameters and the UI would page or virtualize. Design rule: return the whole thing when it's bounded and small; paginate when it isn't.
+
+## Now the design loop runs in the right direction
+
+This is the method you were missing. You design **from the visual inward**, not from the table outward:
+
+First, pick the **visual** ("a monthly line chart of net cash flow"). Second, look up the **array shape that visual eats** (line chart → one object per point with x and y fields). Third, that shape *is* your **Pydantic model** (`MonthlyPoint`: `month`, `month_num`, `net`, …). Fourth, write the **query** to produce exactly that array at the right grain. Fifth, decide **upfront-vs-on-demand** for any detail (is it already in this payload, or a separate lazy call?). Sixth, wire the **thin route**.
+
+Run that loop on your two examples and they fully resolve:
+
+The monthly line chart wants one object per month → `MonthlyPoint[]` → one `/monthly` call returning all months → the chart renders the array. Not twelve calls.
+
+Clicking a month to see its inflow/outflow/net needs nothing new — those fields rode along in the `MonthlyPoint` you clicked, so it's a pure frontend display, no call. Clicking a month to see the *source breakdown* is genuinely new data → `SourceAmount[]` → one `/sources?month=…` call, rendered as bars. The selection (`month`) lives in frontend state and becomes the query parameter.
+
+That's the whole thing: **knowing the visual tells you the array; the array is the model; the model tells you the query; the interaction tells you when to call.** Design in that order and the serving layer stops being guesswork.
+
+If you'd like to make this concrete, a good next move is a tiny working frontend — one page with the line chart wired to `/monthly`, a click handler that fetches `/sources`, and the loading/empty states handled — so you can watch one-call-per-view and the state-driven drill happen against the API you already built. Want me to put that together?
 
 
 # Code Appendix
