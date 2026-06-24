@@ -150,6 +150,152 @@ If you'd like to *feel* the difference, I can rebuild that same demo as a single
 
 
 
+# Frontend Crash Course
+
+
+I'd be happy to help you understand this! Let me first read your demo code so I can tailor the crash course to exactly what you're looking at, rather than giving you generic explanations. 
+
+## First, a reframe that'll save you a lot of confusion
+
+Your file's title says "frontend," and you asked about React — but **this demo doesn't use React at all.** It's plain ("vanilla") JavaScript. That's not a problem; it's actually the best possible thing to learn from, because it shows you the raw machinery that React later hides. Once you understand this file, React will make sense as "the thing that automates the tedious parts I just saw done by hand."
+
+And here's the reassuring part: **you already understand the hard half.** You built a serving layer, FastAPI endpoints, `queries.py`, a SQLite store. The frontend is mostly mechanical translation of arrays into pixels. The concepts you're missing are smaller than you think.
+
+## The four technologies, mapped to things you already know
+
+Think of a web page as having three layers, and one optional helper:
+
+**HTML** is the *nouns* — the structure and skeleton. Every `<div>`, `<select>`, `<table>` in your file is HTML. It's analogous to a schema: it declares *what things exist* on the page, but says nothing about how they look or behave. In your file it's everything between `<body>` and `</body>` (lines 85–139).
+
+**CSS** is the *adjectives* — purely how things look. Colors, spacing, fonts, layout. It's the entire `<style>` block (lines 22–83). Those `--ink`, `--accent` variables at the top are just named constants, exactly like config values. CSS never *does* anything; it only describes appearance.
+
+**JavaScript** is the *verbs* — the behavior and logic. This is the `<script>` block (lines 141–392), and as a backend person this is the layer that'll feel most familiar. It fetches data, transforms arrays, responds to clicks, and rewrites the HTML on the fly. Your file is ~90% JavaScript by importance.
+
+**React** is an optional library that changes *how you write the JavaScript* — specifically the part where you turn data into HTML. Your file does that translation manually (build a string of HTML, shove it into the page). React lets you instead *declare* "this data should look like this," and it figures out the DOM updates for you. You don't need it to understand this file — but I'll show you exactly where it would slot in at the end.
+
+## The one idea this demo is built to teach
+
+Before any code: this entire file exists to hammer home a single principle that lives at the serving-layer/frontend boundary:
+
+> **One view = one array = one API call.** The chart is *one* call that returns all 12 points — not 12 calls. And drilling into data you already fetched costs *zero* calls.
+
+The data flows in a cascade of four levels, and each level down is triggered by a user action. Here's the shape of it:  
+Read it. Here's the cascade that the whole demo is built to teach — four levels of data, each one array, each fetched by one call, triggered by one user action:
+
+![alt text](images/image2.png)
+
+Now the walkthrough. Your file is helpfully numbered into six regions in the comments — I'll go through them in the order they actually matter, not the order they appear.
+
+## The page skeleton (HTML), once
+
+Before the script runs, the HTML lays out empty containers and gives them IDs: `<select id="orch">`, `<div id="chart">`, `<div id="sources">`, `<div id="log">`, and so on. These are just labeled empty boxes. None of them have content yet — notice the chart starts as `<div class="placeholder">loading…</div>`. The JavaScript's whole job is to find these boxes by their ID and fill them with content built from your arrays. That's the core loop of frontend work: *empty container in the HTML → data fetched → container's contents replaced.*
+
+## Region 1 & 2: the fake database and the API client
+
+`DB` (lines 146–202) is just hardcoded sample data shaped exactly like what your real `queries.py` returns. The `api` object (lines 211–244) is the part to study, because it's pretending to be your FastAPI layer. Look at `getMonthly`:
+
+```javascript
+async getMonthly(orch){
+  log("call", `GET /forecast/${short(orch)}/monthly …`);
+  await wait();
+  // REAL APP: return fetch(`/forecast/${orch}/monthly`).then(r=>r.json())
+  const rows = DB.monthly[orch] ?? [];
+  return rows;
+}
+```
+
+The commented line is the only thing that changes in your real app. Right now it reads from the `DB` object after a fake delay; in production you swap that one line for a real `fetch()` to your endpoint. Everything else — the chart, the clicks, the rendering — stays identical. That's the demo's promise: the frontend doesn't care whether the array came from a mock object or a real HTTP round trip, as long as the *shape* is the same.
+
+Two things worth naming for a backend person:
+
+`async`/`await` is JavaScript's way of saying "this takes time, don't freeze the page while we wait." `await wait()` pauses this function (not the whole browser) until the fake delay finishes; `await fetch(...)` would pause until the server responds. It's the same idea as awaiting a coroutine — the page stays responsive and the `loading…` placeholder stays visible meanwhile.
+
+The `?? []` ("nullish coalescing") means "if that lookup came back empty/undefined, use an empty array instead." It's what makes the empty-state handling clean downstream.
+
+## Region 3: frontend state — the part your server never sees
+
+```javascript
+const state = { orch:null, monthly:[], month:null, source:null };
+```
+
+This one line is the conceptual heart of "frontend." Your server is stateless — it answers "give me the sources for *this* month of *this* revision" and forgets you exist. But *which* revision is selected, *which* month was clicked — that lives only in the browser. `state` is that memory. When the user picks a revision, you record it in `state.orch`; when they click a month, `state.month`. The selections drive what gets fetched next, and the server knows nothing about them until you ask it a specific question. This is exactly the comment on line 247: "the selections the server knows nothing about."
+
+## Region 4 & 5: handlers and renderers — the rhythm of every interaction
+
+These two regions are a matched pair, and once you see the rhythm you've basically understood the whole file. Every user action follows the same four beats:
+
+A handler (region 4) does: **change state → show a loading placeholder → fetch the one new array → hand it to a renderer.** A renderer (region 5) does one thing: **turn one array into one chunk of HTML and drop it into its container.** Look at `selectMonth` (handler) calling `renderSources` (renderer):
+
+```javascript
+async function selectMonth(point){
+  state.month = point.month;            // 1. change state
+  renderMonthDetail(point);             //    (inflow/outflow/net — NO fetch, data's in `point`)
+  el("sources").innerHTML = `…loading…`;// 2. loading state
+  const rows = await api.getSources(state.orch, point.month); // 3. ONE fetch
+  renderSources(rows);                  // 4. render the array
+}
+```
+
+That `renderMonthDetail(point)` line is the demo's punchline made concrete: the inflow/outflow/net numbers are already sitting inside the month object you clicked, so showing them costs zero calls. The amber box in the diagram above is that exact moment.
+
+Now look at how a renderer actually builds HTML — `renderSources`:
+
+```javascript
+el("sources").innerHTML = rows.map(r=>`
+  <div class="barRow">
+    <div class="name">${r.source}</div>
+    <button class="bar" data-src="${r.source}">…</button>
+    <div class="amt">${money(r.amount)}</div>
+  </div>`).join("");
+```
+
+This is the single most important pattern in the file, and it's pure data-to-pixels: `.map()` walks the array and turns each row into a string of HTML (using `${...}` to splice values in — that's a "template literal," JS's f-string), `.join("")` glues the strings together, and `.innerHTML = ...` dumps the whole thing into the container. **One array in, one block of markup out.** The chart renderer does the same thing, just emitting SVG `<circle>` and `<polyline>` elements instead of `<div>`s.
+
+The last move in each renderer is wiring up clicks. After the bars exist in the page, the code finds them and attaches a handler: `b.addEventListener("click", ()=>selectSource(b.dataset.src))`. That's how clicking a bar reaches back up and kicks off the *next* fetch in the cascade. The `data-src="..."` attribute is how each button remembers which source it represents — you stash a value on the element when you build it, and read it back when it's clicked.
+
+## Region 6: init — what kicks it all off
+
+```javascript
+async function init(){
+  const orchs = await api.getOrchestrations();  // top of the cascade
+  sel.innerHTML = orchs.map(o=>`<option ...>`).join("");  // fill the dropdown
+  sel.addEventListener("change", ()=>selectOrch(sel.value));  // re-fetch on change
+  await selectOrch(orchs[0].orchestration_key);  // load the first one
+}
+init();
+```
+
+Nothing happens until `init()` runs on the last line. It fetches the list of revisions, fills the dropdown (same `.map().join()` pattern), wires the dropdown's "change" event to re-fetch, and then loads the first revision so the page isn't empty. From there, every further view is just the user clicking down the cascade.
+
+## Where React would actually change things
+
+Everything above — the manual `.map()` into an HTML string, the `.innerHTML =`, the `addEventListener` after each render — is exactly the boilerplate React exists to remove. In React you'd instead write something closer to "given `state`, here's what the screen should look like," and React diffs the old and new versions and updates only what changed. Your `state` object becomes React state (via a hook called `useState`); your renderer functions become "components" that return markup directly; and you'd never call `addEventListener` by hand — you'd write `onClick={...}` right in the markup. The mental model is the real payoff: this vanilla file does *imperatively* (step by step, by hand) what React does *declaratively* (you describe the end state, it does the steps). Learning it in this order is genuinely the right way around.
+
+If it'd help, I can take any one of these pieces deeper — rewrite this exact demo as a small React version side by side with the vanilla one so you can see the mapping, or zoom in on whichever concept (`async`/`await`, the `.map()` rendering, or the state/event loop) feels shakiest.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Appendix code
 
 ## `demo.HTML`
