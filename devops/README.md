@@ -106,6 +106,7 @@ These documents explain:
     * [02-FastAPI](./foundations//mechanisms/beyond-infra/serving-layer/02-fastapi.md)
 * **Frontend**
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
+    * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
 
 #### Vendor Web Design
 
@@ -200,6 +201,9 @@ These are:
 * common operations
 * quick examples
 * practical workflows
+
+### frontend
+* [00-intro-JS-HTML](./references/frontend/00-intro.md)
 
 ### Git
 
