@@ -274,8 +274,342 @@ Everything above — the manual `.map()` into an HTML string, the `.innerHTML =`
 If it'd help, I can take any one of these pieces deeper — rewrite this exact demo as a small React version side by side with the vanilla one so you can see the mapping, or zoom in on whichever concept (`async`/`await`, the `.map()` rendering, or the state/event loop) feels shakiest.
 
 
+# How this code actually executes
 
+A guide to *control flow* in `serving_frontend_demo.html` — how the browser runs the
+code, how it waits for the user, and how a click turns into an API call and a redraw.
+Written for someone who thinks in Python and finds the jumping-around confusing.
 
+The short version: **a Python script runs top to bottom and exits. This program runs a
+brief linear startup, then goes idle and reacts to events forever.** Most of the confusion
+disappears once you separate those two phases.
+
+---
+
+## 1. The core mental shift
+
+### Python's model
+
+```python
+data = load()        # line 1 runs
+result = process(data)  # then line 2
+print(result)        # then line 3
+# script reaches the end → process exits
+```
+
+Execution is a single line moving downward. When it reaches the bottom, the program is
+over. If you want input, you *call* `input()` and the whole program blocks on that line
+until the user types something.
+
+### This file's model
+
+Two phases:
+
+1. **Startup (linear, Python-like).** The browser runs the `<script>` top to bottom *once*.
+   But this phase mostly *defines* things and *registers* what should happen later. The
+   actual startup work is one function call at the very bottom: `init();`.
+
+2. **Idle-and-react (event-driven).** After startup, the call stack empties and the program
+   **goes to sleep**. It is not "at the end" — it is parked, waiting. A user click or a
+   network reply wakes it up, it runs one handler to completion, then goes back to sleep.
+   This repeats until you close the tab.
+
+The reason the code "jumps around" is that the order things *run* in is not the order they
+appear in the file. Phase 2 is driven by the user, not by line numbers.
+
+---
+
+## 2. Phase 1, step by step: what happens when the file loads
+
+1. The browser reads the HTML top to bottom and builds the page structure (the DOM). At
+   this point every container exists but is empty or shows `loading…`.
+2. It applies the CSS from `<style>`.
+3. It reaches `<script>` and runs it top to bottom.
+
+But running the script top to bottom does **not** do the visible work. Look at what each
+part of the script actually is:
+
+```javascript
+const DB = { ... };          // defines data. Runs nothing.
+const api = { ... };         // defines an object of functions. Runs nothing.
+const state = { ... };       // defines a variable. Runs nothing.
+async function selectOrch(){ ... }   // DEFINES a function. Does NOT run it.
+function renderChart(){ ... }        // DEFINES a function. Does NOT run it.
+// ... all the other functions: defined, not run ...
+init();                      // <-- THIS is the only line that does work.
+```
+
+**Defining a function is not the same as running it.** `function renderChart(){...}` just
+files the recipe away under the name `renderChart`. It sits there unused until something
+*calls* it with `renderChart(...)`. Ninety percent of the script is definitions; the single
+line `init();` at the bottom is the ignition.
+
+(This is also why the code can mention functions that appear later in the file: by the time
+`init()` runs on the last line, every function has already been defined.)
+
+---
+
+## 3. The two things that make it non-linear
+
+Two mechanisms break the straight-line flow. Once you can spot them, the file stops being
+mysterious.
+
+### 3.1 `addEventListener` = "park this function, call it later"
+
+```javascript
+sel.addEventListener("change", () => selectOrch(sel.value));
+```
+
+This line **does not run `selectOrch`.** It hands the little function
+`() => selectOrch(sel.value)` to the browser and says "keep this; run it whenever the
+dropdown changes." Then execution moves immediately to the next line. The parked function
+might run in three seconds, three minutes, or never. This is the heart of event-driven
+code: you *register* reactions during startup, and they fire later in response to the user.
+
+Every `addEventListener` in the file is one of these "parked reactions." They are the entry
+points for Phase 2.
+
+### 3.2 `await` = "pause this function, free up the program, resume later"
+
+```javascript
+state.monthly = await api.getMonthly(orch);   // pause here…
+renderChart(state.monthly);                   // …this runs only after the data arrives
+```
+
+`await` suspends the current function at that line and hands control back to the browser so
+the page stays responsive. When the awaited operation finishes (the data arrives), the rest
+of the function is scheduled to resume. The line after `await` is therefore *not* run
+immediately — it runs later, after a gap. More on the mechanics in section 5.
+
+---
+
+## 4. Single thread + the event loop (how it waits without freezing)
+
+JavaScript in the browser does **one thing at a time** — it is single-threaded. So how can
+it "wait for a click" and "wait for the network" without locking up? The answer is the
+**event loop**.
+
+Three pieces (these match the diagram):
+
+- **Call stack** — where code actually executes, one function at a time. While something is
+  on the stack, *nothing else can run*. When the stack is empty, the page is idle.
+- **Task queue** — a waiting room. When the user clicks, or a network reply arrives, or a
+  timer finishes, the associated callback is dropped into this queue. It does not run yet.
+- **Event loop** — a simple rule running forever: *"If the call stack is empty, take the
+  next item from the queue and run it."*
+
+So the lifecycle of any reaction is: something happens in the world → its callback joins the
+queue → when the stack is free, the event loop runs that callback to completion → stack
+empties → idle again.
+
+**"Run to completion" is important.** Once a handler starts, it runs all the way to its end
+before any other queued callback gets a turn. The browser never interrupts a running
+function to handle a different click partway through. (This is why the order *inside* one
+handler is still perfectly linear and Python-like — it's only *between* handlers that things
+are event-driven.)
+
+---
+
+## 5. `async` / `await` in detail
+
+This is the piece most worth understanding, because every data fetch uses it.
+
+### What `await` really does
+
+```javascript
+async function selectOrch(orch){
+  state.orch = orch;
+  el("chart").innerHTML = `<div class="placeholder">loading…</div>`;  // (A)
+  state.monthly = await api.getMonthly(orch);                          // (B)
+  renderChart(state.monthly);                                          // (C)
+}
+```
+
+Step by step:
+
+1. Line (A) runs normally — the loading placeholder appears instantly.
+2. Line (B): `api.getMonthly(orch)` starts the request and returns a **Promise** — an
+   "I'll get back to you later" placeholder. `await` sees the Promise, **suspends
+   `selectOrch` right here**, and returns control to the event loop. The function is now
+   parked mid-execution. The call stack empties; the page is idle and responsive; the
+   `loading…` text stays visible.
+3. Some time later the data arrives. Its "resume `selectOrch`" callback joins the queue.
+   When the stack is empty, the event loop runs it: `await` produces the resolved array,
+   it's stored in `state.monthly`, and execution continues to line (C), which draws the
+   chart.
+
+So lines (A), (B), (C) are written in order but run with a **gap** in the middle. That gap
+is the whole point — during it, the browser can repaint, and the user could even interact
+with other parts of the page.
+
+### Contrast with Python
+
+```python
+# Python: this BLOCKS. The whole program stops on this line until the reply comes.
+data = requests.get(url).json()
+print(data)   # runs immediately after, no gap, but nothing else could happen meanwhile
+```
+
+```javascript
+// JavaScript: this SUSPENDS just this function. The browser stays alive in the gap.
+const data = await fetch(url).then(r => r.json());
+renderChart(data);   // runs after the reply, in a later turn of the event loop
+```
+
+Same intent ("get data, then use it"), but Python freezes the thread while waiting and JS
+frees it. `async`/`await` is JavaScript's way of writing wait-then-continue code that
+*reads* linearly while *running* non-blockingly.
+
+### The fake delay in your file
+
+```javascript
+const wait = (ms = 320) => new Promise(r => setTimeout(r, ms));
+```
+
+`setTimeout(r, ms)` tells the browser "after `ms` milliseconds, drop `r` into the queue."
+Wrapping it in a Promise lets the API methods `await wait()` to simulate network latency.
+In the real app you delete this and `await` a real `fetch` instead — the suspend/resume
+behaviour is identical.
+
+---
+
+## 6. The full trace of your file (the centerpiece)
+
+Here is the complete execution, start to finish, mapped to the wire log you see on the
+right of the screen. Watch where the program goes idle — those gaps are the program
+*waiting for you*.
+
+**Startup**
+
+1. Browser builds the DOM, applies CSS, runs the `<script>`: defines `DB`, `api`, `state`,
+   and all functions. Nothing visible happens yet.
+2. Last line runs: `init();`. The call stack now holds `init`.
+3. Inside `init`: `await api.getOrchestrations()`.
+   → log: `CALL  GET /orchestrations …`
+   → `await` **suspends `init`**. Stack empties. **Page idle** during the fake delay.
+4. Reply ready → `init` resumes.
+   → log: `CALL  ← /orchestrations returned 2 rows`
+5. `init` fills the dropdown (`sel.innerHTML = orchs.map(...).join("")`), then
+   `sel.addEventListener("change", ...)` — **parks** the change handler (does not run it).
+6. `init` calls `await selectOrch(orchs[0]...)` — load the first revision.
+
+**Loading the first chart**
+
+7. Inside `selectOrch`: set `state`, log a `STATE` line, show `loading…` in the chart.
+8. `await api.getMonthly(orch)`.
+   → log: `CALL  GET /forecast/.../monthly …`
+   → suspends `selectOrch`. **Page idle** during the delay.
+9. Reply ready → resume.
+   → log: `CALL  ← /monthly returned 3 points`
+10. `renderChart(state.monthly)` runs: builds the SVG string, assigns it to
+    `el("chart").innerHTML`, then `.forEach` attaches a click + keydown listener to **each
+    dot** — **parking** those handlers.
+    → log: `RENDER  chart drew 3 points`
+11. `renderChart` returns → `selectOrch` returns → `init` returns. **The call stack is now
+    empty.**
+
+**>>> The program is fully idle here. <<<**
+The chart is on screen. No code is running. The program is parked at the bottom-right of
+the event-loop diagram, waiting. It will stay exactly like this — for as long as it takes —
+until you do something. This is the state a Python script never has.
+
+**You click a dot**
+
+12. The browser drops the parked click handler for that dot into the queue. The event loop
+    sees the empty stack and runs it: it calls `selectMonth(p)` where `p` is that dot's
+    month object.
+13. Inside `selectMonth`: set `state.month`, log a `STATE` line.
+14. `renderMonthDetail(p)` runs immediately — **no `await`**, because inflow/outflow/net are
+    already inside `p`. The three stat boxes appear instantly.
+    → log: `NO CALL  showed inflow/outflow/net — already in the point`
+15. Show `loading…` in the sources block, then `await api.getSources(...)`.
+    → log: `CALL  GET /forecast/.../sources?month=… …`
+    → suspends `selectMonth`. **Page idle again.**
+16. Reply ready → resume → `renderSources(rows)` builds the bars and `.forEach` **parks** a
+    click handler on each bar.
+    → log: `CALL  ← /sources returned N rows`, then `RENDER  breakdown drew N bars`
+17. `selectMonth` returns. **Stack empty. Idle again.**
+
+**You click a source bar**
+
+18. Parked bar handler → queue → event loop runs `selectSource(source)`.
+19. Set `state.source`, show the lineage card with `loading…`, `await api.getLineage(...)`.
+    → log: `CALL  GET /forecast/.../lineage?... …` → suspends → **idle**.
+20. Reply → resume → `renderLineage(rows)` builds the table.
+    → log: `CALL  ← /lineage returned N rows`, then `RENDER  lineage drew N rows`
+21. Returns. **Idle.** Waiting for your next action.
+
+**You change the dropdown** (at any idle moment)
+
+22. The parked `change` handler fires → `selectOrch(sel.value)` → back to step 7 with the
+    new revision: reset month/source, re-fetch the chart with one call, redraw.
+
+Notice the rhythm of every interaction is identical: **change state → show loading → await
+one fetch → render → go idle.** And every `…` / suspend point in the trace is the program
+sleeping, waiting for the world.
+
+---
+
+## 7. Python vs this file, side by side
+
+| Question                          | Python script                     | This browser program                          |
+|-----------------------------------|-----------------------------------|-----------------------------------------------|
+| How does it start?                | top of file, line 1               | runs `<script>` top to bottom, but real work is `init()` at the end |
+| Run order = file order?           | yes                               | only during startup; after that, user-driven  |
+| How does it end?                  | reaches the bottom, exits         | never — goes idle and waits until the tab closes |
+| Getting input                     | `input()` blocks the program      | register a handler; it fires later, program stays alive |
+| Waiting for the network           | `requests.get()` blocks the thread| `await fetch()` suspends one function, frees the program |
+| Doing two things "at once"        | threads/async libraries           | single thread + event loop; one handler runs fully at a time |
+| What's "between" actions?         | nothing — code is always running  | the program is asleep, stack empty            |
+
+---
+
+## 8. Reading any handler in this file (a practical method)
+
+1. **Find the entry points.** Search the file for `addEventListener` and the bottom-line
+   `init()`. Those are the only places execution *starts*. Everything else is reached by
+   being called from one of them.
+2. **Read each handler top to bottom — it IS linear.** Inside a single function, control
+   flow is exactly as straightforward as Python. The only special markers are `await`
+   (pause, resume later with the result) and any `addEventListener`/`.forEach(... =>)` that
+   parks a *future* reaction.
+3. **Treat every `await` as a "…to be continued."** The lines after it run in a later turn
+   of the event loop, after the data is back. The program may go idle in between.
+4. **Between handlers, assume the program is asleep.** Nothing runs on its own. If something
+   happened, a user action or a returning fetch caused it.
+
+---
+
+## 9. Common confusions, cleared up
+
+**"Why does the line after `await` seem to run 'later'?"**
+Because it literally does. `await` suspends the function and lets the event loop do other
+work; the continuation is queued and runs once the awaited result is ready.
+
+**"Does `await` freeze the browser like Python's blocking call?"**
+No. It suspends only the one async function. The call stack empties, the page can repaint,
+and other events can still be handled. That's the entire advantage over blocking.
+
+**"What order do the functions run in?"**
+During startup: top to bottom, ending at `init()`. After that: whatever order the *user*
+acts in. The file's line order stops predicting run order the moment startup finishes.
+
+**"Why can the inflow/outflow/net appear instantly but the source bars take a moment?"**
+The trio is already inside the clicked month object, so `renderMonthDetail` runs with no
+`await` — instant. The source breakdown is new data, so it needs an `await`ed fetch, which
+introduces the idle gap and the `loading…` state.
+
+**"Where does the program 'live' when I'm not doing anything?"**
+Parked in the event loop with an empty call stack — the idle state at the bottom of the
+diagram. It is ready, not finished.
+
+---
+
+### One sentence to keep
+
+A Python script is a *recipe being cooked once*; this file is a *vending machine that's
+been switched on* — set up once, then standing ready, doing nothing until someone presses a
+button, serving one request fully, and returning to standby.
 
 
 
@@ -298,7 +632,7 @@ If it'd help, I can take any one of these pieces deeper — rewrite this exact d
 
 # Appendix code
 
-## `demo.HTML`
+## `serving_frontend_demo.HTML`
 
 ```HTML
 <!doctype html>
