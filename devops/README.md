@@ -107,6 +107,7 @@ These documents explain:
 * **Frontend**
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
     * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
+    * [03-HTML-components](./foundations/mechanisms/beyond-infra/frontend/03-HTML-components.md)
 
 #### Vendor Web Design
 
