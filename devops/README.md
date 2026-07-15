@@ -101,6 +101,7 @@ These documents explain:
 
 * [00-intuition](./foundations//mechanisms/beyond-infra/00-intuition.md)
 * [01-frontend-and-serving-layer-communication](./foundations/mechanisms/beyond-infra/01-system-communication.md)
+* [02-web-application-development](./foundations/mechanisms/beyond-infra/02-web-development.md)
 * **Serving Layer**
     * [01-SQLite](./foundations/mechanisms/beyond-infra/serving-layer/01-sqlite.md)
     * [02-FastAPI](./foundations//mechanisms/beyond-infra/serving-layer/02-fastapi.md)
