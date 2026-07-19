@@ -657,6 +657,17 @@ function total(...amounts) {
 total(10, 20, 30);   // 60
 ```
 
+**`reduce()` - Take an array and combine everything into one final value**
+```javascript
+array.reduce(function, initialValue)
+(sum, x) => sum + x // as function
+0 // as initialValue
+```
+means
+- start with `sum=0`
+- go through every element in `array`
+- keep updating `sum` by adding new element back to `sum`
+
 Note: JS has no `**kwargs`. The idiomatic equivalent is passing (and destructuring) an options object — covered in Parts 6–7.
 
 There's also an old `arguments` object inside `function` (not arrow) bodies — an array-like of all args. Ignore it; use rest parameters `...args` instead.
