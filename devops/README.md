@@ -109,6 +109,8 @@ These documents explain:
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
     * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
     * [03-HTML-components](./foundations/mechanisms/beyond-infra/frontend/03-HTML-components.md)
+    * [04-React-sample-code](./foundations/mechanisms/beyond-infra/frontend/04-react-sample-code.md)
+    * [05-foundations-JavaScript-React](./foundations/mechanisms/beyond-infra/frontend/05-js-react-foundations.md)
 
 #### Vendor Web Design
 
