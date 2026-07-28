@@ -2709,7 +2709,7 @@ const REV_ORDER = ["1-pre-seeding", "2-post-seeding", "3-pre-harvest"];
 /* ----- the API: one real fetch per method, mirroring the routes in api.py.
    Each returns the schema.py contract verbatim — the same shapes the mock
    store returned. Point API_BASE at your uvicorn origin. --------------------- */
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 const enc = encodeURIComponent;
 
 async function getJSON(path) {
