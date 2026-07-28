@@ -265,6 +265,23 @@ produces
 ]
 ```
 
+**Example 2 - condition assignment**
+
+to replicate
+```py
+df.loc[df["A"] > 10, "B"] = 0
+```
+
+use
+```py
+df = (
+    df
+    .assign(
+        B=lambda x: x["B"].mask(x["A"] > 10, 0)
+    )
+)
+```
+
 # Chained Filtering with `.loc[]` and `.query()`
 
 `.loc` case
