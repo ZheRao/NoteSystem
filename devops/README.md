@@ -105,6 +105,7 @@ These documents explain:
 * **Serving Layer**
     * [01-SQLite](./foundations/mechanisms/beyond-infra/serving-layer/01-sqlite.md)
     * [02-FastAPI](./foundations//mechanisms/beyond-infra/serving-layer/02-fastapi.md)
+    * [03-build-serving-store](./foundations/mechanisms/beyond-infra/serving-layer/03-build-serving-store.md)
 * **Frontend**
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
     * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
