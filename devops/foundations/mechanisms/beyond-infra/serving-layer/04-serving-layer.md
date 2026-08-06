@@ -1862,17 +1862,459 @@ def get_db() -> Iterator[sqlite3.Connection]:
 ## `schema.py`
 
 ```py
+"""
+src.growlytics_platform.serving_system.serve.schema — API response shapes.
+
+One model (or list of one) per query function. These are the contract the
+frontend codes against; keeping them thin and explicit means a change in query
+output is caught here at serialization time rather than in the browser.
+
+"""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+
+from datetime import date
+
+# --- picker -------------------------------------------------------------- #
+class Orchestration(BaseModel):
+    orchestration_key: str
+    client_id: str
+    client_name: str | None = None
+    forecast_year: int
+    revision_name: str
+
+
+# --- Level 0 / 1 : the monthly chart ------------------------------------- #
+class MonthPoint(BaseModel):
+    month_num: int = Field(ge=1, le=12)
+    month: str
+    net: float
+    inflow: float
+    outflow: float
+
+
+# --- Level 1 : one month's category decomposition ------------------------ #
+class CategoryAmount(BaseModel):
+    category: str
+    amount: float
+
+
+class MonthBreakdown(BaseModel):
+    orchestration_key: str
+    month_num: int = Field(ge=1, le=12)
+    inflow: float
+    outflow: float
+    net: float
+    categories: list[CategoryAmount]
+
+
+# --- Level 2 : sources within a category+month --------------------------- #
+class SourceRow(BaseModel):
+    output_orchestration_key: str
+    output_name: str
+    source: str
+    crop: str | None = None
+    chosen_revision: str
+    annualized: float
+    allocation_pct: float = Field(ge=0, le=1)
+    allocated: float
+
+
+# --- Level 3 : lineage to versioned inputs ------------------------------- #
+class LineageInput(BaseModel):
+    input_output_key: str
+    source: str
+    crop: str | None = None
+    input_type: str
+    value: float
+    unit: str | None = None
+    revision_name: str
+    revision_num: int
+    last_modified: date
+    memo: str | None = None
+
+
+class LineageOutput(BaseModel):
+    output_orchestration_key: str
+    output_name: str
+    source: str
+    crop: str | None = None
+    category: str
+    annualized: float
+
+
+class Lineage(BaseModel):
+    output: LineageOutput | None = None
+    inputs: list[LineageInput]
+
 
 ```
 
 ## `queries.py`
 
 ```py
+"""
+src.growlytics_platform.serving_system.serve.queries — the read query surface.
 
+WHY THIS SHAPE
+    The four levels the client drills through map to five pure functions. Each
+    takes an open read-only connection and returns plain Python (lists/dicts of
+    scalars) so the API layer can wrap them in Pydantic without any DB concepts
+    leaking upward.
+
+THE ONE RULE THAT KEEPS THE NUMBERS HONEST (grain separation)
+    cash_flow_streams <-> input_output_linkage is many-to-many on
+    output_orchestration_key. Joining them and then SUM()-ing money would fan
+    out every stream row by its number of input links and silently inflate
+    totals. So:
+      - Levels 0/1/2 (money) read ONLY cash_flow_streams. No linkage join.
+      - Level 3 (lineage) is the ONLY place linkage is joined, and it LISTS
+        input rows rather than summing money, so the fan-out is exactly what we
+        want there.
+
+RESOLUTION IS ALREADY MATERIALIZED
+    cash_flow_streams is the resolved forecast state: filtering by
+    orchestration_key already selects the correct output revision per source
+    ("highest output revision <= orchestration revision"). We traverse; we never
+    recompute the resolution here.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+
+
+def _rows(cur: sqlite3.Cursor) -> list[dict]:
+    """Turn a cursor into a list of column-keyed dicts."""
+    cols = [c[0] for c in cur.description]
+    return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+
+# --------------------------------------------------------------------------- #
+# Picker — the orchestration revisions that actually have servable data.
+# --------------------------------------------------------------------------- #
+def list_orchestrations(conn: sqlite3.Connection) -> list[dict]:
+    """Every orchestration revision that has resolved stream data, with its
+    client label. Feeds the top-level selector."""
+    cur = conn.execute(
+        """
+        SELECT DISTINCT
+            s.orchestration_key                 AS orchestration_key,
+            s.client_id                         AS client_id,
+            c.client_name                       AS client_name,
+            s.forecast_year                     AS forecast_year,
+            s.orchestration_revision_name       AS revision_name
+        FROM cash_flow_streams AS s
+        LEFT JOIN clients AS c ON c.client_id = s.client_id
+        ORDER BY s.client_id, s.forecast_year, s.orchestration_revision_name
+        """
+    )
+    return _rows(cur)
+
+
+# --------------------------------------------------------------------------- #
+# Level 0/1 — net cash flow per month, with inflow/outflow carried on each point.
+# --------------------------------------------------------------------------- #
+def net_cash_flow(conn: sqlite3.Connection, orchestration_key: str) -> list[dict]:
+    """One row per month for the whole forecast: net, plus the inflow/outflow
+    split that Level 1 reveals on click. Pure streams grain."""
+    cur = conn.execute(
+        """
+        SELECT
+            month_num                                          AS month_num,
+            MAX(month)                                         AS month,
+            ROUND(SUM(value), 2)                               AS net,
+            ROUND(SUM(CASE WHEN value > 0 THEN value ELSE 0 END), 2) AS inflow,
+            ROUND(SUM(CASE WHEN value < 0 THEN value ELSE 0 END), 2) AS outflow
+        FROM cash_flow_streams
+        WHERE orchestration_key = ?
+        GROUP BY month_num
+        ORDER BY month_num
+        """,
+        (orchestration_key,),
+    )
+    return _rows(cur)
+
+
+# --------------------------------------------------------------------------- #
+# Level 1 detail — for one month: inflow/outflow totals + category decomposition.
+# --------------------------------------------------------------------------- #
+def month_breakdown(
+    conn: sqlite3.Connection, orchestration_key: str, month_num: int
+) -> dict:
+    """The category rollup for a single month (Revenue, Input Cost, ...), plus
+    the inflow/outflow/net totals so the caller doesn't re-derive them."""
+    cur = conn.execute(
+        """
+        SELECT
+            category                 AS category,
+            ROUND(SUM(value), 2)     AS amount
+        FROM cash_flow_streams
+        WHERE orchestration_key = ? AND month_num = ?
+        GROUP BY category
+        ORDER BY amount DESC
+        """,
+        (orchestration_key, month_num),
+    )
+    categories = _rows(cur)
+    # return categories
+    # !!!!!! inflow, outflow, net is summing rounded totals, resulting in inaccuracy, but not being used at the moment
+    inflow = sum(c["amount"] for c in categories if c["amount"] > 0)
+    outflow = sum(c["amount"] for c in categories if c["amount"] < 0)
+    return {
+        "orchestration_key": orchestration_key,
+        "month_num": month_num,
+        "inflow": round(inflow, 2),
+        "outflow": round(outflow, 2),
+        "net": round(inflow + outflow, 2),
+        "categories": categories,
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Level 2 — inside a category+month, each source's annualized / % / allocated.
+#   Grain = output_orchestration_key (source x crop x resolved revision), which
+#   is the atomic annualized unit and the exact key Level 3 traces from.
+# --------------------------------------------------------------------------- #
+def category_sources(
+    conn: sqlite3.Connection,
+    orchestration_key: str,
+    month_num: int,
+    category: str,
+) -> list[dict]:
+    """One row per resolved annualized component in this category for this
+    month: its annual value, this month's allocation %, and the resulting
+    allocated cash. The month filter guarantees one row per key, so total_value
+    is read directly (no risk of summing it 12x)."""
+    cur = conn.execute(
+        """
+        SELECT
+            output_orchestration_key   AS output_orchestration_key,
+            output_name                AS output_name,
+            source                     AS source,
+            crop_sys                   AS crop,
+            revision_name              AS chosen_revision,
+            ROUND(total_value, 2)      AS annualized,
+            perc                       AS allocation_pct,
+            ROUND(value, 2)            AS allocated
+        FROM cash_flow_streams
+        WHERE orchestration_key = ? AND month_num = ? AND category = ?
+        ORDER BY ABS(value) DESC
+        """,
+        (orchestration_key, month_num, category),
+    )
+    return _rows(cur)
+
+
+# --------------------------------------------------------------------------- #
+# Level 3 — lineage: the exact versioned inputs behind one annualized output.
+#   This is the ONLY function that joins linkage. It lists inputs, so the
+#   many-to-many fan-out is the intended behaviour, not a bug.
+# --------------------------------------------------------------------------- #
+def source_lineage(
+    conn: sqlite3.Connection, output_orchestration_key: str
+) -> dict:
+    """The resolved output header plus every versioned input that composed it.
+    The inputs may sit at different revisions (e.g. acres@rev1, yield@rev2) —
+    that mix is the 'highest input revision <= output revision' rule made
+    visible, and is the core traceability story."""
+    header_cur = conn.execute(
+        """
+        SELECT
+            output_orchestration_key   AS output_orchestration_key,
+            output_name                AS output_name,
+            source                     AS source,
+            crop_sys                   AS crop,
+            category                   AS category,
+            ROUND(value, 2)            AS annualized
+        FROM output
+        WHERE output_orchestration_key = ?
+        LIMIT 1
+        """,
+        (output_orchestration_key,),
+    )
+    header = _rows(header_cur)
+
+    inputs_cur = conn.execute(
+        """
+        SELECT
+            cp.input_output_key   AS input_output_key,
+            cp.input_source       AS source,
+            cp.crop               AS crop,
+            cp.input_type         AS input_type,
+            cp.value              AS value,
+            cp.unit               AS unit,
+            cp.revision_name      AS revision_name,
+            cp.revision_num       AS revision_num,
+            cp.last_modified      AS last_modified,
+            cp.memo               AS memo
+        FROM input_output_linkage AS l
+        JOIN input AS cp ON cp.input_output_key = l.input_output_key
+        WHERE l.output_orchestration_key = ?
+        ORDER BY cp.input_type, cp.revision_num
+        """,
+        (output_orchestration_key,),
+    )
+    return {
+        "output": header[0] if header else None,
+        "inputs": _rows(inputs_cur),
+    }
+
+# --------------------------------------------------------------------------- #
+# Dev smoke test: prove the whole drill path with no FastAPI and no network.
+#   python queries.py
+# This block is the only place that opens a connection or imports config; the
+# functions above stay pure.
+# --------------------------------------------------------------------------- #
+if __name__ == "__main__":
+    from growlytics_platform.serving_system.utils import config
+
+    conn = sqlite3.connect(config.STORE_PATH)
+    try:
+        # print("clients:")
+        # for c in list_clients(conn):
+        #     print("  ", c)
+
+        print("\norchestrations:")
+        for v in list_orchestrations(conn):
+            print("  ", v)
+
+        monthly = net_cash_flow(conn, "c0001_2026_3-pre-harvest")
+        print("\nLEVEL 0 — monthly cash flow:")
+        for r in monthly:
+            print("  ", r)
+
+        if monthly:
+            month_num = monthly[0]["month_num"]
+            category = month_breakdown(conn, "c0001_2026_3-pre-harvest", month_num)
+            print("\nFull Category list:")
+            print(category)
+            print(f"\nLEVEL 1 — sources for month {month_num}:")
+            for r in category["categories"]:
+                print("  ", r)
+
+            if category:
+                category = category["categories"][0]["category"]
+                category1 = category_sources(conn, "c0001_2026_3-pre-harvest", month_num, category)
+                print(f"\nLEVEL 2 — source lineage behind month {month_num} / {category}:")
+                for r in category1:
+                    print("  ", r)
+                
+                if category1:
+                    output1 = category1[0]
+                    input1 = source_lineage(conn, output1["output_orchestration_key"])
+                    print(f"\nLEVEL 3 — input lineage behind output_orchestration_key {output1['output_orchestration_key']} / source {output1['source']}:")
+                    for r in input1["inputs"]:
+                        print("  ", r)
+
+    finally:
+        conn.close()
 ```
 
 ## `api.py`
 
 ```py
+"""
+src.growlytics_platform.serving_system.serve.api — the read-only HTTP surface.
+
+Thin by design: each route resolves the request-scoped connection, calls one
+query function, and returns it. All grain/lineage logic lives in queries.py;
+all I/O safety lives in store.py. Routes are sync (SQLite reads are fast and
+CPU-cheap) and FastAPI runs them in its threadpool, so a slow query never blocks
+the event loop.
+
+RUN (dev):
+    uvicorn api:app --reload --port 8000
+    # in-tree:  uvicorn growlytics_platform.serving_system.serve.api:app --reload
+
+IN YOUR TREE: change the three local imports to their package paths, e.g.
+    from growlytics_platform.serving_system.utils import config
+    from growlytics_platform.serving_system.serve import queries, store, schema
+"""
+
+from __future__ import annotations
+
+import sqlite3
+
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from growlytics_platform.serving_system.utils import config, store
+from growlytics_platform.serving_system.serve import queries
+from growlytics_platform.serving_system.utils.schema import (
+    Lineage,
+    MonthBreakdown,
+    MonthPoint,
+    Orchestration,
+    SourceRow,
+)
+
+app = FastAPI(title="GrowLytics Serving API", version="0.1.0")
+
+# Only the configured frontend origins may call this API (see config.py).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.CORS_ORIGINS,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok"}
+
+
+# --- picker -------------------------------------------------------------- #
+@app.get("/orchestrations", response_model=list[Orchestration])
+def orchestrations(db: sqlite3.Connection = Depends(store.get_db)):
+    return queries.list_orchestrations(db)
+
+
+# --- Level 0 / 1 : monthly net cash flow --------------------------------- #
+@app.get("/forecast/{orchestration_key}/cashflow", response_model=list[MonthPoint])
+def cashflow(orchestration_key: str, db: sqlite3.Connection = Depends(store.get_db)):
+    rows = queries.net_cash_flow(db, orchestration_key)
+    if not rows:
+        raise HTTPException(404, f"No forecast for {orchestration_key!r}")
+    return rows
+
+
+# --- Level 1 : one month's category decomposition ------------------------ #
+@app.get("/forecast/{orchestration_key}/month/{month_num}", response_model=MonthBreakdown)
+def month(
+    orchestration_key: str,
+    month_num: int,
+    db: sqlite3.Connection = Depends(store.get_db),
+):
+    result = queries.month_breakdown(db, orchestration_key, month_num)
+    if not result["categories"]:
+        raise HTTPException(404, f"No data for month {month_num} of {orchestration_key!r}")
+    return result
+
+
+# --- Level 2 : sources within a category (category is a query param) ------ #
+@app.get("/forecast/{orchestration_key}/month/{month_num}/sources", response_model=list[SourceRow])
+def sources(
+    orchestration_key: str,
+    month_num: int,
+    category: str,
+    db: sqlite3.Connection = Depends(store.get_db),
+):
+    return queries.category_sources(db, orchestration_key, month_num, category)
+
+
+# --- Level 3 : lineage (global on the output key) ------------------------- #
+@app.get("/forecast/lineage/{output_orchestration_key}", response_model=Lineage)
+def lineage(
+    output_orchestration_key: str,
+    db: sqlite3.Connection = Depends(store.get_db),
+):
+    result = queries.source_lineage(db, output_orchestration_key)
+    if result["output"] is None and not result["inputs"]:
+        raise HTTPException(404, f"No lineage for {output_orchestration_key!r}")
+    return result
 
 ```
