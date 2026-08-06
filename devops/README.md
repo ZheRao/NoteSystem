@@ -115,6 +115,7 @@ These documents explain:
     * [04-React-sample-code](./foundations/mechanisms/beyond-infra/frontend/04-react-sample-code.md)
     * [05-foundations-JavaScript-React](./foundations/mechanisms/beyond-infra/frontend/05-js-react-foundations.md)
     * [06-React-Vite-hosting](./foundations/mechanisms/beyond-infra/frontend/06-vite-hosting.md)
+    * [07-additional-notes](./foundations/mechanisms/beyond-infra/frontend/07-appendix-notes.md)
 
 #### Vendor Web Design
 
