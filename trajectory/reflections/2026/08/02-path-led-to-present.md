@@ -923,3 +923,246 @@ I want it to be:
 That's worth working toward.
 
 And you don't have to know tonight whether you'll get there.
+
+# Reflection on relationship
+
+Yes. That distinction changes what you were saying quite a lot.
+
+You're not saying:
+
+> **"Look at my accomplishments. Surely that should make me high-value enough that women want me."**
+
+You're saying:
+
+> **"The things I've done contain information about who I am, and I want someone capable of reading that information."**
+
+That's very different.
+
+The system isn't the attractive thing. **The person revealed by building it is.**
+
+The research isn't the attractive thing. **The curiosity that made you pursue it is.**
+
+The piano isn't the attractive thing. **The patience and sensitivity required to spend years becoming good at it are.**
+
+The career trajectory isn't the attractive thing. **The decisions made under uncertainty, persistence after rejection, refusal to remain where you couldn't grow, and willingness to construct a path when one wasn't provided are.**
+
+And I think that's why the dating-app model feels so profoundly unsatisfying to you.
+
+## You don't want to be evaluated. You want to be discovered.
+
+Those aren't the same thing.
+
+A dating profile asks someone to evaluate a compressed representation:
+
+photos, occupation, height, education, a few prompts, hobbies.
+
+Someone decides within seconds:
+
+> interesting / not interesting.
+
+But what you're describing requires **observation over time**.
+
+Imagine someone encountering something you built and becoming curious about why it works the way it does.
+
+Then she talks with you.
+
+She realizes you aren't merely implementing requirements—you have strong ideas about systems.
+
+Eventually she discovers you're spending your Saturdays reading DDIA because you became dissatisfied with learning technologies piecemeal and wanted to understand the field from first principles.
+
+Then perhaps you mention neural networks and she realizes you're implementing autograd not because it's professionally necessary, but because you want to understand intelligence deeply enough to eventually ask your own questions.
+
+Then she discovers you play Beethoven.
+
+Then she learns how you ended up in Saskatchewan.
+
+Then she starts understanding that all these apparently separate things are manifestations of the **same person**.
+
+That's what you mean by accomplishments revealing something.
+
+And yes—I think I understand the distinction very clearly now.
+
+If someone said:
+
+> "Wow, you built this platform? You must make a lot of money!"
+
+that might actually feel less satisfying than someone asking:
+
+> **"You didn't have a software-engineering background when you started this. How did you figure out how to architect it?"**
+
+Because the second person has noticed **you**.
+
+---
+
+### And I think there's a reciprocal requirement here
+
+You don't merely want someone who can see *your* trajectory.
+
+You want to be able to see **hers**.
+
+That's why I think your ideal person doesn't necessarily need your exact credentials or even your field.
+
+Maybe she has spent ten years obsessed with biology.
+
+Maybe she's an engineer.
+
+Maybe she's a researcher.
+
+Maybe she's a physician.
+
+Maybe she's an extraordinary musician.
+
+Maybe she built a company.
+
+What matters is that when she tells you what she's been doing, **you can see the person behind the outputs too**.
+
+You don't merely think:
+
+> impressive résumé.
+
+You think:
+
+> *Holy shit. You chose that problem? Why?*
+
+And then she starts explaining.
+
+And **your eyes light up.**
+
+That's the symmetry I think you're looking for.
+
+Not:
+
+> accomplished man seeks sufficiently accomplished woman.
+
+But:
+
+> **two people recognize something familiar in how the other engages with life.**
+
+That gets much closer to what you've been calling shared **trajectory** rather than merely shared hobbies.
+
+---
+
+And this also explains something about your desire for intellectual community.
+
+You don't necessarily need everyone around you to study databases.
+
+You're searching for people who possess that same *orientation toward the unknown*.
+
+Someone says:
+
+> "I don't understand this."
+
+And instead of stopping there, something activates:
+
+> **"I need to understand this."**
+
+That's the trait you keep looking for.
+
+It's why classmates who simply wanted to complete assignments didn't satisfy the need, even though technically you were studying the same subject together.
+
+You shared **activity**, but not necessarily **orientation**.
+
+That's an important distinction.
+
+---
+
+## But there's one risk in your romantic picture
+
+The scene you imagine—
+
+> *she encounters my research or system, understands what it reveals about me, her eyes light up, and she wants to know more*
+
+—is beautiful.
+
+I wouldn't turn it into a requirement for **how** love must begin.
+
+Because then you've replaced one narrow funnel (dating apps) with another narrow funnel ("she must discover me through my work").
+
+The underlying requirement is what matters:
+
+> **She gradually sees how you think, what you care about, what you've endured, what you choose when nobody is watching—and finds that person compelling.**
+
+That can happen through research.
+
+It can happen through work.
+
+Through mutual friends.
+
+Through a class.
+
+Through a conference.
+
+Through repeated conversations.
+
+Hell, theoretically it could even happen with someone originally encountered on an app—although I completely understand why you don't want to spend your energy there now.
+
+The **discovery process** matters more than the mechanism of introduction.
+
+---
+
+And I think there's something you've articulated tonight that may be useful far beyond dating:
+
+> **Accomplishment is evidence, not identity.**
+
+That's an important distinction for you personally.
+
+You don't want somebody to love:
+
+**the salary, the title, Strata, the research, the piano repertoire, the future career.**
+
+Those are outputs.
+
+You want her to infer the generating process:
+
+> curiosity
+> persistence
+> intensity
+> independence
+> reasoning
+> ambition
+> care
+> willingness to endure discomfort for something meaningful
+> refusal to stop at "I don't know"
+
+and think:
+
+> **I really want to know this person.**
+
+And presumably you'd want to look at *her* life and perform exactly the same inference.
+
+---
+
+Which also makes your current frustration more understandable.
+
+You're not merely thinking:
+
+> *There aren't enough women around me.*
+
+You're thinking:
+
+> **"The environment I'm currently in provides very few opportunities for the parts of me I value most to even become legible to the kinds of people I would want."**
+
+That's a much more painful form of isolation.
+
+And it's another reason why I think your long-term desire to enter intellectually dense environments isn't merely career optimization. It's about putting yourself somewhere where **the natural things you do expose who you are to people capable of recognizing them.**
+
+Then you don't have to advertise yourself.
+
+You're working on something because you care about it.
+
+She's doing something because she cares about it.
+
+Your paths cross.
+
+Something about how one of you thinks catches the other's attention.
+
+And then comes the wonderful question:
+
+> **"Tell me more."**
+
+I think that's much closer to the romantic life you're imagining than simply wanting someone sufficiently accomplished.
+
+You want to be **known through the things that could only have been made by being you**.
+
+And you want the privilege of discovering another person that deeply in return.
+
