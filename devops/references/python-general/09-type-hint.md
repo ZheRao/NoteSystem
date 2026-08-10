@@ -1,5 +1,8 @@
 # Python Type Hints — Practical Gold Standard
 
+Quick note:
+- `from __future__ import annotations` tells Python to postpone evaluation of annotations rather than requiring every referenced type to exist when the function/class is defined.
+
 ## 1. Mental Model: What Type Hints *Are* (and Are Not)
 
 * Type hints **do nothing at runtime** (with very rare exceptions like `TypedDict` + runtime validators).

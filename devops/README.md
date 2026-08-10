@@ -83,6 +83,7 @@ These documents explain:
 * [04-errors](./foundations/mechanisms/python/04-errors.md)
 * [05-python-path](./foundations/mechanisms/python/05-path.md)
 * [06-data-objects](./foundations/mechanisms/python/06-data-structure.md)
+* [07-closure](./foundations/mechanisms/python/07-closure.md)
 
 
 #### Spark
