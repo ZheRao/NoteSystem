@@ -316,3 +316,89 @@ Operations with cloud services
   - performing a task on a single machine is often simpler and cheaper than setting up a distributed system
   - CPUs, memory, and disks have grown larger, faster, and more reliable
   - when combined with single-node databases such as DuckDB, SQLite, and KuzuDB, many workloads can now run on a single node
+
+### Microservices and Severless
+
+Microservices
+- key mechanics
+  - most common way of distributing a system across multiple machines is to divide them into **clients and servers** and let clients make requests to servers
+    - HTTP is most commonly used for this communication
+  - the same process may be both
+    - a server (handling incoming requests)
+    - a client (making outbound requests to other services)
+- evolution
+  - **service-oriented architecture (SOA)**
+    - traditional way of building applications
+  - **microservices architecture**
+    - recent refinement
+    - a service has one weel-defined purposes
+    - each service exposes an API that can be called by clients via the network
+    - complex application can be decomposed into multiple interacting services
+- advantages
+  - each service 
+    - can be updated independently
+    - can be assigned the hardware resources it needs
+  - hiding the implementation details behind an API
+    - service owners are free to change the implementation without affecting clients
+  - independent data storage
+    - each service can have its own databases and not to share databases between services
+    - shared database
+      - make database structure part of the service's API → difficult to change
+      - cause one service's queries to negatively impact the performance of other services
+- complexity
+  - in testing a service
+    - have to run all the other services that it depends on
+  - in deployment
+    - each service requires 
+      - infrastructure for depoying new releases
+      - adjusting the allocated hardware resources to match the load
+      - collecting logs
+      - monitoring service health
+      - alerting an on-call engineer in the case of a problem
+    - Kubernetes have become a popular way of deploying services, since they provide a foundation for this infrastructure
+- challenge to evolve
+  - scenario
+    - clients expect API to have certain fields
+    - add or remove fields in an API as business needs change
+    - cause clients to fail, and not discovered until later in the development cycle
+  - API description standards such as OpenAPI and gRPC help manage the relationship between client and server APIs
+- caution
+  - using microservices is likely to be unnecessary overhead in small companies
+
+Serverless (*function as a service*)
+- another approach to deploy services — management of infrastructure is outsourced to a cloud vendor
+  - VMs — explicitly choose when to start up or shut down an instance
+  - serverless model — cloud provider automatically allocates and frees hardware resources as needed, based on the incoming requests to your service
+    - pay only for the time your application code is running rather than having to provision resources in advance
+- caution
+  - providers impose a time limit on function execution and limit runtime envrionments
+  - services might suffer from slow start times when a function is first invoked
+
+### Cloud Computing vs. Supercomputing
+
+- Cloud computing is not the only way of building large-scale computing systems 
+- **high-performance computing (HPC)**, also known as **supercomputing** is another way with different priorities and uses different techniques
+
+Differences
+- purpose
+  - supercomputers — computationally intensive scientific computing tasks
+    - weather forecast
+    - molecular dynamics
+    - complex optimization problems, and solving PDEs
+  - cloud computing — serve user requests with high availability
+    - online services
+    - business data systems
+- jobs
+  - supercomputer — large batch jobs that checkpoint the state of their computation to disk from time to time
+    - node fails — stop entire cluster workload —repair the faulty node — restart computation from last checkpoint
+  - cloud service — prioritize continually serve users with minimal interruptions
+    - stopping entire cluster is not desirable
+- resources sharing
+  - supercomputer — typically communicate through shared memory and RDMA
+    - supports high bandwidth and low latency
+    - assume a high level of trust
+  - cloud computing — network and machines are shared by mutually untrusting organizations
+    - require stronger security mechanisms such as resource isolation
+- physical machines
+  - supercomputer — generally have nodes close together
+  - cloud computing — allows nodes to be distributed across multiple geographic regions
