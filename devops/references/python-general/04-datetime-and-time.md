@@ -8,6 +8,13 @@ import datetime as dt
 dt.date.today()
 dt.date.today().isoformat()
 dt.timedelta(days=3)
+
+dt.datetime.today().replace(
+    hour=0,
+    minute=0,
+    second=0,
+    microsecond=0
+)   # record today's datetime at midnight when we want to record date, but has to comply with datetime format
 ```
 
 **Weekday Offset Example**
