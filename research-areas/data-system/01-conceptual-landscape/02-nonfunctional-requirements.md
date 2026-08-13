@@ -151,3 +151,36 @@ Response time can vary significantly
   - a mechanical vibrations in the server rack
 - **queueing delays** often account for a **large part** of the variability in response times
   - **head-of-line blocking** — it takes only a small number of slow requests to hold up the processing of subsequent requests
+
+---
+### Average, Median, and Percentiles
+
+- **arithmetic mean**
+  - useful for estimating throughput limites
+  - not a very good metric for mesauring "typical" response time
+  - because it doesn't tell you how many users actually experienced that delay
+
+- **percentiles**
+  - to figure out how bad outliers are, look at higher percentiles: the 95th, 99th, and 99.9th percentile are common
+    - if 95th percentile response time is 1.5 seconds, that means 95 out of 100 requests take less than 1.5 seconds, and 5 out of 100 requests take 1.5 seconds or more
+  - high response-time percentiles, also known as **tail latencies**, are important because they directly affect users' experience of the service
+    - reducing response times at very high percentiles is difficult because they are easily affected by random events outside of your control, and the benefits are dimishing
+    - e.g., for amazon, customers with the slowest requests are often those who have the most data on their accounts → they are the most valuable customers
+
+---
+### Use of Response Time Metrics
+
+- high percentiles are especially important in backend services that are called multiple times as part of serving a single end-user request
+- even if you make the calls in parallel, the request still need to wait for the slowest of the parallel calls to complete
+
+**SLO** and **SLA**
+- percentiles are often used in **service level objectives** (SLOs) and **service level agreements** (SLAs) as ways of defining the expected performance and availability of a service
+  - SLO may set a target for a service to 
+    - have a median response time of less than 200 ms
+    - have a 99th percentile under 1 second
+    - have at least 99.9% of valid requests result in non-error responses
+  - SLA is a contract that specifies what happens if the SLO is not met
+    - e.g., customers may be entitled to a refund
+
+## Reliability and Fault Tolerance
+
