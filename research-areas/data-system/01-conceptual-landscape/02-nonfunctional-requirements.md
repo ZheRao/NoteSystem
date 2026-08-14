@@ -184,3 +184,115 @@ Response time can vary significantly
 
 ## Reliability and Fault Tolerance
 
+Typical expectations of reliability
+- application performs the function that the user expected
+- tolerate the user making mistakes or using the software in unexpected ways
+- performance is good enough for the required use case, under the expected load and data volume
+- system prevents any unauthorized access and abuse
+
+**faults** vs. **failures**
+- fault
+  - when a **particular part** of a system stops working correctly
+    - a single hard drive malfunctions
+    - a single machine crashes
+    - an external service (that the system depends on) has an outage
+- failure
+  - system **as a whole** stops providing the required service to the user
+    - when it does not meet the **SLO**
+
+---
+### Fault Tolerance
+
+Terminologies
+- **fault-tolerant**
+  - the system continues providing the required service to user in spite of certain faults occurring
+- **single point of failure**
+  - the system cannot tolerate a certain part becoming faulty, then that part is a SPOF
+
+Example: tweeter service
+- fault might happen during the fan-out process, a machine involved in updating the materialized timelines crashes or become unavailable
+- to make it fault-tolerant
+  - ensure that another machine can take over this task without missing any posts that should have been delivered, and without duplicating any posts
+
+Prevention — **fault injection**
+- it can make sense to increase the rate of faults by triggering them deliberately
+  - e.g., by randomly killing individual processes without warning
+- many critical bugs are actually due to poor error handling
+
+
+---
+### Hardware Faults
+
+Facts
+- approximately 2%-5% of **magnetic hard drives** fail per year
+- approximately 0.5%-1% of **SSDs** fail per year
+  - small numbers of bit errors are corrected automatically, 
+  - but uncorrectable errors occur approximately once per year per drive
+    - this error rate is higher than that of magnetic hard drives
+- other hardware components also fail, although less frequently than hard derives
+  - e.g., power supplies, RAID, controllers, memory modules
+- approximately 1 in 1,000 machines has a **CPU core** that occasionally computes the wrong result, likely because of manufacturing defects
+  - erroneous computation can lead to crash, or simply returning the wrong result
+- data in **RAM** can be corrupted, either because of random events such as cosmic rays or because of permanent physical defects
+  - even with error-correcting codes (ECC), more than 1% of machines encounter an uncorrectable error in a given year
+    - typically leads to crash of the machine and the affected memory module needing to be replaced
+  - certain pathological memory access patterns can flip bits with high probability
+- an entire **datacenter** might become unavailable or even be permanently destroyed
+  - e.g., because of a power outage or network misconfiguration
+- **large-scale systems**
+  - hardware faults happen often enough that they become part of normal system operation
+
+Tolerating hardware faults through **redundancy**
+- redundancy to the individual hardware components
+  - examples
+    - disks — RAID configuration
+    - servers — dual power supplies and hot-swappable CPUs
+    - datacenters — batteries and diesel generators for backup power
+- effective when component faults are **independent**
+  - occurrence of one fault does not change the likelihood that another fault will occur
+  - experience has shown significant **correlations** between component failures
+- **cloud systems** focus less on reliability of individual machines and aim to make services highly available by **tolerating faulty nodes** at the **software level**
+  - cloud providers use **availability zones** to identify which resources are physically co-located
+  - resources in the same place are more likely to fail at the same time than geographically separated resources
+- **rolling upgrade** — **operational advantage** of systems that can tolerate the loss of entire machines
+  - single-server system requires planned downtime if machine needs to be rebooted
+  - multi-node fault-tolerant system can be patched by restarting one node at a time, without affecting the service for users
+
+---
+### Software Faults
+
+Characteristics
+- software faults are often very **highly correlated**
+  - because it is common for many nodes to run the same software and thus have the same bugs
+  - such faults are harder to anticipate, 
+  - and they tend to cause many more failures than uncorrelated hardware faults
+- faults often lie dormant for a long time until they are triggered by an unusual set of circumstances
+  - it's revealed that software is making some kind of **assumption** about its environment
+  - and while that assumption is usually true, it eventually stops being true for some reason
+- no quick solution, but something helps
+  - carefully thinking about assumptions and interactions in the system
+  - through testing
+  - ensuring process isolation
+  - allowing processes to crash and restart
+  - avoiding feedback loops such as retry storms
+  - measuring, monitoring, and analyzing system behavior in production
+
+Examples
+- a software bug that causes every node to fail at the same time in particular circumstances
+  - e.g., because of a firmware bug, all SSDs of certain models suddenly fail after precisely 32,768 hours of operation (less than four years)
+  - rendering the data on them unrecoverable
+- a runaway process that uses up a shared, limited resource, such as CPU time, memory, disk space, network bandwidth, or threads
+  - e.g., a bug in a client library could cause a much higher request volume than anticipated
+- a service that the system depends on slows down, becomes unresponsive, or starts returning corrupted responses
+- an interaction between different systems results in emergent behavior that does not occur when each system is tested in isolation
+- cascading failures, where a problem in one component causes another component to become overloaded and slow down, which in turn brings down another component
+
+---
+### Humans and Reliability
+
+Minimizing the impact of human mistakes
+- testing (both handwritten tests and property testing on lots of random inputs)
+- rollback mechanisms for quickly reverting configuration changes
+- gradual rollouts of new code
+- detailed and clear monitoring, observability tools for diagnosing production issues
+- well-designed interfaces that encourage "the right thing" and discourage "the wrong thing"
