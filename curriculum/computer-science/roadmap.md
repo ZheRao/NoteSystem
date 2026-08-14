@@ -52,6 +52,31 @@ Purpose:
 
 **Depth target:** Medium. Selected lectures rather than a major commitment.
 
+### Recommendations
+
+there is a beautiful little sequence in CS50 that fills some of the undergraduate exposure you missed:
+
+**Week 1 — C**
+compiler, machine code, types, integer overflow, floating-point representation
+
+**Week 2 — Arrays**
+compilation, assembly, linking, debugging, arrays and strings
+
+**Week 3 — Algorithms**
+searching, sorting, asymptotic complexity, recursion
+
+**Week 4 — Memory**
+pointers, allocation, stack, heap, segmentation faults, buffer overflow, file I/O
+
+**Week 5 — Data Structures**
+queues, stacks, linked lists, trees, hash tables, tries
+
+Then I'd jump to:
+
+**Week 8 — HTML/CSS/JS**, specifically the portions introducing routers, TCP/IP, DNS, HTTP and servers. ([edX][2])
+
+That sequence is valuable for you because C forces things that Python normally hides to become visible.
+
 
 ## 1B. Data Structures & Algorithms: MIT 6.006
 
@@ -167,6 +192,65 @@ This is:
 OSTEP then becomes a companion/reference rather than another curriculum.
 
 **Depth target: High, but later.**
+
+### Alternative: Stanford CS110 is the course I think you're actually looking for
+
+[Stanford CS110 — Principles of Computer Systems](https://bulletin.stanford.edu/courses/2085411?utm_source=chatgpt.com)
+
+Read Stanford's description:
+
+> Principles and practice of engineering of computer software and hardware systems.
+
+It covers complexity management, client-server design, **virtual memory, threads, networks, atomicity and coordination of parallel activities**. ([Stanford Bulletin][3])
+
+That's remarkably close to the hole you've been repeatedly running into.
+
+Think about your recent questions:
+
+```text
+What is a process?
+What exactly is a thread?
+What does the OS schedule?
+How does FastAPI concurrency work?
+What does blocking mean?
+How can multiple requests interact?
+What is shared between threads?
+What is atomic?
+How does a client communicate with a server?
+```
+
+Those aren't really “FastAPI questions.”
+
+They're **computer systems questions**.
+
+CS110 gives them a home.
+
+And this is why I prefer it over immediately reading CS:APP cover-to-cover.
+
+You can let someone teach you:
+
+```text
+processes
+    ↓
+threads
+    ↓
+concurrency
+    ↓
+virtual memory
+    ↓
+files / I/O
+    ↓
+networking
+    ↓
+client/server systems
+```
+
+one lecture at a time.
+
+**One lecture every Saturday for six months would be completely fine.**
+
+There is absolutely no reason to race through it.
+
 
 ## 3B. Networking: Stanford CS144
 
