@@ -296,3 +296,217 @@ Minimizing the impact of human mistakes
 - gradual rollouts of new code
 - detailed and clear monitoring, observability tools for diagnosing production issues
 - well-designed interfaces that encourage "the right thing" and discourage "the wrong thing"
+
+
+## Scalability
+
+
+Motivation
+- even if a system is working reliably today, that doesn't mean it will necessarily work reliably in the future
+  - one common reason for degradation is **increased load**
+  - **scalability** is the term used to describe a system's ability to cope with increased load
+- for a new product with only a small number of users
+  - the overriding engineering goal is usually to keep the system as simple and flexible as possible so that you can easily modify and adapt the features of product
+  - it is counterproductive to worry about hypothetical scale that might be needed in the future
+    - in the best case, investments in scalability are wasted effort and premature optimization
+    - in the worst case, they lock you into an inflexible design and make it harder to evolve your application
+
+Scalability involve questions like
+- if the system grows in a particular way, what are our options for coping with the growth?
+- how can we add computing resources to handle the additional load?
+- based on current growth projections, when will we hit the limit of our current architecture?
+
+
+---
+### Understanding Load
+
+Examples
+- often the load can be measures of throughput, e.g., 
+  - number of requests per second to a service
+  - number of GB of new data arriving per day
+- often other statistical characteristics of the load affect the access patterns and hence the scalability requirements
+  - e.g., ratio of reads to writes in a database, the hit rate on a cache, or the number of data items per user
+
+
+Investigate what happens when the load increases
+- two ways 
+  - when increase the load in a certain way and keep the system resources (CPUs, memory, network bandwidth, etc.) unchaged, how is the performance of system affected?
+  - when increase the load in a certain way, how much resources need to be increased if wanting to keep performance unchanged?
+- if doubling resources enables handling twice the load while keeping performance the same, we say that you have **linear scalability**
+  - however, much more likely is that the **cost grows faster** than linearly
+  - there are many reasons for  the inefficiency, e.g.,
+    - with a lot of data, processing a single write request may involve more work than if having a small amount of data, even if the size of the request is the same
+
+---
+### Shared-Memory, Shared-Disk, and Shared-Nothing Architectures
+
+Methods of scaling
+- **vertical scaling** or **scaling up**
+  - the simplest way of increasing the hardware resources of a service is to move it to a more powerful machine
+    - a machine with more CPU cores, more RAM, and more disk space
+  - **shared-memory architecture**
+    - achieve parallelism on a single machine by using multiple processes or threads
+    - all threads belong to the same process can access thes ame RAM
+    - **problem**
+      - cost grows faster than linearly
+      - a high-end machine with twice the hardware resources of lower-spec machine typically costs significantly more than twice as much
+      - and because of bottlenecks, that machine is unlikely to actually be able to handle twice the load
+- **shared-disk architecture**
+  - uses several machines with independent CPUs and RAM
+    - stores data on an array of disks that is shared among the machines
+    - which are connected via a fast network: **network-attached storage** (NAS) or a **storage area network** (SAN)
+  - traditionally used for **on-premises data warehousing** workloads
+    - but contention and the overhead of locking **limit the scalability** of the shared-disk approach
+- **shared-nothing architecture** or **horizontal scaling** or **scaling out**
+  - distributed system with multiple nodes, each of which has its own CPUs, RAM and disks
+  - coordination between nodes is done at the software level, via a conventional network
+  - advantage — potential to **scale linearly**
+    - more easily adjust its hardware resources as load increases or decreases
+    - greater fault tolerance by distributing the system across multiple datacenters or regions
+  - downside
+    - requires explicit **sharding** (C7)
+    - incurs all the complexity of distributed systems (C9)
+
+Side note
+- cloud's native database systems that separate storage and compute
+  - similar to a shared-disk architecture
+  - but avoids scalability problems of older systems
+    - instead of providing a filesystem (NAS) or block device (SAN) abstraction
+    - the storage service offers a specialized API that is designed for the specific needs of the database
+
+---
+### Principles for Scalability
+
+Specific and specialized
+- large scale system architecture is usually highly specific to the application
+  - the following two scenarios looks very different even with same data throughput (100 MB/second)
+    - 100k requests per second, each at 1 kB in size
+    - 3 requests per minute, each 2 GB
+- an architecture that is appropriate for one level of load is unlikely to cope with 10 times that load
+  - have to rethink architecture on every order of magnitude load increase
+  - but not worth planning future scaling needs more than one order of magnitude in advance
+
+Principle
+- 1 — break a system into smaller components that can operate largely independently from on another
+  - same principle behind
+    - microservices
+    - sharding (C7)
+    - stream processing (C12)
+    - shared-nothing architecture
+  - challenge
+    - line between things that should be together and things that should be apart
+    - design guidelines for microservices can be found in `Sam Newman. Building Microservices, 2nd edition. O’Reilly Media, 2021. ISBN: 9781492034025`
+- 2 — not to make things more complicated than necessary
+  - autoscaling systems are cool, but if load is fairly predictable, a manually scaled system may have fewer operational surprises
+
+## Maintainability
+
+Characteristics
+- requirements for an application frequently evolve, environment that software runs in change (e.g., dependencies and platform), and it may have bugs that need fixing
+- majority of the cost of software is not in its initial development but in its ongoing maintenance
+  - fixing bugs
+  - keeping its systems operational
+  - investigating failures
+  - adapting it to new platforms
+  - modifying it for new use cases
+  - repaying technical debt
+  - adding new features
+
+Legacy systems
+- system that successfully running for a long time may use outdated technologies that not many engineers understand today
+- institutional knowledge of how and why the system was designed in a certain way may have been lost as people have left the organization
+- fixing other people's mistakes might also be necessary
+
+Principles
+- **Operability**
+  - make it easy for the organization to keep the system running smoothly
+- **Simplicity**
+  - make it easy for new engineers to understand the system 
+    - by implementing it using well-understood, consistent patterns and structures 
+    - avoid unnecessary complexity
+- **Evolvability**
+  - make it easy for engineers to make changes to the system in the future, adapting it and extending it for unanticipated use cases as requirements change
+
+---
+### Operability: Making Life Easy for Operations
+
+**Automation**
+- two-edged sword
+  - plus side
+    - for large-scale systems consisting of many thousands of machines, manual maintenance would be unreasonably expensive
+    - automation is essential
+  - downside
+    - there will always be edge cases (such as rare failure scenarios) that require manual intervention
+    - greater automation requires a more skilled operations team that can resolve those issues
+    - automated system that goes wrong is harder to troubleshoot than a system that relies on an operator to perform some actions manually
+- more automation is not always better
+  - some amount of automation is important
+  - need to find the sweet spot that suits the application and organization
+
+Data systems automation targets
+- allowing monitoring tools to check the system's key metrics and supporting observability tools
+- avoiding dependency on individual machines
+  - allowing machines to be taken down for maintenance while the system as a whole continues running uninterrupted
+- providing good documentation and an easy-to-understand operational model
+  - "if I do X, Y will happen"
+- providing good default behavior, but also giving administrators the freedom to override defaults when needed
+- self-healing where appropriate, but also giving administrators manual control over the system state when needed
+- exhibiting predictable behavior, minimizing surprises
+
+
+---
+### Simplicity: Managing Complexity
+
+**Complexity**
+- characteristics
+  - small software can have delightfully simple and expressive code
+  - as projects get larger, they often become very complex and difficult to understand
+- downsides of complexity
+  - slow down everyone who needs to work on the system, further increasing the cost of maintenance
+  - greater risk of introducing bugs when making a change
+  - harder for developers to understand and reason about the system
+  - more easily overlooking
+    - hidden assumptions
+    - unintended consequences
+    - unexpected interactions
+- reducing compexity greatly improves the maintainability of software
+
+Reason about complexity
+- 2 categories
+  - essential complexity is inherent in the problem domain of the application
+  - accidental complexity arises only because of limitations of our tooling
+- note that boundaries between the essential and the accidental shift as tooling evolves
+
+**Abstraction** — one of the best tools for managing complexity
+- a good abstraction can hide a great deal of implementation detail behind a clean, simple-to-understand facade
+- **reuse**
+  - this reuse is more efficient than reimplementing a similar thing multiple times
+  - also leads to higher-quality software
+- can be created using methodologies such as 
+  - `Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides. Design Patterns: Elements of Reusable Object-Oriented Software. Addison-Wesley Professional, 1994. ISBN: 9780201633610`
+  - `Eric Evans. Domain-Driven Design: Tackling Complexity in the Heart of Software. Addison-Wesley Professional, 2003. ISBN: 9780321125217`
+
+---
+### Evolvability: Making Change Easy
+
+Characteristics
+- system's requirements constantly flux
+  - learn new facts
+  - previously unanticipated use cases emerge
+  - business priorities change
+  - users request new features
+  - new platforms replace old platforms
+  - legal or regulatory requirements change
+  - growth of the system forces architectural changes
+- **Agile**
+  - for organizational processes, *Agile* working patterns provide a framework for adapting to change
+  - e.g., test-driven development (TDD) and refactoring
+
+Evolvability
+- the ease of modifying a data system and adapting it to changing requirements is closely linked to its **simplicity** and its **abstractions**
+- loosely coupled, simple systems are usually easier to modify than tightly coupled, complex ones
+
+**Irreversibility**
+- one major factor that makes change difficult in large systems is irreversibility
+  - e.g., migrating from one database to another, but cannot switch back to the old system in case of problems with the new one
+- irreversible actions need to be taken very carefully, minimizing irreversibility improves flexibility
