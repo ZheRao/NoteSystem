@@ -12,6 +12,10 @@ df.sort_values(["col1", "col2"], ascending=[False, True])
 df["price"] = np.where(df["item_type"] == "expensive", 999.99, 1.99)
 df["total_price"] = df["units_sold"] * df["cost"]
 df["total_price"] = df["total_price"].round(2)
+
+# summing many columns such as summing over all month columns, i.e., df["annual_total"] = df["Jan"] + df["Feb"] + ...
+month_cols = ["Nov", "Dec", "Jan", ...]
+df["annual_total"] = df[month_cols].sum(axis=1)
 ```
 
 ### Type Conversion
@@ -293,6 +297,17 @@ df_summary = (
       )
       .reset_index()
 )
+```
+
+**summing all ungrouped columns**
+
+suppose we have two layers of columns
+- identity columns such as "source", "id", ...
+- monthly value columns such as "Nov", "Jan", ...
+- now we want to aggregate monthly totals for each source, i.e., summing all "Nov" values for rows with the same "source"
+
+```python
+out = df.groupby(["source", "id"], as_index=False).sum(numeric_only=True) # numeric_only=True drops any leftover string columns instead of concatenating them
 ```
 
 ### Pivot
