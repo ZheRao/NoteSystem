@@ -90,3 +90,95 @@ Benefits of JSON representation
   - JSON representation makes this tree structure explicit
   - **example** tree structure  
     ![alt text](images/0301.png)
+
+---
+### Normalization, Denormalization, and Joins
+
+ID vs. Text String
+- for example, `region_id` vs. `Washington, DC, United States`
+- advantages to have standardized list of geographic regions and let users choose from a drop-down list or autocomplete
+  - consistent style and spelling
+  - avoid ambiguity if several places have the same name
+    - if the string were just Washington, DC, would it refer to DC or to the state?
+  - ease of updating — the name is stored in only one place, it is easy to update across the board
+  - localication support — when the site is translated into other languages, the standardized lists can be localized
+    - so the region can be displayed in the viewer's language
+  - better search functionality
+    - a search for pepole on the US East Coast can match this profile, because the list of regions can encode the fact that Washington is located on the East Cost
+
+Normalization
+- whether to store an ID or a text string is a question of **normalization**
+  - using an ID is more normalized: the information that is meaningful to humans is stored in only one place, and everything that refers to it uses an ID
+  - when storing text directly, you are duplicating the human-meaningful information in every record that uses it
+    - this representation is **denormalized**
+- advantage of using an ID
+  - it never needs to change
+    - the ID can remain the same even if the information it identifies changes
+    - anything meaningful to humans may need to change sometime in the future — and if the information is duplicated, all the redundant copies will need to be updated
+- downside of normalized representation
+  - every time you want to display a record containing an ID, you have to do an additional lookup to resolve the ID into something human-readable
+  - i.e., **join**s
+- **document databases** can store both normalized and denormalized data
+  - but they are often **associated with denormalization** 
+    - partly because the JSON data model makes it easy to store additional denormalized fields
+    - partly because the weak support for joins in many document databases makes normalization inconvenient
+
+Trade-offs of normalization
+- motivation
+  - in the LinkedIn profile example
+    - `region_id` field is a reference to a standardized set of regions
+    - `organizations` and `school_name` are just strings
+      - these are denormalized: many people may have worked at the same company, but there is no ID linking them
+  - it is worth considering whether the organization and school name should be entities instead, and the profile should reference their IDs
+    - the same arguments for referencing the ID of a region also apply here
+- **general principle**
+  - normalized data is
+    - faster to write (since there is only one copy)
+    - slower to query (since it requires joins)
+  - denormalized data is usually
+    - faster to read (fewer joins)
+    - more expensive to write (more copies to update, more disk space used)
+  - additional consideration
+    - need to consider the consistency of the database if a process crashes halfway through making its updates
+- normalization form vs. type of system
+  - normalization tends to be better for **OLTP** systems
+    - where both reads and updates need to be fast
+  - **analytical system** often fare better with denormalized data
+    - since they perform updates in bulk
+    - and the performance of read-only queries is the dominant concern
+  - **small to moderate scale**
+    - a normalized data model is often best because 
+      - you don't have to worry about keeping multiple copies of the data consistent with one another
+      - cost of performing joins is acceptable
+  - **very large-scale systems**
+    - cost of joins can become problematic
+
+---
+### Denormalization in the social networking case study
+
+Normalized representation vs. denormalized one
+- compare the two approaches to assemble the post timeline
+  - original joins between posts and follows were too expensive, and the materialized timeline is a cache of the result of the joins
+  - fan-out process that inserts a new post into followers' timelines was our way of keeping the denormalized representation consistent
+- actual implementation
+  - in the fan-out method, Twitter does not store the actual text of each post
+  - each entry stores only 
+    - the post ID
+    - the ID of the user who posted it
+    - a little bit of extra information to identify reposts and replies
+  - this means
+  - whenever the timeline is read, the service still needs to perform two joins
+    - it looks up the post ID to fetch the actal post content (as well as statistics such as the number of likes and replies)
+    - it looks up the sender's profile by ID (to get their username, profile picture, and other details)
+- **hydrating** — the process of looking up the human-readable information by ID
+
+Architectural choice
+- reason for storing only IDs in the precomputed timeline is that the data they refer to is fast-changing
+  - number of likes and replies may change multiple times per second on a popular post
+  - some users regularly change their username or profile photo
+- denormalizing this information into the materialized timeline would not make sense
+  - since the timeline should show the latest like count and profile picture when it is viewed
+  - and storage cost would be increased significantly by such denormalization
+- hydrating post and user IDs is actually a fairly easy **operation to scale**
+  - since it parallelizes well
+  - and the cost doesn't depend on the number of accounts you are following or the number of followers you have
