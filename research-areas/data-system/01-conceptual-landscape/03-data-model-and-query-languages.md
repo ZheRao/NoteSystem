@@ -182,3 +182,103 @@ Architectural choice
 - hydrating post and user IDs is actually a fairly easy **operation to scale**
   - since it parallelizes well
   - and the cost doesn't depend on the number of accounts you are following or the number of followers you have
+
+---
+### Many-to-One and Many-to-Many Relationships
+
+In the profile example
+- **positions** and **education** tables are examples of **one-to-many** relationship
+  - i.e., one resume has several positions, but each position belongs only to one resume
+- `region_id` field is an example of **many-to-one** relationship
+  - i.e., many people live in the same region, but we assume that each person lives in only one region at any one time
+- `organizations` is an example of `many-to-many` relationships
+  - i.e., one person may have worked for several organizations, and an organization has several past or present employee
+
+Data structure and querying
+- many-to-one and many-to-many relationships do not easily fit within one self-contained JSON document, they lend themselves more to a **normalized** representation
+- many-to-many relationships often need to be queried in **both directions**
+  - e.g., finding all the organizations that a particular person has worked for, and finding all the people who have worked at a particular organization
+  - one way of enabling such queries is to store ID references on both sides
+    - such that 
+      - a resume includes the ID of each organization where the person has worked
+      - the organization document includes the IDs of the resumes that mention that organization
+    - this presentation is **denormalized**, since the relationship is stored in two places, which could become inconsistent with each other
+- a normalized representation stores the relationship in only one place and relies on **secondary indexes**
+  - allow the relationship to be efficiently queried in both directions
+
+---
+### Stars and Snowflakes: Schemas for Analytics
+
+Widely used conventions for structure of tables in a data warehouse
+- star schema
+- snowflake schema
+- dimensional modeling
+- one big table (OBT)
+
+Star schema
+- structure
+  - at the center of the schema is **fact table**
+    - each row of the fact table represents an event that occurred at a particular time
+      - it allows maximum flexibility of analysis later
+      - but it can become extremely large
+  - some columns in the fact table are **attributes**, such as the price at which the product was sold and the cost of buying it from the supplier
+  - other columns in the fact table are foreign-key references to other tables, called **dimension tables**
+    - dimensions represent the *who, what, where, when, how,* and *why* of the event
+    - queries often involve multiple joins to multiple dimension tables
+    - even date and time are often represented using dimension tables
+      - allows additional information about dates (e.g., public holiday) to be encoded
+      - enabling queries to differentiate between sales on holidays and non-holidays
+
+Snowflake schema
+- when dimensions of star schema are further broken into subdimensions
+  - e.g., there could be separate tables for brands and product categories, 
+  - and each row in the `dim_product` table could reference the brand and category as foreign keys, rather than strings in the `dim_product` table
+- is more normalized than star schema, but star schemas are often preferred because they are simpler for analysts to work with
+
+One big table (OBT)
+- motivation
+  - star or snowflake schema consists mostly of many-to-one relationships
+    - e.g., many sales occur for one particular product, in one particular store
+  - in principle, other relationship types could exist, but they are often denormalized to simplify queries
+    - e.g., if a customer buys several different products at once, that multi-item transaction is not represented explicitly
+    - instead, the fact table has a separate row for each product purchased, and those facts all just happen to have the same customer ID, store ID, and timestamp
+- some data warehouse schemas take denormalization even further and leave out the dimension tables entirely
+  - folding the information in the dimensions into denormalized columns in the fact table instead
+  - essentially, precomputing the join between the fact table and the dimension tables
+  - this approach is known as **one big table** (OBT)
+- trade-off
+  - it requres more storage space, it sometimes enables faster queries
+  - in **analytics**, denormalization is unproblematic, since the data typically represents a log of historical data that is not going to change
+  - the issue of consistency and write overheads that occur with denormalization in **OLTP** systems are not as pressing in analytics
+
+---
+### When to Use Which Model
+
+Quick Overview
+- document data model
+  - schema flexibility
+  - better performance due to locality
+  - closer to the object model for some applications
+- relational model
+  - better support for joins and many-to-one and many-to-many relationships
+
+Document model
+- preferred when data in the application has a document-like structure
+  - i.e., a try of one-to-many relationships
+  - where typically the entire tree is loaded at once
+- relational technique of **shredding** can lead to cumbersome schemas and unnecessarily complicated application code
+  - shredding: splitting a document-like structure into multiple tables
+- limitations
+  - cannot refer directly to a nested item within a document
+    - instead, you need to say something like, "the second item in the list of positions for user 251"
+    - if you need to reference nested items, a relational approach works better, since you can refer to any item directly by its ID
+- additional advantage
+  - some applications allow the user to choose the order of items (e.g., to-do list)
+  - document model supports such application well
+    - because the items (or their IDs) can simply be stored in a JSON array to determine their order
+  - in relational databases, there isn't a standard way of representing such reorderable lists various tricks are used, such as 
+    - sorting by an integer column (requiring renumbering when you insert into the middle)
+    - maintaining a linked list of IDs
+    - using fractional indexing
+
+Schema flexibility in the document model
