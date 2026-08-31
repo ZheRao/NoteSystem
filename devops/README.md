@@ -215,7 +215,7 @@ These are:
 ### frontend
 * [00-intro-JS-HTML](./references/frontend/00-intro.md)
 * [01-SQL](./references/frontend/01-sql.md)
-* [02-SQLite](./references/frontend/02-sqlite.md)
+* [02-SQLite-and-FastAPI](./references/frontend/02-sqlite-fastapi.md)
 
 ### Git
 
