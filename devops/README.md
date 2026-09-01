@@ -105,7 +105,8 @@ These documents explain:
 * [02-web-application-development](./foundations/mechanisms/beyond-infra/02-web-development.md)
 * **Serving Layer**
     * [01-SQLite](./foundations/mechanisms/beyond-infra/serving-layer/01-sqlite.md)
-    * [02-FastAPI](./foundations//mechanisms/beyond-infra/serving-layer/02-fastapi.md)
+    * [02-FastAPI-HighLevel](./foundations//mechanisms/beyond-infra/serving-layer/02-fastapi.md)
+    * [06-FastAPI-Details](./foundations/mechanisms/beyond-infra/serving-layer/06-fastapi-detail.md)
     * [03-build-serving-store](./foundations/mechanisms/beyond-infra/serving-layer/03-build-serving-store.md)
     * [04-serving-layer](./foundations/mechanisms/beyond-infra/serving-layer/04-serving-layer.md)
     * [05-additional-notes](./foundations//mechanisms/beyond-infra/serving-layer/05-appendix-notes.md)
