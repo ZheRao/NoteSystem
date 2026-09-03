@@ -281,4 +281,121 @@ Document model
     - maintaining a linked list of IDs
     - using fractional indexing
 
-Schema flexibility in the document model
+
+---
+### Schema flexibility in the document model
+
+shcema-on-read vs. schema-on-write
+- motivation
+  - most document databases, and the JSON support in relational databases, do not enforce any schema on the data in documents
+  - no schema means that
+    - arbitrary keys and values can be added to a document
+    - when reading, clients have no guarantees as to what fields the documents may contain
+- **schema-on-read**
+  - the structure of the data is implicit and interpreted only when the data is read
+  - code that reads the data from document databases usually assumes some kind of structure
+    - that is, there is an **implicit schema**, but it is not enforced by the database
+- **schema-on-write**
+  - the traditional approach of relational databases
+  - the schema is explicit and the database ensures that all data conforms to it when the data is written
+
+Difference between approaches
+- the difference is particularly noticeable when an application wants to change the format of its data
+- e.g., before: storing each uer's full name in one field; after: store the first name and last name separately
+  - document database
+    - just start writing new documents with the new fields and have code in the application that handles the case when old documents are read, for example
+        ```java
+        if (user && user.name && !user.first_name) {
+          // documents written before Dec 8, 2023 don't have first_name
+          user.first_name = user.name.split(" ")[0];
+        }
+        ```
+    - **downside**
+      - every part of application that reads from the database now needs to deal with documents in old formats
+  - relational databases
+    - would typically perform a **migration** along the lines of
+        ```sql
+        ALTER TABLE users ADD COLUMN first_name text DEFAULT NULL;
+        UPDATE users SET first_name = split_part(name, '', 1);  --PostgreSQL
+        UPDATE users SET first_name = substring_index(name, '', 1); --MySQL
+        ```
+    - adding a column with a default value is fast and unproblematic, even on large tables
+    - running the UPDATE statement is likely to be slow on a large table
+      - since every row needs to be rewritten
+      - and other schema operations (such as changing the datatype of a column) also typically require the entire table to be copied
+
+---
+### Data locality for reads and writes
+
+Trade-offs
+- fact: a document is usually stored as a single continuous string, encoded as JSON, XML, or a binary variant (e.g., MongoDB's BSON)
+- **locality advantageous** if application often needs to **access the entire document** (e.g., to render it on a web page)
+  - if data is **split across multiple tables** 
+    - multiple index lookups are required to retrieve it all
+    - may require more disk seeks and take more time
+  - locality advantage only applies if large parts of the document are needed at the same time
+    - i.e., database needs to load the entire document
+    - wasteful if only need to access a small part of a large document
+- **downside**: on **updates** to a document, the entire document usually needs to be rewritten
+  - it is generally recommended that you keep documents fairly small and avoid frequent small updates
+
+Storing related data together for locality outside of document model
+- Google's Spanner database offers the same locality properties in a relational data model
+  - by allowing the schema to declare that a table's rows should be interleaved (nested) within a parent table
+- Oracle allows the same thing, using a feature called **multi-table index cluster tables**
+- **wide-column** data model popularized by Google's Bigtable and used, for example, in HBase and Accumulo has **column families**
+  - which have a similar purpose of managing locality
+
+
+---
+### Query languages for documents
+
+Most relational databases are queried using **SQL**, but document databases are more varied
+- some only allow key-value access by primary key
+- others also offer secondary indexes to query for values inside documents
+- some provides rich query language
+
+Examples of query languages
+- XML databases are often queried using XQuery and XPath
+  - allows complex queries, including joins across multiple documents, and format results as XML
+- JSON Pointer and JSONPath provide an equivalent XPath for JSON
+- MongoDB's aggregation pipeline is an example of a query language for collections of JSON documents
+
+Example of query
+- scenario
+  - marine biologist adds an observation record to database every time sees animals in the ocean
+  - now wants to generate a report saying **how many sharks that have been sighted per month**
+- PostgreSQL
+    ```SQL
+    SELECT date_trunc('month', observation_timestamp) AS observation_month,
+      sum(num_animals) AS total_animals
+    FROM observations
+    WHERE family = 'Sharks'
+    GROUP BY observation_month;
+    ```
+- MongoDB's aggregation pipeline
+    ```js
+    db.observations.aggregate([
+      {$match: {family:"Sharks"}},
+      {$group: {
+        _id: {
+          year: {$year: "$observationTimestamp"},
+          month: {$month: "$observationTimestamp"}
+        },
+        totalAnimals: {$sum: "numAnimals"}
+      }}
+    ]);
+    ```
+
+---
+### Convergence of document and relational databases
+
+Document databases and relational databases started out as very different approaches to data management, but they have grown more similar over time
+- **relational databases** 
+  - added support for JSON types and query operators, 
+  - and the ability to index properties inside documents
+- some **document databases** 
+  - added support for joins, secondary indexes, and declarative query languages
+- relational-document hybrids are a powerful combination
+  - many document databases need relational-style references to other documents
+  - many relational databases have sections where schema flexibility is beneficial
