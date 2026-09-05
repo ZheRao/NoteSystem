@@ -399,3 +399,301 @@ Document databases and relational databases started out as very different approa
 - relational-document hybrids are a powerful combination
   - many document databases need relational-style references to other documents
   - many relational databases have sections where schema flexibility is beneficial
+
+
+## Graph-Like Data Models
+
+Motivation
+- **type of relationship** is an important distinguishing feature across data models
+  - **document model** is appropriate if 
+    - the application has mostly **one-to-many** relationships 
+    - and few other relationships between records
+  - **many-to-many**
+    - **relational model** can handle simple cases of those relationships
+    - but as the connections within data become more complex, it becomes more natural to start modeling that data **as a graph**
+
+Graph
+- consists of two kinds of objects
+  - **vertices** (also known as nodes or entities)
+  - **edges** (also known as relationships or arcs)
+- data model examples
+  - social graphs
+    - vertices are people, and edges indicate which people know each other
+  - the web graph
+    - vertices are web pages, and edges indicate HTML links to other pages
+  - road and rail networks
+    - vertices are junctions, and edges represent the roads or railway lines between them
+- examples of algorithms that can operate on these graphs
+  - map navigation apps search for the shortest path between two points in a road network
+  - PageRank can be used on the web graph to determine the popularity of a web page and thus its ranking in search results
+- representations
+  - **adjacency list** model
+    - each vertex stores the IDs of its neighbor vertices that are one edge away
+  - **adjacency matrix** model
+    - a 2D array in which each row and column corresponds to a vertex
+    - where the value is 0 when there is no edge between the row vertex and the column vertex and 1 when there is an edge
+- a powerful use of graphs is to **provide a consistent way of storing completely different types of objects in a single database**
+  - Facebook maintains a single graph with many types of vertices and edges
+    - vertices represent
+      - people
+      - locations
+      - events
+      - check-ins
+      - comments made by users
+    - edges indicate
+      - which people are friends with each other
+      - which check-in happened in which location
+      - who commented on which post
+      - who attended which event
+  - search engines use knowledge graphs to record facts about entities that often occur in search queries, such as organizations, people, and places
+    - this information is obtained by crawling and analyzing the text on websites
+    - some websites, such as Wikidata, also publish graph data in a structured form
+
+Structuring and querying data
+- data models
+  - **property graph model**
+  - **triple store model**
+- query languages for graphs
+  - **Cypher**
+  - **SPARQL**
+  - **Datalog**
+  - **GraphQL**
+  - plus SQL support for querying graphs
+
+Example used
+- two people are married and living in London
+  - each persona nd each location is represented as a vertex
+  - relationships between them are represented as edges
+
+
+![alt text](images/0302.png)
+
+
+---
+### Property Graphs
+
+Characteristics
+- each vertex consists of the following
+  - a unique identifier
+  - a label (string) to describe the type of object this vertex represents
+  - a set of outgoing edges
+  - a set of incoming edges
+  - a collection of properties (key-value pairs)
+- each edge consists of the following
+  - a unique identifier
+  - the vertex at which the edge starts (the *tail vertex*)
+  - the vertex at which the edge ends (the *head vertex*)
+  - a label to describe the kind of relationship between the two vertices
+  - a collection of properties (key-value pairs)
+
+Representation of property graph as a relational schema
+- a graph store can be thought of as consisting of **two relational tables**, one for **vertices** and one for **edges**
+  - the head and tail vertices are stored for each edge
+  - if you want the set of incoming or outgoing edges for a vertex, you can query the edges table by `head_vertex` or `tail_vertex`, respectively
+- example code  
+  ```sql
+  CREATE TABLE vertices (
+    vertex_id integer PRIMARY KEY,
+    label text,
+    properties jsonb
+  );
+  CREATE TABLE edges (
+    edge_id integer PRIMARY KEY,
+    tail_vertex integer REFERENCES vertices(vertex_id),
+    head_vertex integer REFERENCES vertices(vertex_id),
+    label text,
+    properties jsonb
+  )
+  CREATE INDEX edges_tails ON edges(tail_vertex);
+  CREATE INDEX edges_heads ON edges(head_vertex);
+  ```
+- important aspects
+  - any vertex can have an edge connecting it with any other vertex
+    - there is no schema that restricts which kinds of things can or cannot be associated
+  - given any vertex, you can efficiently find both its incoming and outgoing edges and thus **traverse** the graph both forward and backward
+  - by using different labels for different kinds of vertices and relationships, you can store several kinds of information in a single graph, while still maintaining a clean data model
+- the **edge table** is like the **many-to-many** associative, generalized to allow many types of relationship to be stored in the same table
+- there may also be indexes on the labels and the properties, allowing vertices or edges with certain properties to be found efficiently
+
+Difficulty to express in **traditional relational schema** such as
+- different kinds of regional structures in different countries
+  - e.g., France has `departments` and `regions`, whereas the US has `counties` and `states`
+- quirks of history such as a country within a country
+- varying granularity of data
+  - e.g., Lucy's current residence is specified as a city, whereas her place of birth is specified at only the level of a state
+
+Extending the graph to include many other facts, for example
+- indicate any food allergies they have
+  - by introducing a vertex for each allergen, and an edge between a person and an allergen to indicate an allergy
+- link the allergens with a set of vertices that show which foods contain which substances
+  - then you could write a query to find out what is safe for each person to eat
+- graphs are good for **evolvability**
+  - as you add features to your application, a graph can easily be extended to accommodate changes in the application's data structure
+
+
+---
+### The Cypher Query Language — for Property Graphs
+
+Example to **create**
+- insert the lefthand portion of the example into a graph database
+- structure
+  - each **vertex** is given a **symbolic name**, like usa or idaho
+    - that **name is not stored** in that database but used only internally within the query to create edges between the vertices
+  - edges are created using an **arrow notation** 
+    - `(tail_node) -[:LABEL]-> (head_node)`
+
+```js
+(namerica   :Location   {name: 'North America',   type: 'continent'}),
+(usa        :Location   {name: 'United States',   type: 'country'}),
+(idaho      :Location   {name: 'Idaho',           type: 'state'}),
+(lucy       :Person     {name: 'Lucy'}),
+(idaho) -[:WITHIN]-> (usa) -[:WITHIN]-> (namerica),
+(lucy) -[:BORN_IN]-> (idaho)
+```
+
+Example to **query**
+- to find people who emigrated from the US to Europe  
+```js
+MATCH
+(person) -[:BRON_IN]-> () -[:WITHIN*0..]-> (:Location {name: 'United States'}),
+(person) -[:LIVES_IN]-> () -[:WITHIN*0..]-> (:Location {name: 'Europe'})
+RETURN person.name
+```
+- the query can be read as follows
+  - find any vertex (call it person) that meets both of the following conditions
+    - person has an outgoing `BORN_IN` edge to a vertex
+      - from that vertex, you can follow a chain of outgoing `WITHIN` edges 
+      - until eventually you reach a vertex of type `Location`, whose name property is equal to `United States`
+    - that same person vertex also has an outgoing `LIVES_IN` edge
+      - following that edge, and then a chain of outgoing `WITHIN` edges
+      - you eventually reach a vertex of type `Location`, whose name property is equal to `Europe`
+  - for each such person vertex, return the name property
+
+Executing query
+- start by scanning all the people in the database
+  - examining each person's birthplace and residence
+  - returning only those people who meet the criteria
+- start with two `Location` vertices and work backward
+  - if there is an index on the name property, you can efficiently find the two vertices representing the US and Europe
+  - then you can proceed to find all lcoations (state, regions, cities, etc.) in the US and Europe by following all incoming `WITHIN` edges
+  - finally, you can look for people who can be found through an incoming `BORN_IN` or `LIVES_IN` edge at one of the location vertices
+
+
+---
+### Graph Queries in SQL
+
+Can we query using SQL if we put graph data in a relational structure?
+- Yes, but awkwardly
+  - every edge that you traverse in a graph query is effectively a join with the edge table
+  - and in a relational database, you usually know in advance which joins you need in your query
+  - but in a graph query, you may beed to traverse a veriable number of edges before you find the vertex you are looking for
+    - that is, the number of joins is not fixed in advance
+    - e.g., in the previous example, a person's `LIVES_IN` edge may point to any kind of location, such as a street, a city, ...
+      - a city may be `WITHIN` a region, a region `WITHIN` a state, a state `WITHIN` a country and so on
+    - in Cypher, `:WITHIN*0` means "following a WITHIN edge, zero or more times"
+- the idea of variable-length traversal paths in a query can be expressed using **recursive common table expressions** (the `WITH RECURSIVE` syntax)
+  - but the syntax is very clumsy in comparison to Cypher
+- the fact that 4-line Cypher query requires 31 lines in SQL show how much of a difference **choice of data and query language** can make
+  - there are more details to consider, for example, around handling cycles and choosing between breadth-first or depth-first traversal
+
+---
+### Triple Stores and SPARQL
+
+Structure
+- triple store model is mostly equivalent to the property graph model, using different words to describe the same ideas
+- all information is stored in the form of very simple **three-part statements: (*subject*, *predicate*, *object*)**
+  - e.g., in the triple (*Jim*, *likes*, *bananas*), *Jim* is the subject, *likes* is the predicate (verb), and *bananas* is the object
+- the **subject** of a triple is equivalent to a **vertex** in a graph
+- the **object** is one of the two things
+  - a value of a **primitive datatype**
+    - **predicate** and **object** of the triple are equivalent to the **key** and **value** of a property on the subject vertex
+    - e.g., `(lucy, brithYear, 1989)` is like a vertex `lucy` with properties `{"birthYear": 1989}`
+  - another **vertex** in the graph
+    - the **predicate** is an **edge** in the graph
+    - the **subject** is the **tail** vertex
+    - the **object** is the **head** vertex
+    - e.g., `(lucy, marriedTo, alain)`
+
+Example data represented as **Turtle triples**  
+```
+@prefix: <urn:example:>.
+_:lucy      a         :Person.
+_:lucy      :name     "Lucy".
+_:lucy      :bornIn   _:idaho.
+_:idaho     a         :Location.
+_:idaho     :name     "Idaho".
+_:idaho     :type     "state".
+_:idaho     :within   _:usa.
+_:usa       a         :Location.
+_:usa       :name     "United States".
+_:usa       :type     "country".
+_:usa       :within   _:namerica.
+_:namerica  a         :Location.
+_:namerica  :name     "North America".
+_:namerica  :type     "continent".
+```
+
+Structure
+- **vertices** of the graph are written as `_:someName`
+  - the name doesn't mean anything outside of this file
+  - it exists only because we otherwise wouldn't know which triples refer to the same vertex
+- when **predicate** represents an **edge**, the **object** is a **vertex**
+  - e.g., `_:idaho  :within   _:usa`
+- when **predicate** is a **property**, the **object** is a string literal
+  - e.g., `_:usa  :name   'United States'`
+
+More compact representation
+- use semicolons to say multiple things about the same subject, e.g.
+- `_:lucy   a :Person;    :name 'Lucy';   :bornIn _:idaho`
+
+
+---
+### The RDF data model
+
+**Resource Description Framework**(RDF)
+- the Turtle language is actually a way of encoding data in the RDF
+- RDF is a data model that was designed for the Semantic Web
+- RDF can also be encoded in other ways, including (more verbosely) XML, as example below  
+```xml
+<rdf:RDF xmlns="urn:example:"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+  <Location rdf:nodeID="idaho">
+    <name>Idaho</name>
+    <type>state</type>
+    <within>
+      <Location rdf:nodeID="usa">
+        <name>United States</name>
+        <type>country</type>
+        <within>
+          <Location rdf:nodeID="namerica">
+            <name>North America</name>
+            <type>continent</type>
+          </Location>
+        </within>
+      </Location>
+    </within>
+  </Location>
+
+  <Person rdf:nodeID="lucy">
+    <name>Lucy</name>
+    <bornIn rdf:nodeID="idaho"/>
+  </Person>
+
+</rdf:RDF>
+```
+
+RDF has a few **quirks** because it is designed for internet-wide data exchange
+- the subject, predicate, and object of a triple are often **URI**s
+  - e.g., a predicate might be a URI such as `<http://my-company.com/namespace#within>` or `<http://my-company.com/namespace#lives_in>` rather than `WITHIN` or `LIVES_IN`
+- rational 
+  - you should be able to combine your data with someone else's data
+  - if they attach a different meaning to the word `within` or `livles_in`, you won't get a compflict because their predicates are actually `<http://other.org/foo#within>`
+- the URL doesn't necessarily need to resolve to anything
+  - from RDF's point of view, it is simply a namespace
+  - to avoid potential confusion with `http://URLs`, examples will use nonresolvable URIs such as `urn:example:within`
+
+
+---
+### The SPARQL query language
+
