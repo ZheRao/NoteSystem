@@ -110,6 +110,7 @@ These documents explain:
     * [03-build-serving-store](./foundations/mechanisms/beyond-infra/serving-layer/03-build-serving-store.md)
     * [04-serving-layer](./foundations/mechanisms/beyond-infra/serving-layer/04-serving-layer.md)
     * [05-additional-notes](./foundations//mechanisms/beyond-infra/serving-layer/05-appendix-notes.md)
+    * [07-Transactions-Locking-Concurrency](./foundations/mechanisms/beyond-infra/serving-layer/07-transactions-locking-concurrency.md)
 * **Frontend**
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
     * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
