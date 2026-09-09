@@ -215,6 +215,33 @@ sqlite3.paramstyle            # 'qmark'
 
 `sqlite3.sqlite_version` is what you check against feature thresholds (window functions ≥ 3.25, upsert ≥ 3.24, `RETURNING` ≥ 3.35, `STRICT` ≥ 3.37, `FULL JOIN` ≥ 3.39). The old `sqlite3.version` was the module's own version, was always misleading, and was removed in Python 3.14.
 
+### Initialize db with `journal_mode`
+
+```python
+import sqlite3
+
+CONFIG_DB_PATH = '../test.db'
+
+def initialize_database():
+    conn = sqlite3.connect(CONFIG_DB_PATH)
+    conn.execute("PRAGMA journal_mode = WAL")
+
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS clients(
+            client_id INTEGER PRIMARY KEY,
+            client_name TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            created_by TEXT NOT NULL
+        )
+        """
+    )
+
+    conn.commit()
+    conn.close()
+    print("Client table with client id/name, created at/by columns created successfully\n")
+```
+
 ### Invariants
 
 1. `with conn:` manages the transaction. `closing(conn)` or `conn.close()` manages the resource. They are different jobs.
