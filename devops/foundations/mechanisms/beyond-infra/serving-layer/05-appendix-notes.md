@@ -1648,6 +1648,252 @@ which exits the `with` block, causing the connection cleanup.
 
 This is simplified, but it captures the mechanism.
 
+
+---
+
+## Why do you need inner and outer layers?
+
+Yes — **you absolutely can do that**, and your reasoning is mostly right. The key is to distinguish two completely different meanings of `with` that are getting mixed together.
+
+When you write:
+
+```python
+with conn:
+    ...
+```
+
+using a raw `sqlite3.Connection`, Python's SQLite context-manager behavior manages the **transaction**: commit on success, rollback on exception. It **does not close the connection** afterward.
+
+But your code:
+
+```python
+@contextmanager
+def connect_write():
+    conn = init_connect()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        yield conn
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
+```
+
+isn't relying on `sqlite3.Connection.__enter__()` at all. You created **your own context manager**, and *your* `finally` closes the connection.
+
+So if this function exists specifically as a FastAPI dependency, you could indeed remove `@contextmanager`:
+
+```python
+def get_write_db() -> Iterator[sqlite3.Connection]:
+    conn = init_connect()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        yield conn
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
+```
+
+and then:
+
+```python
+@app.post("/clients")
+def create_client(
+    conn: sqlite3.Connection = Depends(get_write_db),
+):
+    ...
+```
+
+FastAPI understands `yield` dependencies. Conceptually it does:
+
+```text
+request arrives
+
+get_write_db()
+    ↓
+open connection
+BEGIN IMMEDIATE
+    ↓
+yield conn
+    ↓
+endpoint runs
+    ↓
+resume dependency
+    ↓
+COMMIT
+    ↓
+close
+```
+
+If the endpoint raises:
+
+```text
+endpoint raises
+    ↓
+dependency resumes with exception
+    ↓
+ROLLBACK
+    ↓
+close
+```
+
+So **for a FastAPI-only database layer, this is arguably simpler.**
+
+You could have:
+
+```python
+def get_write_db() -> Iterator[sqlite3.Connection]:
+    conn = init_connect()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        yield conn
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
+
+
+def get_read_db() -> Iterator[sqlite3.Connection]:
+    conn = init_connect()
+    try:
+        yield conn
+    finally:
+        conn.close()
+```
+
+and that's completely coherent.
+
+The only reason I would preserve `connect_write()` as a `@contextmanager` is if you want this transaction abstraction to exist **independently of FastAPI**.
+
+For example:
+
+```python
+def some_background_script():
+    with connect_write() as conn:
+        conn.execute(...)
+```
+
+or a test:
+
+```python
+def test_something():
+    with connect_write() as conn:
+        ...
+```
+
+or perhaps later some service code that isn't running inside an HTTP request.
+
+Then having:
+
+```python
+connect_write()   # generic Python API
+get_write_db()    # FastAPI adapter
+```
+
+makes sense.
+
+But if your thought is:
+
+> "Right now this SQLite connection module exists to provide connections to my FastAPI CRUD endpoints. Why am I creating a generic context-manager abstraction that I don't otherwise need?"
+
+Then I agree with you: **you don't need both yet.**
+
+In fact, I think I'd simplify your current version to this:
+
+```python
+"""
+SQLite connection management.
+"""
+
+import sqlite3
+from typing import Iterator
+
+CONFIG_DB_PATH = "../test.db"
+
+
+def init_connect() -> sqlite3.Connection:
+    conn = sqlite3.connect(
+        CONFIG_DB_PATH,
+        isolation_level=None,
+    )
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 5000")
+    return conn
+
+
+def get_write_db() -> Iterator[sqlite3.Connection]:
+    conn = init_connect()
+
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        yield conn
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
+
+
+def get_read_db() -> Iterator[sqlite3.Connection]:
+    conn = init_connect()
+
+    try:
+        yield conn
+    finally:
+        conn.close()
+```
+
+There's actually a deeper point in what you noticed.
+
+The purpose of `@contextmanager` is **not specifically "automatic commit."** It means:
+
+> I have a resource with setup → use → cleanup semantics, and I want ordinary Python callers to express that through `with`.
+
+FastAPI's `yield` dependency mechanism already gives you a framework-managed version of the same lifecycle:
+
+```text
+             generic Python                FastAPI
+
+setup        before yield                  before yield
+              ↓                             ↓
+use          inside `with`                 endpoint executes
+              ↓                             ↓
+cleanup      after yield                   after endpoint
+```
+
+So wrapping one lifecycle abstraction inside another:
+
+```python
+def get_write_db():
+    with connect_write() as conn:
+        yield conn
+```
+
+is useful **only if you actually value `connect_write()` as an independent abstraction**.
+
+Otherwise it is indeed one layer too many.
+
+And you caught an important SQLite-specific detail too: **`with sqlite_connection:` is transaction management, not connection lifecycle management.** That is precisely why code such as:
+
+```python
+with sqlite3.connect(...) as conn:
+    ...
+```
+
+can be misleading if someone assumes exiting the block closes the connection. It doesn't. Your `finally: conn.close()` is what gives you that guarantee.
+
+So given where Strata is today, I would actually favor your simplification: **`init_connect()` + `get_read_db()` + `get_write_db()`**, and introduce generic `@contextmanager` functions later only if a real non-FastAPI caller appears. That follows the same principle you've been applying elsewhere: don't create abstraction layers merely because they might someday be useful.
+
+
 ---
 
 ## What happens if the route raises?
