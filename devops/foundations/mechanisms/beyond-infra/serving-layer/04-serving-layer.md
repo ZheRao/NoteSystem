@@ -1791,70 +1791,56 @@ Always clear the overrides in a `finally` — `dependency_overrides` is module-l
 ## `store.py`
 
 ```py
-"""
-src.growlytics_platform.serving_system.serve.store — the read-only door to the store.
-
-The build-time loader is the single writer (Invariant 3). Everything on the
-request path goes through here, and here we open SQLite in read-only URI mode so
-the API *cannot* mutate the store even by accident. One short-lived connection
-is handed to each request via the FastAPI dependency and closed when the request
-ends.
 
 """
-
-from __future__ import annotations
+Create SQLite connections
+"""
 
 import sqlite3
-from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import Iterator
 
-from growlytics_platform.serving_system.utils import config
+CONFIG_DB_PATH = '../test.db'
 
 
-def _open_readonly() -> sqlite3.Connection:
-    """Open the store read-only. Raises if the store file does not exist yet
-    (i.e. the loader has not been run)."""
-    if not config.STORE_PATH.exists():
-        raise FileNotFoundError(
-            f"Store not found at {config.STORE_PATH}. "
-            f"Run `python build/build_serving_store.py` first."
-        )
-    # The URI form lets us request read-only mode explicitly.
-    conn = sqlite3.connect(f"file:{config.STORE_PATH}?mode=ro", uri=True, check_same_thread=False)
-    # Rows come back as mapping-friendly objects if used directly; queries.py
-    # does not rely on this, but it is good hygiene.
+def init_connect() -> sqlite3.Connection:
+    conn = sqlite3.connect(
+        CONFIG_DB_PATH,
+        isolation_level=None,
+    )
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
 
 
 @contextmanager
-def connect() -> Iterator[sqlite3.Connection]:
-    """For scripts and the queries.py smoke test:
+def connect_write() -> Iterator[sqlite3.Connection]:
+    conn = init_connect()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        yield conn
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
 
-        with store.connect() as conn:
-            rows = queries.level0_monthly(conn, orch)
-
-    Opens one read-only connection and guarantees it is closed.
-    """
-    conn = _open_readonly()
+@contextmanager
+def connect_read() -> Iterator[sqlite3.Connection]:
+    conn = init_connect()
     try:
         yield conn
     finally:
         conn.close()
 
+def get_write_db() -> Iterator[sqlite3.Connection]:
+    with connect_write() as conn:
+        yield conn
 
-def get_db() -> Iterator[sqlite3.Connection]:
-    """FastAPI dependency. FastAPI calls this once per request, injects the
-    yielded connection into the route, then runs the cleanup after the response
-    is sent:
-
-        @app.get(...)
-        def route(conn: sqlite3.Connection = Depends(store.get_conn)):
-            ...
-
-    It simply delegates to connect(), so both entry points share one lifecycle.
-    """
-    with connect() as conn:
+def get_read_db() -> Iterator[sqlite3.Connection]:
+    with connect_read() as conn:
         yield conn
 
 ```
