@@ -218,6 +218,7 @@ These are:
 * [00-intro-JS-HTML](./references/frontend/00-intro.md)
 * [01-SQL](./references/frontend/01-sql.md)
 * [02-SQLite-and-FastAPI](./references/frontend/02-sqlite-fastapi.md)
+* [03-serving-code-blocks](./references/frontend/03-serving-layer-codeblocks.md)
 
 ### Git
 
