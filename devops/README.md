@@ -143,6 +143,7 @@ Focuses on:
 
 #### Cloud Migration
 * [01-path-and-config](./foundations/principles/cloud-migration/01-path-config.md)
+* [02-from-Manual-Pipeline-to-Automated-Deployment](./foundations/principles/cloud-migration/02-manual-pipeline-to-automated-deployment.md)
 
 #### Consumer Facing
 
