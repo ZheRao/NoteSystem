@@ -1493,3 +1493,351 @@ Each entry: the symptom, the cause, the fix. Add to this as you hit them.
 - Range types and exclusion constraints for temporal validity
 - SQL:2011 system-versioned tables and how to emulate them
 - Isolation-level anomalies worked through with concrete interleavings
+
+
+# SQL Triggers — A Reference
+
+A trigger is a stored procedure the database executes automatically in response to a data-modifying statement. Nothing in the application calls it; the database engine invokes it as part of executing the triggering statement.
+
+The defining property, and the source of both its power and its problems: **triggers are invisible at the call site.** An `INSERT` that fires three triggers looks identical to one that fires none. Everything below follows from that.
+
+---
+
+## Part 1 — The Mental Model
+
+### 1.1 Triggers as an event-driven layer inside the database
+
+If you have built ETL pipelines, the closest analogy is a change-data-capture consumer: something watches a table for mutations and reacts. The difference is placement. A CDC consumer runs *outside* the database, asynchronously, after the fact, and can fail independently. A trigger runs *inside* the database, synchronously, in the same transaction as the statement that fired it.
+
+That distinction produces the central invariant:
+
+> **A trigger and its triggering statement succeed together or fail together.**
+
+There is no state in which the `INSERT` committed but the trigger did not. If the trigger raises an error, the statement is rolled back. If the transaction rolls back later for an unrelated reason, the trigger's writes roll back too. This is why triggers are the standard mechanism for maintaining invariants that *must* hold — and why they are a poor mechanism for side effects that are allowed to fail, like sending email.
+
+### 1.2 The three axes
+
+Every trigger definition is a point in a three-dimensional space. Understanding a trigger means locating it on all three axes.
+
+| Axis | Options | Question it answers |
+|---|---|---|
+| **Timing** | `BEFORE`, `AFTER`, `INSTEAD OF` | When, relative to the row change? |
+| **Event** | `INSERT`, `UPDATE`, `DELETE` | What kind of change? |
+| **Granularity** | `FOR EACH ROW`, `FOR EACH STATEMENT` | How many times does it fire? |
+
+Plus an optional fourth: a `WHEN` condition narrowing which rows or statements qualify.
+
+### 1.3 Timing, precisely
+
+**`BEFORE`** fires before the row is written. The row does not yet exist in its new form. This is where you go to:
+
+- **Reject** a statement — raise an error and nothing is written.
+- **Modify** the incoming row — in dialects that permit it, assigning to the new-row pseudo-record changes what actually gets stored (normalizing case, stamping a timestamp, computing a derived column).
+
+**`AFTER`** fires once the row change is applied but before the transaction commits. The new row exists and is visible to the trigger body. This is where you go to:
+
+- **React** to a change that has already been validated — writing an audit row, updating a denormalized aggregate elsewhere.
+- Reference a generated key. An auto-generated primary key does not exist yet in `BEFORE`; it does in `AFTER`. **This is the single most common reason an audit trigger must be `AFTER` rather than `BEFORE`.**
+
+**`INSTEAD OF`** replaces the statement entirely — the original write never happens; only the trigger body runs. Its canonical use is making a view writable: the view has no storage of its own, so an `INSTEAD OF INSERT` trigger translates the insert into writes against the underlying base tables. Most dialects permit `INSTEAD OF` only on views, not tables.
+
+A useful summary invariant:
+
+> **`BEFORE` decides what gets written. `AFTER` responds to what was written. `INSTEAD OF` substitutes for writing.**
+
+### 1.4 Granularity, and why it is a correctness issue
+
+A **row-level** trigger fires once per affected row. `UPDATE clients SET active = 0` against 5,000 rows fires it 5,000 times.
+
+A **statement-level** trigger fires once per statement, regardless of row count — including **zero** rows. `DELETE FROM clients WHERE 1 = 0` fires a statement-level trigger once and a row-level trigger not at all.
+
+Row-level is what you want for anything that records or reacts to individual row values, which includes essentially all audit work. Statement-level is for coarse concerns: refreshing a summary table once after a bulk load, logging that a maintenance operation occurred.
+
+The trap is performance. Row-level triggers containing an `INSERT` turn a single-statement bulk update into N+1 statements. A bulk load into a table with a row-level audit trigger can run an order of magnitude slower than the same load into an untriggered table, and the cost is invisible in the query being run. This is the most common way triggers surprise people in production.
+
+### 1.5 `OLD` and `NEW` — the row pseudo-records
+
+Inside a row-level trigger body, two pseudo-records expose the row's before and after state.
+
+| | `OLD` | `NEW` |
+|---|---|---|
+| `INSERT` | not available | the incoming row |
+| `UPDATE` | the row as it was | the row as it will be / now is |
+| `DELETE` | the row being removed | not available |
+
+Referencing an unavailable pseudo-record is an error, which is why a trigger declared for multiple events must branch on which event fired before touching `OLD` or `NEW`.
+
+Whether `NEW` is *assignable* is timing-dependent and the rule is worth memorizing:
+
+> **Assigning to `NEW` is meaningful only in a `BEFORE` trigger.** In an `AFTER` trigger the row is already written; assignment is either an error or silently discarded, depending on dialect.
+
+Naming is not universal: SQL Server exposes changes as **tables** named `INSERTED` and `DELETED` rather than per-row records, a difference significant enough that it changes how you write the trigger (see Part 4).
+
+### 1.6 The `WHEN` condition
+
+A predicate that gates whether the body runs at all:
+
+```sql
+CREATE TRIGGER log_credit_limit_change
+AFTER UPDATE ON clients
+FOR EACH ROW
+WHEN (OLD.credit_limit IS DISTINCT FROM NEW.credit_limit)
+BEGIN
+    ...
+END;
+```
+
+`IS DISTINCT FROM` rather than `<>` is deliberate: `<>` evaluates to unknown when either side is `NULL`, so a change from `NULL` to `5000` would *not* fire the trigger. `IS DISTINCT FROM` is the null-safe comparison and treats `NULL` as a value. This is the single most common bug in change-detection triggers.
+
+Filtering in `WHEN` rather than with an `IF` inside the body is generally faster, since the engine can skip invoking the body at all.
+
+---
+
+## Part 2 — Syntax
+
+### 2.1 Canonical form
+
+The SQL standard shape, which most dialects approximate:
+
+```sql
+CREATE TRIGGER trigger_name
+    { BEFORE | AFTER | INSTEAD OF } { INSERT | UPDATE | DELETE }
+    ON table_name
+    [ REFERENCING OLD AS o NEW AS n ]
+    [ FOR EACH { ROW | STATEMENT } ]
+    [ WHEN ( condition ) ]
+    body;
+```
+
+`FOR EACH STATEMENT` is the standard default. Several dialects default the other way or require the clause explicitly, so **state it rather than relying on the default** — this is a portability hazard where the wrong choice is silently accepted.
+
+### 2.2 Narrowing an UPDATE to specific columns
+
+```sql
+CREATE TRIGGER trigger_name
+AFTER UPDATE OF credit_limit, payment_terms ON clients
+FOR EACH ROW
+...
+```
+
+`UPDATE OF <columns>` restricts firing to statements that *mention* those columns in the `SET` clause. Note the semantics carefully:
+
+> **`UPDATE OF` tests whether the column was assigned, not whether its value changed.** `SET credit_limit = credit_limit` fires it.
+
+To test for actual change, combine `UPDATE OF` with a `WHEN` clause using `IS DISTINCT FROM`.
+
+### 2.3 Multiple events in one trigger
+
+```sql
+CREATE TRIGGER audit_clients
+AFTER INSERT OR UPDATE OR DELETE ON clients
+FOR EACH ROW
+...
+```
+
+The body must then determine which event fired before dereferencing `OLD` or `NEW`. Standard SQL provides no predicate for this; each dialect supplies its own (`TG_OP`, `INSERTING`/`UPDATING`/`DELETING`, or inspecting which pseudo-tables are populated). Not all dialects support combining events at all.
+
+### 2.4 Raising an error
+
+Aborting the statement from within a trigger is how you enforce a constraint that `CHECK` cannot express. The mechanism is entirely dialect-specific — `RAISE`, `SIGNAL SQLSTATE`, `THROW`, `RAISERROR`, `RAISE_APPLICATION_ERROR` — but the semantics are consistent: the error propagates to the client and the triggering statement is rolled back.
+
+### 2.5 Removing and replacing
+
+```sql
+DROP TRIGGER trigger_name;                    -- some dialects: ON table_name
+DROP TRIGGER IF EXISTS trigger_name;
+```
+
+`ALTER TRIGGER` exists in some dialects but usually only for enabling, disabling, or renaming — not for editing the body. **The portable way to change a trigger is drop and recreate**, which for a live system means a window in which the trigger is not enforcing its invariant. Wrap both statements in a transaction where DDL is transactional.
+
+---
+
+## Part 3 — Canonical Use Cases
+
+### 3.1 Audit trails
+
+The archetypal trigger application: on every change to a table, write a row to an audit table recording the old and new state, who made the change, and when.
+
+```sql
+CREATE TRIGGER clients_audit_update
+AFTER UPDATE ON clients
+FOR EACH ROW
+WHEN (OLD.client_name IS DISTINCT FROM NEW.client_name)
+BEGIN
+    INSERT INTO audit_log (table_name, row_id, operation,
+                           col_changed, old_value, new_value, changed_at)
+    VALUES ('clients', NEW.client_id, 'update',
+            'client_name', OLD.client_name, NEW.client_name, CURRENT_TIMESTAMP);
+END;
+```
+
+`AFTER` because the audit row should record what was actually written, and because on `INSERT` the generated key only exists post-write.
+
+**The limitation that decides most real designs:** a trigger sees the row, not the session that changed it. There is no standard way to learn *which user* issued the statement. `CURRENT_USER` returns the database role, which in a connection-pooled application is a single service account identical for every request — not the human you want to attribute the change to.
+
+The workarounds are all dialect-specific: session-scoped variables set by the application before the write, a context object the trigger reads, or a `modified_by` column on the base table that the application populates and the trigger copies out. All of them mean the application is participating anyway.
+
+> **If the audit must record *who*, the application already has to cooperate, and the trigger's main advantage — being impossible to bypass — is substantially weakened.** Application-level audit writing is often the more honest design in that case.
+
+Triggers retain a genuine edge where changes arrive from outside the application: manual DBA fixes, migration scripts, bulk loads, a second service writing to the same schema. A trigger catches those; application code does not.
+
+### 3.2 Enforcing immutability (append-only tables)
+
+A trigger that unconditionally raises on `UPDATE` and `DELETE` makes a table append-only:
+
+```sql
+CREATE TRIGGER audit_log_no_update
+BEFORE UPDATE ON audit_log
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'audit_log is append-only')
+END;
+```
+
+Note that `INSERT` is deliberately *not* guarded — inserts are how the table is populated. Guard `DELETE` with a second, parallel trigger.
+
+This is a case where a trigger is unambiguously the right tool, precisely because the actor problem from §3.1 does not arise: the rule needs no knowledge of who is acting.
+
+Scope it honestly. Anyone able to execute DDL can `DROP TRIGGER` and proceed. This is protection against **accident** — a mistyped table name in an `UPDATE`, a well-meaning manual correction — not against a determined actor. Accident is usually the realistic threat, and the trigger costs nothing.
+
+A consequence worth planning for: the table can no longer be pruned. Archiving old rows requires dropping the trigger, running the deletion, and recreating it — which is now a deliberate, auditable act rather than something that can happen by accident. That is the point, but it means retention needs a plan rather than a `DELETE`.
+
+### 3.3 Derived and denormalized values
+
+Maintaining a `last_modified` timestamp, a computed total, or a cached count in a parent table:
+
+```sql
+CREATE TRIGGER clients_touch
+BEFORE UPDATE ON clients
+FOR EACH ROW
+BEGIN
+    SET NEW.last_modified = CURRENT_TIMESTAMP;
+END;
+```
+
+`BEFORE`, because it modifies the row being written rather than reacting to it.
+
+Prefer a **generated/computed column** where the dialect supports one and the value depends only on other columns in the same row. Generated columns are declarative, visible in the schema, and cannot be bypassed. Reach for a trigger only when the derivation crosses rows or tables.
+
+Cross-table denormalization (`AFTER INSERT ON order_lines` → `UPDATE orders SET total = ...`) is the case triggers genuinely handle well, since the invariant holds transactionally. It is also where deadlocks appear under concurrency, since every child write now locks the parent row.
+
+### 3.4 Validation beyond CHECK constraints
+
+`CHECK` constraints are limited to a single row and, in most dialects, cannot execute queries. Cross-row and cross-table rules — "an account cannot be closed while it has open orders" — need a trigger.
+
+Weigh this against a foreign key, a unique index, or an exclusion constraint first. Declarative constraints are visible to the query planner, self-documenting in the schema, and cannot be accidentally dropped without notice. **Use a trigger for validation only when the rule genuinely cannot be expressed declaratively.**
+
+### 3.5 Making views writable
+
+`INSTEAD OF INSERT` / `UPDATE` / `DELETE` on a view translates writes against the view into writes against base tables. This is the one use case with no alternative implementation — it is what `INSTEAD OF` exists for.
+
+A related pattern: replacing physical deletion with a soft delete, so `DELETE FROM active_clients` becomes `UPDATE clients SET deleted_at = CURRENT_TIMESTAMP`.
+
+---
+
+## Part 4 — Where Dialects Diverge
+
+Triggers are among the **least portable** parts of SQL. The three-axis model transfers; almost no syntax does.
+
+| Concern | Variation across major dialects |
+|---|---|
+| **Body language** | Some dialects inline the body in the `CREATE TRIGGER` statement. PostgreSQL does not: you define a separate function returning a trigger type and the trigger merely names it. Oracle and MySQL use their own procedural languages. Bodies are effectively never portable. |
+| **Change exposure** | Row-level `OLD`/`NEW` records in most dialects. SQL Server instead exposes `INSERTED` and `DELETED` **tables** — set-based, not per-row — and has no row-level triggers at all. A SQL Server trigger must be written to handle multiple rows correctly; one written as though it fires per row is a well-known source of silent data corruption on bulk operations. |
+| **Granularity** | `FOR EACH ROW` vs `FOR EACH STATEMENT` support and defaults differ. SQLite supports only row-level; SQL Server only statement-level. |
+| **Multiple events** | `INSERT OR UPDATE OR DELETE` in one trigger is supported by some, rejected by others. |
+| **Firing order** | With several triggers on the same table and event, order is undefined by the standard. Some dialects order alphabetically by name, some allow explicit ordering, some leave it unspecified. **Never depend on order without an explicit mechanism.** |
+| **Raising errors** | `RAISE`, `SIGNAL SQLSTATE`, `THROW`, `RAISERROR`, `RAISE_APPLICATION_ERROR` — all different. |
+| **Recursion** | Whether a trigger's own writes fire further triggers is configurable in some dialects and fixed in others, with differing defaults. |
+| **Bulk-load bypass** | Some bulk-import paths skip triggers by default or by option. If a trigger maintains an invariant and the loader bypasses it, the invariant is silently violated. **Verify this before relying on a trigger for correctness.** |
+| **`RETURNING` interaction** | SQL Server's `OUTPUT` clause behaves differently, and in some configurations fails outright, on tables carrying `AFTER` triggers — requiring `OUTPUT ... INTO` instead. |
+| **Transactional DDL** | Whether `CREATE TRIGGER` participates in a transaction (and can be rolled back) is dialect-dependent. |
+
+The practical consequence: **treat trigger definitions as per-dialect artifacts**, kept in versioned migration files alongside the schema, not as something an abstraction layer will paper over.
+
+---
+
+## Part 5 — Failure Modes and Design Guidance
+
+### 5.1 Invisible control flow
+
+The recurring complaint about triggers, and it is a fair one. A developer reads `INSERT INTO clients ...`, and nothing in that statement discloses that three other tables were also written. Debugging means knowing to inspect the schema's triggers, which is not where anyone looks first.
+
+Mitigations: a strict naming convention that encodes table, timing, and purpose (`clients_after_update_audit`); a comment in the migration explaining *why* the rule lives in the database rather than the application; and a documented list of triggers maintained where developers actually read.
+
+### 5.2 Recursion and cascades
+
+A trigger that writes to a table with its own triggers can chain, and a trigger that writes to its *own* table can recurse. Depth limits vary and hitting one produces an error far from the apparent cause. Where recursive firing is configurable, leaving it off is the safer default.
+
+Cascading deletes interacting with triggers deserve particular care: whether a foreign key's `ON DELETE CASCADE` fires the child table's delete triggers is dialect-dependent.
+
+### 5.3 The performance cliff
+
+Row-level triggers scale linearly with row count, which is fine at OLTP volumes and painful at batch volumes. A migration touching a million rows in a table with a row-level audit trigger writes a million audit rows inside one transaction, producing enormous write amplification and a long-held lock.
+
+The standard maneuver is to disable the trigger for the duration of a known bulk operation and record the change once at a coarser grain. **That is a deliberate, documented exception, not something to discover mid-migration.**
+
+### 5.4 Never put non-transactional side effects in a trigger
+
+Sending email, calling an HTTP endpoint, writing to a queue, or touching a file from inside a trigger breaks the trigger's core guarantee. The transaction can still roll back afterward — leaving the email sent and the data absent. Dialects that permit external calls from triggers permit a foot-gun.
+
+The correct pattern is the **transactional outbox**: the trigger writes a row to an outbox table in the same transaction, and a separate process reads that table and performs the external action. The write is atomic with the data change; the side effect is retryable and independent.
+
+### 5.5 Choosing between trigger and application code
+
+| Favors a trigger | Favors application code |
+|---|---|
+| The invariant must hold for **all** writers, including migrations, manual fixes, and other services | All writes go through one application you control |
+| The rule is simple, self-contained, and stable | The logic is complex, or changes at application cadence |
+| No knowledge of the acting *user* is required | The actor must be recorded, or business context is needed |
+| Correctness matters more than transparency | Debuggability and testability matter more |
+| Volumes are OLTP-scale | Bulk operations are routine |
+| Single database, portability not a concern | Multiple backends, or a backend migration is plausible |
+
+The honest summary: triggers are excellent at enforcing **narrow, mechanical, actor-agnostic invariants** — immutability, referential rules `CHECK` cannot express, derived values. They are a poor home for **business logic**, because business logic changes, needs testing, needs context about who and why, and does not belong in a place developers do not look.
+
+### 5.6 Testing
+
+Triggers are easy to leave untested because nothing calls them explicitly. Two tests earn their place for any trigger carrying real weight:
+
+1. **Fires when it should** — perform the triggering statement, assert the effect. For an audit trigger, assert the audit table grew by exactly the expected number of rows, and that a no-op update produced none.
+2. **Does not fire when it should not** — assert the negative case, especially for `WHEN`-gated triggers where a `NULL` comparison bug would silently disable it.
+
+For immutability triggers, assert that the forbidden statement raises **and** that the data is unchanged afterward. A trigger that raises but has already written is worse than none.
+
+---
+
+## Quick Reference
+
+```sql
+-- Reject a change
+CREATE TRIGGER t BEFORE UPDATE ON tbl FOR EACH ROW
+    <raise an error>;
+
+-- Modify the incoming row
+CREATE TRIGGER t BEFORE INSERT ON tbl FOR EACH ROW
+    SET NEW.col = <value>;
+
+-- React to a completed change, only when a column actually changed
+CREATE TRIGGER t AFTER UPDATE OF col ON tbl FOR EACH ROW
+    WHEN (OLD.col IS DISTINCT FROM NEW.col)
+    INSERT INTO other_table ...;
+
+-- Substitute for the change (views)
+CREATE TRIGGER t INSTEAD OF INSERT ON some_view FOR EACH ROW
+    INSERT INTO base_table ...;
+
+DROP TRIGGER IF EXISTS t;
+```
+
+**Invariants to carry:**
+
+1. A trigger and its statement commit or roll back together.
+2. `BEFORE` decides what is written; `AFTER` reacts to what was written; `INSTEAD OF` replaces the write.
+3. Generated keys exist in `AFTER`, not in `BEFORE`.
+4. `NEW` is assignable only in `BEFORE`.
+5. `UPDATE OF col` means *assigned*, not *changed*.
+6. Use `IS DISTINCT FROM` for change detection; `<>` is wrong when nulls are possible.
+7. Row-level fires per row; statement-level fires once, including for zero rows.
+8. Firing order among multiple triggers is undefined unless the dialect gives you a mechanism.
+9. Triggers see the row, not the session — attributing a change to a human requires application cooperation.
+10. Never place a non-transactional side effect in a trigger body.
