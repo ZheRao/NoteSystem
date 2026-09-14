@@ -4,6 +4,70 @@ Two paths: scaffold fresh, or wire up an existing folder.
 
 ---
 
+## Step 0 — Node version
+
+Check first. This is the most common source of setup failures.
+
+```bash
+node -v
+```
+
+Current `create-vite` requires Node `^20.19.0 || >=22.12.0`. Node 18 reached end-of-life in April 2025 and will fail.
+
+### Installing / upgrading with nvm
+
+nvm keeps multiple Node versions side by side and lets you switch per project — better than a system-wide install when different projects have different requirements.
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+```
+
+Restart the shell (or `source ~/.bashrc`), then:
+
+```bash
+nvm install 22
+nvm use 22          # this shell only
+nvm alias default 22   # all new shells
+```
+
+Confirm with `node -v` before continuing. Upgrading Node also upgrades the bundled npm.
+
+### about the numher `22`
+
+`22` is a Node **major version number**, not anything nvm-specific. `nvm install 22` means "give me the latest 22.x release" — you can equally say `nvm install 24`, or `nvm install 22.11.0` for an exact patch.
+
+**Where the versions stand now.** Node 24 is the Active LTS line. Node 22 has moved into Maintenance — still receiving security fixes, but no longer the default recommendation. Node 18, which you're on, is past EOL entirely.
+
+So for your situation, `nvm install 24` is the better call.
+
+**This convention is going away.** Starting with 27.x, Node moves to one major release per year instead of two, and every release becomes LTS — no more odd/even distinction. Each version will go LTS after its six-month Current phase. Version numbers will align with the calendar year of the initial release: 27.0.0 in 2027, 28.0.0 in 2028.
+
+Practically: today, pick the highest even number that's in Active LTS. From 2027 on, the year tells you the version, and "is it even" stops being a useful heuristic.
+
+**How to check rather than remember.** `nvm ls-remote --lts` lists LTS releases with their status, and `nvm install --lts` grabs the newest without you naming a number. Worth using in place of a hardcoded `22` for exactly the reason you're asking about.
+
+### Pinning a version per project
+
+Drop a `.nvmrc` in the project root:
+
+```
+22
+```
+
+Then `nvm use` in that directory picks it up with no argument. Useful when one machine hosts projects on different Node versions.
+
+### Staying on an older Node
+
+If upgrading isn't an option, pin the scaffolder to a generation that still supports it:
+
+```bash
+npm create vite@5 frontend_system -- --template react
+```
+
+Workable, but it means learning on a toolchain two majors behind. Treat it as a stopgap.
+
+---
+
 ## Path A — Scaffold (empty or new folder)
 
 ```bash
@@ -126,6 +190,8 @@ export default function App() {
 ---
 
 ## Gotchas
+
+**`EBADENGINE` is a warning, not a stop.** npm prints the engine mismatch and then runs the package anyway. The real failure comes later and looks unrelated — on Node 18 it surfaces as `SyntaxError: The requested module 'node:util' does not provide an export named 'styleText'`, because `styleText` landed in Node 20.12. If a tool crashes right after an `EBADENGINE` warning, check `node -v` before debugging anything else.
 
 **JSX must be in `.jsx`, not `.js`.** Vite's esbuild transform won't parse JSX in `.js` files. The error points at your first `<div>` and reads like a syntax error. Rename the file.
 
