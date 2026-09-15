@@ -836,3 +836,477 @@ That's a legitimate body of computer science/software engineering knowledge, and
 [4]: https://designftw.mit.edu/?utm_source=chatgpt.com "6.4500 Design for the Web: Languages and User Interfaces"
 [5]: https://www.helsinki.fi/en/admissions-and-education/open-university/multidisciplinary-themed-modules/full-stack?utm_source=chatgpt.com "Full Stack | University of Helsinki"
 [6]: https://courses.mooc.fi/org/uh-cs/courses/full-stack-open-typescript?utm_source=chatgpt.com "Full Stack Open: Typescript - MOOC.fi courses"
+
+
+# Editted study material for concentrated gap
+
+## gap
+
+- Frontend interaction reliability
+  - UI state: what states can every screen/action be in?
+    - states:
+      - LOADING
+      - READY
+      - DIRTY
+      - VALIDATING
+      - SAVING
+      - SAVED
+      - INVALID
+      - CONFLICT
+      - ERROR
+      - STALE
+      - DISABLED
+      - EMPTY
+  - Feedback: how does the user know what the system is doing/did?
+    - key point: never make the user wonder "did that work?"
+    - key interfaces
+      - saved
+      - failed → retry
+      - validation → suggest how to modify, e.g., `cost must not be negative`
+  - Async operations: what happens between request and response?
+    - key questions
+      - Can the user click Run Forecast twice?
+      - Can they edit inputs while calculation is happening?
+      - What happens if they navigate away?
+      - What if the request takes 100 ms?
+      - 2 seconds?
+      - 30 seconds?
+      - What if the connection disappears?
+      - What if the server returns 500?
+      - What if the first request finishes after a newer request?
+  - Error/recovery: what happens when something fails?
+    - key questions
+      - What if it succeeds?
+      - What if it's slow?
+      - What if it returns nothing?
+      - What if validation fails?
+      - What if authorization fails?
+      - What if the server fails?
+      - What if the network fails?
+      - What if the underlying data changed?
+
+Yes. Now that we've identified the gap precisely, I would **not take another broad frontend course after React v9**. I'd build a small, targeted second stage around the parts React v9 doesn't really teach: **server-state synchronization, explicit interaction state modeling, failure/recovery, and user-facing reliability.**
+
+I checked the current Full Stack Open curriculum, and there are a few sections that fit extremely well.
+
+### My post–React v9 curriculum for Strata
+
+| Order | Resource                | Study                                      | Main gap it fills                               | Time |
+| ----- | ----------------------- | ------------------------------------------ | ----------------------------------------------- | ---: |
+| 1     | Full Stack Open Part 2c | **Getting data from server**               | Async/browser/API lifecycle                     | 1–2h |
+| 2     | Full Stack Open Part 2d | **Altering data in server**                | Mutations, API → UI synchronization, errors     | 2–3h |
+| 3     | Full Stack Open Part 6c | **React Query**                            | Server state, stale data, loading/error/refetch | 2–3h |
+| 4     | State machines tutorial | **States + events + transitions + guards** | Explicit UI state modeling                      |  ~1h |
+| 5     | Apply to Strata         | Draw interaction models                    | Loading/saving/error/conflict/recovery          | 2–3h |
+
+So this is another **~8–12 hours**, not another 40-hour curriculum.
+
+And I'd actually do it **after you attempt the simple Strata client frontend**, because then all of these concepts will attach to problems you've physically encountered.
+
+## 1. Full Stack Open 2c — absolutely do this
+
+[Full Stack Open — Getting data from server](https://fullstackopen.com/en/part2/getting_data_from_server/?utm_source=chatgpt.com)
+
+This section explicitly teaches the browser's asynchronous execution model, promises, effects, API fetching, state updates, and rerendering. ([Full Stack Open][1])
+
+The important model for you is:
+
+```text
+React renders
+     ↓
+effect starts GET /clients
+     ↓
+request is pending
+     │
+     │ JavaScript DOES NOT sit there waiting
+     ↓
+response eventually arrives
+     ↓
+callback executes
+     ↓
+setClients(...)
+     ↓
+React rerenders
+```
+
+You probably won't need much time here after React v9.
+
+Your graduation criterion is simply:
+
+> **Can I trace the exact lifecycle from mounting `<ClientPage>` through `GET /clients` to the user seeing clients?**
+
+Including the period when the request hasn't finished yet.
+
+## 2. Full Stack Open 2d — probably the highest-value section
+
+[Full Stack Open — Altering data in server](https://fullstackopen.com/en/part2/altering_data_in_server/?utm_source=chatgpt.com)
+
+This one I'd study carefully.
+
+It covers changing remote data, PUT/POST-style operations, promises, error handling, updating React state based on server responses, and separating backend communication into its own service module. ([Full Stack Open][2])
+
+This directly maps to:
+
+```text
+<CreateClientForm>
+       ↓
+local draft state
+       ↓
+POST /clients
+       ↓
+FastAPI
+       ↓
+SQLite transaction
+       ↓
+response
+       ↓
+update client state
+       ↓
+<ClientList> rerenders
+```
+
+And this is where I'd start asking your reliability questions:
+
+```text
+What if POST is pending?
+
+What if it succeeds?
+
+What if FastAPI returns 400?
+
+What if FastAPI returns 409?
+
+What if FastAPI returns 500?
+
+What if the network disappears?
+```
+
+Full Stack Open won't completely answer your UX policy. **That's okay.**
+
+Its purpose is to make you understand the machinery on which that policy operates.
+
+## 3. Full Stack Open Part 6c — this is the one I especially want you to see
+
+The current 2026 version of Full Stack Open Part 6 has been updated: it now teaches Zustand, `useReducer`/Context, and **React Query for server-state management**. ([Full Stack Open][3])
+
+[Full Stack Open — Part 6 Advanced State Management](https://fullstackopen.com/en/part6/?utm_source=chatgpt.com)
+
+Don't take all of Part 6.
+
+You specifically care about **6c React Query / server state**.
+
+Why?
+
+Because after your first CRUD implementation, you're likely to have something like:
+
+```text
+FastAPI / SQLite
+      ↓
+AUTHORITATIVE CLIENTS
+
+       versus
+
+React
+      ↓
+CURRENTLY KNOWN CLIENTS
+```
+
+And those aren't necessarily identical.
+
+The frontend's knowledge may be:
+
+```text
+loading
+fresh
+stale
+refetching
+errored
+```
+
+Meanwhile mutations may be:
+
+```text
+idle
+pending
+success
+error
+```
+
+That's exactly the conceptual territory in your checklist.
+
+React Query exists largely because **remote asynchronous state has fundamentally different properties from ordinary local UI state**. Full Stack Open specifically introduces it as a tool for simplifying server-state management. ([Full Stack Open][3])
+
+Even if you decide **not to use React Query in Strata yet**, learn the conceptual model.
+
+That's the important part.
+
+## 4. Then spend ONE hour learning state machines
+
+This is the major thing neither React v9 nor Full Stack Open gives you systematically.
+
+And there's a nearly perfect free resource:
+
+[Introduction to State Machines Using XState — free Egghead course](https://egghead.io/courses/introduction-to-state-machines-using-xstate?utm_source=chatgpt.com)
+
+It's **58 minutes total**.
+
+The course covers enumerating states, transitions, guards, hierarchical states and parallel states. ([Egghead][4])
+
+I would **not learn XState because I think Strata needs XState**.
+
+Ignore the library.
+
+You're stealing its conceptual machinery.
+
+The most important early lesson is literally about avoiding **Boolean explosion** by explicitly enumerating states. ([Egghead][4])
+
+Because suppose you start writing:
+
+```text
+isLoading
+isSaving
+isDirty
+isError
+isValid
+isStale
+```
+
+Now what does this mean?
+
+```text
+isLoading = true
+isSaving = true
+isError = true
+isValid = false
+isStale = true
+```
+
+Is that possible?
+
+Should it be possible?
+
+**Nobody knows. Welcome to frontend hell.** 😂
+
+State machines force you to think:
+
+```text
+READY
+  │
+  │ EDIT
+  ↓
+DIRTY
+  │
+  │ SAVE
+  ↓
+SAVING
+ ↙    ↘
+ERROR  READY
+```
+
+And statecharts introduce something even more useful for the observation we made earlier: **hierarchical and parallel state**. That's how you can reason about an interaction being, say, `DIRTY` and `STALE` simultaneously without producing one gigantic flat enum. ([XState for React Developers][5])
+
+That's extremely relevant to Strata.
+
+Again:
+
+**learn the model, don't adopt the framework yet.**
+
+## 5. Then STOP STUDYING and design one Strata workflow
+
+At this point I would not add another tutorial.
+
+Take:
+
+### Edit Client
+
+and actually write:
+
+```text
+DATA
+────────────
+LOADING
+EMPTY
+PRESENT
+ERROR
+
+
+EDITING
+────────────
+CLEAN
+DIRTY
+
+
+VALIDATION
+────────────
+VALID
+INVALID
+
+
+SAVE
+────────────
+IDLE
+SAVING
+ERROR
+SUCCESS
+```
+
+Then define transitions:
+
+```text
+LOAD
+  ↓
+LOADING
+  ↓
+PRESENT
+
+USER_EDITS
+  ↓
+DIRTY
+
+SAVE
+  ↓
+VALIDATING
+   ↙     ↘
+INVALID   SAVING
+            ↓
+       ┌────┴────┐
+     ERROR     SUCCESS
+```
+
+Now ask:
+
+> What does the user see in every state?
+
+That's where your **feedback layer** enters.
+
+```text
+SAVING
+→ button disabled
+→ "Saving..."
+
+SUCCESS
+→ "Saved"
+
+INVALID
+→ field-level explanation
+
+ERROR
+→ edits remain
+→ explain failure
+→ Retry
+
+EMPTY
+→ "No clients yet"
+→ Create Client
+```
+
+And now you've connected:
+
+```text
+React
+   ↓
+implementation primitives
+
+Full Stack Open
+   ↓
+async API interaction
+
+React Query concepts
+   ↓
+server-state lifecycle
+
+State machines
+   ↓
+interaction modeling
+
+Your checklist
+   ↓
+product reliability policy
+
+STRATA
+```
+
+**That's the coherent picture you've been looking for.**
+
+---
+
+There is one important thing I **wouldn't study yet: conflict resolution**.
+
+You should understand that this situation exists:
+
+```text
+Browser loads revision 5
+        ↓
+Someone changes server
+        ↓
+Server becomes revision 6
+        ↓
+Browser submits changes based on revision 5
+        ↓
+CONFLICT
+```
+
+But *solving* that properly starts pulling you into optimistic concurrency control, version numbers/ETags, API semantics, merge policies, etc.
+
+That's actually more connected to the database/concurrency work you've already been doing than to React itself.
+
+For the first client CRUD iteration, just know:
+
+> **STALE and CONFLICT are states my architecture may eventually need to represent.**
+
+Don't engineer them yet unless Strata's actual multi-user requirements demand them.
+
+---
+
+So I think you've now got a very clean learning sequence:
+
+```text
+NOW
+│
+├── Complete Intro to React v9
+│       ↓
+│   learn React vocabulary
+│
+├── BUILD Strata Client CRUD v0
+│       ↓
+│   discover actual gaps
+│
+├── Full Stack Open 2c
+│   async fetching
+│
+├── Full Stack Open 2d
+│   mutations + errors
+│
+├── Full Stack Open 6c
+│   server state
+│
+├── ~1h state-machine course
+│   explicit interaction modeling
+│
+└── REDESIGN Client CRUD v1
+        ↓
+    loading
+    empty
+    ready
+    dirty
+    validating
+    saving
+    saved
+    invalid
+    error
+    retry
+```
+
+At that point, I would consider the conceptual gap you identified **sufficiently closed for Strata v1**.
+
+Not “you know frontend.”
+
+Rather, something much more useful:
+
+**you know enough about frontend application behavior to recognize the important engineering decisions instead of accidentally letting React's implementation details make those decisions for you.**
+
+[1]: https://fullstackopen.com/en/part2/getting_data_from_server/?utm_source=chatgpt.com "Fullstack part2 |"
+[2]: https://fullstackopen.com/en/part2/altering_data_in_server/?utm_source=chatgpt.com "Fullstack part2 |"
+[3]: https://fullstackopen.com/en/part6/?utm_source=chatgpt.com "Fullstack part6"
+[4]: https://egghead.io/courses/introduction-to-state-machines-using-xstate?utm_source=chatgpt.com "Introduction to State Machines Using XState | egghead.io"
+[5]: https://www.xstateforreactdevelopers.com/1-getting-started/1-intro-to-state/2-compound-states.mdx?utm_source=chatgpt.com "XState for React Developers"
