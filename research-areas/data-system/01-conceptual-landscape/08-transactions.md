@@ -312,4 +312,51 @@ Motivation
 
 
 Multiversion concurrency control (MVCC)
-- 
+- implementation of snpashot isolation typically use **write locks** to prevent dirty writes, however, reads do not require aby locks
+- principle (from a performance point of view)
+  - **readers never block writers, and writers never block readers**
+- high level implementation
+  - database potentially keeps several committed versions of a row, because various in-progress transactions may need to see the state of the database at different points in time
+  - and because it maintains several versions of a row side by side, this technique is known as **multiversion concurrency control (MVCC)**
+- MVCC-based snapshot isolation implementation in PostgreSQL  
+![alt text](images/0805.png)
+  - when a transaction is started, it is given a unique, always-increasing **transaction ID (txid)**
+  - whenever a transaction writes anything to the database, the data it writes is tagged with the transaction ID of the writer
+    - to be precise, transaction IDs in PostgreSQL are 32-bit integers, so they overflow after approximately 4 billion transactions
+    - the **vacuum** process performs cleanup to ensure that overflow does not affect the data
+  - each row in a table has an `inserted_by` field, containing the ID of the transaction that inserted that row into the table
+  - each row also has a `deleted_by` field, which is initially empty
+    - if a transaction deletes a row, the row isn't removed from the database 
+    - instead is marked for deletion by setting the `deleted_by` field to the ID of the transaction that requested the deletion
+    - at a later time, when it is certain that no transaction can any longer access the deleted data, a **garbage collecction (GC)** process in the db removes those rows
+  - an **update** is internally translated into a delete and an insert
+    - e.g., in the example, transaction 13 deducts $100 from account 2, changing the balance from $500 to $400
+      - the accounts table now contains two rows for account 2
+        - a row with a balance of $500 that was marked as deleted by transaction 13
+        - and a row with a balance of $400 that was inserted by transaction 13
+  - all the versions of a row are stored within the same database heap, regardless of whether the transactions that wrote them have committed
+    - the versions of thes ame row form a linked list, going either from newest version to oldest or the other way round
+    - so that queries can internally interate over all versions of a row
+
+
+Visbility rules for observing a consistent snapshot
+- when a transaction reads from the database, transaction IDs are used to decide which row versions it can see and which are invisible
+  - by carefully defining visibility rules, the database can present a consistent snapshot of its contents to the application
+- rules
+  - at the **start** of each transaction, the database makes a **list of all the other transactions that are in progress** (not yet committed or aborted) at that time
+    - any **writes** that those transactions have made are **ignored**, even if the transactions subsequently commit
+    - this ensures that the application sees a consistent snapshot that is not affected by another transaction committing
+  - any **writes** made by transactions with a **later transaction ID** (started after the current transaction started) are **ignored**
+  - any **writes** made by **aborted transactions** are **ignored**, regardless of when the abort happened
+    - this has the advantage that when a transaction aborts, we don't need to immediately remove the rows it wrote from storage, since the visibility rule filters them out
+    - the GC process can remove them later
+  - all other writes are visible to the application's queries
+- these rules apply to both insertion and deletion of rows
+  - e.g., in the example, transaction 12 reads from account 2, it sees a balance of 500 because the deletion of the $500 balance was made by transaction 13
+- put another way, a row is **visible** if both of the following conditions are true
+  - at the time when the reader's transaction started, the transaction that inserted the row had already committed
+  - the row is not marked for deletion, or if it is, the transaction that requested deletion had not yet committed at the time when the reader's transaction started
+- by never updating values in place but instead inserting a new version every time a value is changed, the database can provide a consistent snapshot while incurring only a small overhead
+
+
+Indexes and snapshot isolation
