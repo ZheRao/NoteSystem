@@ -119,6 +119,7 @@ These documents explain:
     * [05-foundations-JavaScript-React](./foundations/mechanisms/beyond-infra/frontend/05-js-react-foundations.md)
     * [06-React-Vite-hosting](./foundations/mechanisms/beyond-infra/frontend/06-vite-hosting.md)
     * [07-additional-notes](./foundations/mechanisms/beyond-infra/frontend/07-appendix-notes.md)
+    * [08-client-CRUD-react-walkthrough](./foundations/mechanisms/beyond-infra/frontend/08-client-CRUD-walkthrough.md)
 
 #### Vendor Web Design
 
@@ -216,10 +217,14 @@ These are:
 * practical workflows
 
 ### frontend
-* [00-intro-JS-HTML](./references/frontend/00-intro.md)
-* [01-SQL](./references/frontend/01-sql.md)
-* [02-SQLite-and-FastAPI](./references/frontend/02-sqlite-fastapi.md)
-* [03-serving-code-blocks](./references/frontend/03-serving-layer-codeblocks.md)
+* **serving-layer**
+  * [01-SQL](./references/frontend/01-sql.md)
+  * [02-SQLite-and-FastAPI](./references/frontend/02-sqlite-fastapi.md)
+  * [03-serving-code-blocks](./references/frontend/03-serving-layer-codeblocks.md)
+* **frontend**
+  * [01-intro-JS-HTML](./references/frontend/00-intro.md)
+  * [02-vite-setup](./references/frontend/05-vite-setup.md)
+  * [03-client-CRUD-React-sample-code](./references/frontend/04-React-intro-client-CRUD.md)
 
 ### Git
 
