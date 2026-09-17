@@ -115,6 +115,7 @@ These documents explain:
     * **Client CRUD React Walkthrough**
       * [00-intro-and-structure](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/00-design.md)
       * [01-useCurrentUser.js-ReactHook-useCallback-DependencyArry](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/01-useCurrentUser-js.md)
+      * [02-client.js-promise-ErrorHandling-async-await](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/02-client-js.md)
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
     * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
     * [03-HTML-components](./foundations/mechanisms/beyond-infra/frontend/03-HTML-components.md)
@@ -226,7 +227,7 @@ These are:
 * **frontend**
   * [01-intro-JS-HTML](./references/frontend/00-intro.md)
   * [02-vite-setup](./references/frontend/05-vite-setup.md)
-  * [03-client-CRUD-React-sample-code](./references/frontend/04-React-intro-client-CRUD.md)
+  * [03-HTML-tags](./references/frontend/06-HTML-tags.md)
 
 ### Git
 
