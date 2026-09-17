@@ -112,6 +112,9 @@ These documents explain:
     * [05-additional-notes](./foundations//mechanisms/beyond-infra/serving-layer/05-appendix-notes.md)
     * [07-Transactions-Locking-Concurrency](./foundations/mechanisms/beyond-infra/serving-layer/07-transactions-locking-concurrency.md)
 * **Frontend**
+    * **Client CRUD React Walkthrough**
+      * [00-intro-and-structure](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/00-design.md)
+      * [01-useCurrentUser.js-ReactHook-useCallback-DependencyArry](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/01-useCurrentUser-js.md)
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
     * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
     * [03-HTML-components](./foundations/mechanisms/beyond-infra/frontend/03-HTML-components.md)
@@ -119,7 +122,6 @@ These documents explain:
     * [05-foundations-JavaScript-React](./foundations/mechanisms/beyond-infra/frontend/05-js-react-foundations.md)
     * [06-React-Vite-hosting](./foundations/mechanisms/beyond-infra/frontend/06-vite-hosting.md)
     * [07-additional-notes](./foundations/mechanisms/beyond-infra/frontend/07-appendix-notes.md)
-    * [08-client-CRUD-react-walkthrough](./foundations/mechanisms/beyond-infra/frontend/08-client-CRUD-walkthrough.md)
 
 #### Vendor Web Design
 
