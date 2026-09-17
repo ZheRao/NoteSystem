@@ -116,6 +116,7 @@ These documents explain:
       * [00-intro-and-structure](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/00-design.md)
       * [01-useCurrentUser.js-ReactHook-useCallback-DependencyArry](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/01-useCurrentUser-js.md)
       * [02-client.js-promise-ErrorHandling-async-await](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/02-client-js.md)
+      * [03-UserBar.jsx-ReactComponent-ControlledInput-OneWayDataFlow](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/03-userbar-component.md)
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
     * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
     * [03-HTML-components](./foundations/mechanisms/beyond-infra/frontend/03-HTML-components.md)
