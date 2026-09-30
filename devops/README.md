@@ -120,6 +120,7 @@ These documents explain:
       * [04-ClientRow.jsx-useRef-useEffect-form-ConditionRendering](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/04-clientRow-component.md)
       * [05-ClientTable.jsx-CollectionRendering-ComponentComposition-Closures-Key](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/05-clientTable-component.md)
       * [06-AddClientForm.jsx](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/06-addClientForm-component.md)
+      * [07-App.jsx](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/07-App-jsx.md)
     * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
     * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
     * [03-HTML-components](./foundations/mechanisms/beyond-infra/frontend/03-HTML-components.md)
