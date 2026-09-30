@@ -1618,3 +1618,606 @@ API result may update state again
 ```
 
 That is the core engine of this entire React file.
+
+# React Essential Concepts
+
+## turn array into table values
+
+```js
+function App() {
+  const tasks = [
+    {id:1, name:'Read DDIA', created_by:'Zhe'},
+    {id:2, name:'Practice piano', created_by: 'ChatGPT'}
+  ]
+  return (
+      <div>
+        <h1>Task Tracker</h1>
+
+        <table className="task-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Created By</th>
+            </tr>
+          </thead>
+          <tbody className="task-body">
+            {
+              tasks.map(a => 
+              <tr key={a.id}>
+                <td>{a.name}</td>
+                <td>{a.created_by}</td>
+              </tr>)
+            }
+          </tbody>
+        </table>
+      </div>
+  )
+}
+
+export default App
+```
+
+### table tags
+
+| Element | Meaning |
+|---|---|
+| `<table>` | the entire table |
+| `<thead>` | header section |
+| `<tbody>` | data/body section |
+| `<tr>` | **t**able **r**ow |
+| `<th>` | **t**able **h**eader cell |
+| `<td>` | **t**able **d**ata cell |
+
+### basic CSS
+
+```css
+/* apply to all tables */
+table {
+  border-collapse: collapse;
+  margin: 0 auto;
+}
+
+/* apply to tag className */
+.task-table th, 
+.task-table td {
+  border: 1px solid;
+  padding: 8px;
+}
+
+.task-body td {
+  text-align: left;
+}
+
+```
+
+
+## controlling user inputs with `useState` & `<input>` AND controlled vs. uncontrolled inputs
+
+```js
+import {useState} from 'react'
+
+function App() {
+  const [name, setName] = useState('')
+
+  return (
+      <div>
+        <h1>Task Tracker</h1>
+
+        <input placeholder="Task name" 
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+
+        <p>{name}</p>   
+
+        <input placeholder="Created by" />
+
+        <button>Add Task</button>
+
+        <table className="task-table">
+          ...
+        </table>
+      </div>
+  )
+}
+
+export default App
+```
+
+Exactly the right confusion to resolve. Your intuition has identified something important: **we do not fundamentally have to store every keystroke in React state.** That's a design choice called a **controlled input**.
+
+And your interpretation of `value={name}` is actually backwards, which is probably the source of the confusion.
+
+### The crucial direction
+
+This:
+
+```jsx
+value={name}
+```
+
+does **not** mean:
+
+```text
+input ──────→ name
+```
+
+It means:
+
+```text
+name ──────→ input
+```
+
+React is saying to the browser:
+
+> The value displayed inside this input should be whatever `name` currently contains.
+
+Whereas:
+
+```jsx
+onChange={(event) => setName(event.target.value)}
+```
+
+goes in the opposite direction:
+
+```text
+input ──────→ name
+```
+
+So together, you have a loop:
+
+```text
+                value={name}
+          ┌─────────────────────┐
+          │                     ▼
+React state                  <input>
+name = "Read"              "Read"
+          ▲                     │
+          │                     │ user types D
+          │                     ▼
+          └────────────── onChange
+                    setName("ReadD")
+```
+
+That's the heart of a **controlled input**.
+
+---
+
+### Let's execute ONE keystroke very slowly
+
+Suppose initially:
+
+```js
+const [name, setName] = useState('')
+```
+
+Therefore:
+
+```text
+name = ""
+```
+
+React executes `App()`.
+
+It reaches:
+
+```jsx
+<input value={name} ... />
+```
+
+which effectively means:
+
+```jsx
+<input value="" ... />
+```
+
+So the browser displays an empty input:
+
+```text
+[            ]
+```
+
+And:
+
+```jsx
+<p>{name}</p>
+```
+
+becomes effectively:
+
+```jsx
+<p>{""}</p>
+```
+
+so nothing appears there either.
+
+---
+
+Now you press:
+
+```text
+R
+```
+
+The browser detects that the input changed and invokes your function:
+
+```js
+(event) => setName(event.target.value)
+```
+
+At that moment:
+
+```js
+event.target
+```
+
+refers to the input element that changed.
+
+And:
+
+```js
+event.target.value
+```
+
+is:
+
+```text
+"R"
+```
+
+Therefore your callback effectively executes:
+
+```js
+setName("R")
+```
+
+This is the important moment.
+
+You have now asked React to update this state from:
+
+```text
+""
+```
+
+to:
+
+```text
+"R"
+```
+
+That state update causes React to render `App` again.
+
+---
+
+### App runs again
+
+Now:
+
+```js
+name
+```
+
+is:
+
+```text
+"R"
+```
+
+So this:
+
+```jsx
+<input value={name} />
+```
+
+effectively becomes:
+
+```jsx
+<input value="R" />
+```
+
+And this:
+
+```jsx
+<p>{name}</p>
+```
+
+effectively becomes:
+
+```jsx
+<p>R</p>
+```
+
+The screen therefore becomes:
+
+```text
+[ R ]
+R
+```
+
+Then you type `e`.
+
+Same cycle:
+
+```text
+user types "e"
+      ↓
+event.target.value
+      ↓
+"Re"
+      ↓
+setName("Re")
+      ↓
+state changes
+      ↓
+React rerenders
+      ↓
+name is now "Re"
+      ↓
+value={name}
+      ↓
+input displays "Re"
+
+and
+
+<p>{name}</p>
+      ↓
+displays "Re"
+```
+
+So yes: **`<p>{name}</p>` is showing you the result of the rerender.**
+
+It's our little debugging window into React state.
+
+---
+
+### But you just asked the more interesting question
+
+You said:
+
+> why do we have to have state tied to `name` at this stage? Why not take the user's clicking of Add Task as the mutation/state-change instead of recording every keystroke as state-change?
+
+**We absolutely could.**
+
+That's the insight I want you to keep.
+
+The browser was perfectly capable of maintaining the input before we introduced `useState`.
+
+Remember our original input?
+
+```jsx
+<input placeholder="Task name" />
+```
+
+You could type:
+
+```text
+[ Read DDIA ]
+```
+
+without any React state whatsoever.
+
+Something was already remembering `"Read DDIA"`.
+
+Who?
+
+**The browser/DOM.**
+
+So there are actually two possible architectures.
+
+#### Uncontrolled input
+
+```text
+Browser owns input value
+
+<input>
+   │
+   │ user types
+   ▼
+"Read DDIA"
+
+React doesn't care about every keystroke.
+
+Eventually:
+user clicks Add
+      ↓
+our code asks the DOM:
+"What value is currently in that input?"
+```
+
+This is called an **uncontrolled input**.
+
+Your intuition is basically describing this approach.
+
+#### Controlled input
+
+What we're currently doing is:
+
+```text
+React owns input value
+
+name state
+   │
+   │ value={name}
+   ▼
+<input>
+   │
+   │ onChange
+   ▼
+setName(...)
+   │
+   └──────────────→ state changes
+```
+
+This is called a **controlled input**.
+
+The React state is the source of truth.
+
+---
+
+### So why would we choose controlled inputs?
+
+Imagine later we want rules like:
+
+```text
+Disable Add when name is empty.
+
+Show "Task name is required."
+
+Limit name to 100 characters.
+
+Show "87 / 100 characters."
+
+Clear the input after successful submission.
+
+Change the input based on another UI action.
+
+Validate while the user types.
+```
+
+If React already knows:
+
+```js
+name
+```
+
+all of these become straightforward.
+
+For example, after successful creation we can eventually say:
+
+```js
+setName('')
+```
+
+and because:
+
+```text
+name = ""
+   ↓
+value={name}
+   ↓
+<input value="">
+```
+
+the textbox clears.
+
+That's powerful: **React controls what the input displays.**
+
+And this is why the two halves matter:
+
+```jsx
+value={name}
+```
+
+means:
+
+> React state → input
+
+while:
+
+```jsx
+onChange={(event) => setName(event.target.value)}
+```
+
+means:
+
+> input → React state
+
+Together:
+
+```text
+            DATA DOWN
+               ↓
+         value={name}
+               ↓
+React state ────────→ Input
+     ▲                  │
+     │                  │
+     └──────────────────┘
+           onChange
+          EVENT UP
+```
+
+And look at what just happened.
+
+You've independently rediscovered the pattern from the Strata frontend:
+
+> **data down, events up.**
+
+Even within **one tiny `<input>`**, the same architecture appears.
+
+---
+
+And there's one last distinction I want you to hold onto before we continue.
+
+Right now we have **two different kinds of state**:
+
+```text
+DRAFT UI STATE
+──────────────
+name = "Learn React"
+
+Changes every keystroke.
+
+Represents:
+"What is the user currently typing?"
+
+
+COMMITTED APPLICATION STATE
+───────────────────────────
+tasks = [
+  { id: 1, ... },
+  { id: 2, ... }
+]
+
+Should change when Add Task succeeds.
+
+Represents:
+"What tasks actually exist?"
+```
+
+That's going to become very important.
+
+Typing:
+
+```text
+"Learn React"
+```
+
+should **not** immediately create a task.
+
+We're merely changing the **draft**.
+
+Then:
+
+```text
+click Add
+    ↓
+commit draft
+    ↓
+tasks changes
+```
+
+And eventually with Strata:
+
+```text
+typing
+   ↓
+local draft state
+
+
+click Save
+   ↓
+POST / API
+   ↓
+database changes
+   ↓
+refresh()
+   ↓
+committed server state changes
+```
+
+So your instinct about the eventual POST → refresh architecture is right. We're just building the smaller conceptual layers underneath it first.
+
+Next, I'd have you create `createdBy` as another controlled input yourself. That should be almost mechanical now. Then we'll finally confront the interesting question:
+
+**How do we make `tasks` itself stateful, and why won't simply doing `tasks.push(...)` give us the React behavior we want?**
