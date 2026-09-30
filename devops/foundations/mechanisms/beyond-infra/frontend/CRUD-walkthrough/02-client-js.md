@@ -618,6 +618,36 @@ server: {
 }
 ```
 
+
+
+- **`server`**: settings for the dev server only, the one `npm run dev` starts. `vite build` ignores it. Your `dist/` output has no proxy at all.
+- **`proxy`**: rules that tell Vite to pass certain requests to another server instead of handling them itself.
+- **`'/api'`**: which requests the rule applies to. Any path starting with `/api` matches.
+- **`target`**: where to forward matching requests, which is your FastAPI server. The forwarding happens in Node, not in the browser. Vite makes its own HTTP request to port 8000 and passes the response back.
+- **`changeOrigin: true`**: rewrites the request's `Host` header from `localhost:5173` to `127.0.0.1:8000`, so it looks like it was sent to the backend directly. FastAPI doesn't care about this, but many servers do, so it's a common default.
+- **`rewrite`**: removes the `/api` prefix before forwarding. Your FastAPI routes are `/client` and `/client/{id}`, not `/api/client`. Without this line, FastAPI would receive `/api/client` and return a 404 of its own.
+
+**What happens now**
+
+```
+browser → GET localhost:5173/api/client
+Vite    → matches '/api', rewrites the path to /client
+Vite    → GET 127.0.0.1:8000/client
+FastAPI → [] (JSON)
+Vite    → passes it back to the browser
+```
+
+**Why add `/api` at all**
+
+- **It separates the two kinds of requests.** The `/api` prefix is how Vite tells "this is for the backend" apart from "this is a frontend page". Without it, a request for `/client` could be either one.
+- **It avoids CORS.** From the browser's point of view, everything comes from `localhost:5173`, the same origin as the page. Cross-origin rules only apply when a page calls a different origin, so there's no CORS preflight. That's why `.env.development` recommends leaving `VITE_API_BASE` empty. `client.js` then falls back to `/api`, and every request goes through the proxy.
+
+The other option is to set `VITE_API_BASE=http://127.0.0.1:8000`. Then the browser calls FastAPI directly, skips the proxy, and relies on the `CORSMiddleware` in `api.py` to allow it. Both work in development.
+
+**About production**
+
+The proxy only exists while `npm run dev` is running. When you deploy the built `dist/` files, something else has to route `/api` to FastAPI. That's usually a reverse proxy like nginx or Caddy doing the same prefix-strip, or you set `VITE_API_BASE` to the real backend URL at build time.
+
 So the flow is:
 
 ```
