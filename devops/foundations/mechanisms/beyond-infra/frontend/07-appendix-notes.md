@@ -2221,3 +2221,138 @@ So your instinct about the eventual POST → refresh architecture is right. We'r
 Next, I'd have you create `createdBy` as another controlled input yourself. That should be almost mechanical now. Then we'll finally confront the interesting question:
 
 **How do we make `tasks` itself stateful, and why won't simply doing `tasks.push(...)` give us the React behavior we want?**
+
+
+## introduce array as state & seperate components & pass prop into components
+
+`TaskRow.jsx`
+- seperating row rendering into a component
+
+```js
+// note define with TaskRow({task}), not TaskRow(task)
+function TaskRow({task}) {
+    return  <tr>
+                <td>{task.name}</td>
+                <td>{task.created_by}</td>
+            </tr>
+}
+
+export default TaskRow
+```
+
+`App.jsx`
+
+```js
+import './App.css'
+import {useState} from 'react'
+
+import TaskRow from './TaskRow.jsx'
+
+function App() {
+  const [name, setName] = useState('');
+  const [createdby, setCreatedby] = useState('');
+  const tasks_init = [
+    {id:1, name:'Read DDIA', created_by:'Zhe'},
+    {id:2, name:'Practice piano', created_by: 'ChatGPT'}
+  ];
+  const [tasks, setTasks] = useState(tasks_init);
+  const appendArray = (old_array, new_value) => {
+    return [...old_array, new_value]
+  };
+  const addTask = () => {
+
+    const new_value = {
+      id: tasks.at(-1).id + 1, 
+      name: `${name}`,
+      created_by: `${createdby}`
+    }
+
+    setTasks(appendArray(tasks, new_value))
+    setName('')
+    setCreatedby('')
+  };
+  return (
+      <div>
+        <h1>Task Tracker</h1>
+
+        <input placeholder="Task name" 
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+
+        <input placeholder="Created by" 
+          value={createdby}
+          onChange={(event)=>setCreatedby(event.target.value)}
+        />
+
+        <button
+          onClick={addTask}
+        >
+          Add Task
+        </button>
+
+        <table className="task-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Created By</th>
+            </tr>
+          </thead>
+          <tbody className="task-body">
+            {
+              tasks.map(a => 
+              <TaskRow key={a.id} task={a}/>)
+            }
+          </tbody>
+        </table>
+      </div>
+  )
+}
+
+export default App
+```
+
+The bug (with `TaskRow(task)`) is in how `TaskRow` receives its data. When you write this in `App`:
+
+```jsx
+<TaskRow task={a} />
+```
+
+React doesn't call `TaskRow(a)`. It collects every attribute into **one object** and calls the function with that:
+
+```js
+TaskRow({ task: a })
+```
+
+That object is the **props** object. Your function names its parameter `task`, but what actually arrives is `{ task: {...} }`. So inside `TaskRow`:
+
+```text
+task            → { task: { id: 1, name: 'Read DDIA', created_by: 'Zhe' } }
+task.name       → undefined      (the props object has no "name" key)
+task.task.name  → 'Read DDIA'    (one level deeper)
+```
+
+JSX renders `undefined` as nothing. That's why you get rows with empty cells and no error. You can confirm it by adding `console.log(task)` at the top of `TaskRow`.
+
+The fix is to pull `task` out of the props object with destructuring:
+
+```jsx
+function TaskRow({ task }) {
+  return (
+    <tr>
+      <td>{task.name}</td>
+      <td>{task.created_by}</td>
+    </tr>
+  )
+}
+```
+
+`{ task }` in the parameter list is plain JavaScript, not React. It means "take the argument, read its `task` property, and bind it to a local variable called `task`." It's the same as writing `function TaskRow(props) { const task = props.task; ... }`.
+
+**The next thing you'll notice: keys.** Once rows render, open the console and you'll see a warning that each child in a list should have a unique `key` prop. The `key` goes on the element you return from `.map()`, in `App`, not inside `TaskRow`:
+
+```jsx
+tasks.map(a => <TaskRow key={a.id} task={a} />)
+```
+
+React uses `key` to match each row with the same row on the next render. Without it, React matches rows by position, which breaks once you delete or reorder tasks in Stage 3. `key` is also special: React consumes it and does **not** pass it into props, so `TaskRow` can't read it. That's why your `id={task.id}` on the `<tr>` doesn't serve this purpose. That just sets an HTML `id` attribute on the DOM element, and you can remove it.
