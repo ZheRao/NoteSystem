@@ -2312,47 +2312,257 @@ function App() {
 export default App
 ```
 
-The bug (with `TaskRow(task)`) is in how `TaskRow` receives its data. When you write this in `App`:
+Yes — that's exactly right. More importantly, you've just built your first real **parent → child data flow** yourself.
+
+Before we move on, let's make sure you understand precisely what your code means, because the syntax packs several concepts together.
+
+You wrote:
 
 ```jsx
-<TaskRow task={a} />
+<TaskRow key={a.id} task={a} />
 ```
 
-React doesn't call `TaskRow(a)`. It collects every attribute into **one object** and calls the function with that:
+During the first `.map()` iteration:
 
 ```js
-TaskRow({ task: a })
+a = {
+  id: 1,
+  name: 'Read DDIA',
+  created_by: 'Zhe'
+}
 ```
 
-That object is the **props** object. Your function names its parameter `task`, but what actually arrives is `{ task: {...} }`. So inside `TaskRow`:
-
-```text
-task            → { task: { id: 1, name: 'Read DDIA', created_by: 'Zhe' } }
-task.name       → undefined      (the props object has no "name" key)
-task.task.name  → 'Read DDIA'    (one level deeper)
-```
-
-JSX renders `undefined` as nothing. That's why you get rows with empty cells and no error. You can confirm it by adding `console.log(task)` at the top of `TaskRow`.
-
-The fix is to pull `task` out of the props object with destructuring:
+So conceptually React sees:
 
 ```jsx
-function TaskRow({ task }) {
+<TaskRow
+  key={1}
+  task={{
+    id: 1,
+    name: 'Read DDIA',
+    created_by: 'Zhe'
+  }}
+/>
+```
+
+The important prop is:
+
+```jsx
+task={a}
+```
+
+You're saying:
+
+> Create a prop named `task`, whose value is the object currently stored in `a`.
+
+Then React calls your component conceptually like:
+
+```js
+TaskRow({
+  task: {
+    id: 1,
+    name: 'Read DDIA',
+    created_by: 'Zhe'
+  }
+})
+```
+
+And this:
+
+```jsx
+function TaskRow({task}) {
+```
+
+is JavaScript **object destructuring**.
+
+It's essentially extracting `task` from the props object.
+
+Without destructuring, you could have written:
+
+```jsx
+function TaskRow(props) {
   return (
     <tr>
-      <td>{task.name}</td>
-      <td>{task.created_by}</td>
+      <td>{props.task.name}</td>
+      <td>{props.task.created_by}</td>
     </tr>
   )
 }
 ```
 
-`{ task }` in the parameter list is plain JavaScript, not React. It means "take the argument, read its `task` property, and bind it to a local variable called `task`." It's the same as writing `function TaskRow(props) { const task = props.task; ... }`.
+Your version is simply cleaner:
 
-**The next thing you'll notice: keys.** Once rows render, open the console and you'll see a warning that each child in a list should have a unique `key` prop. The `key` goes on the element you return from `.map()`, in `App`, not inside `TaskRow`:
-
-```jsx
-tasks.map(a => <TaskRow key={a.id} task={a} />)
+```text
+props
+  │
+  └── task
+       │
+       ├── name
+       └── created_by
 ```
 
-React uses `key` to match each row with the same row on the next render. Without it, React matches rows by position, which breaks once you delete or reorder tasks in Stage 3. `key` is also special: React consumes it and does **not** pass it into props, so `TaskRow` can't read it. That's why your `id={task.id}` on the `<tr>` doesn't serve this purpose. That just sets an HTML `id` attribute on the DOM element, and you can remove it.
+So we've now established:
+
+```text
+App
+ │
+ │ owns tasks
+ │
+ │ tasks.map(a => ...)
+ │
+ │ task={a}
+ ▼
+TaskRow
+ │
+ │ receives task prop
+ ▼
+renders <tr>
+```
+
+And notice: **`TaskRow` knows absolutely nothing about the `tasks` array.**
+
+It only knows:
+
+> Someone gave me one `task`. My job is to render it.
+
+That's a nice component boundary.
+
+### One subtle point: `key`
+
+You correctly wrote:
+
+```jsx
+<TaskRow key={a.id} task={a} />
+```
+
+rather than putting `key` on `<tr>` inside `TaskRow`.
+
+Why?
+
+Because the list exists here:
+
+```jsx
+tasks.map(a =>
+  <TaskRow ... />
+)
+```
+
+React needs to distinguish the **siblings being created by this list operation**:
+
+```text
+TaskRow key=1
+TaskRow key=2
+TaskRow key=3
+```
+
+So the identity belongs at that level.
+
+`TaskRow` itself doesn't need to know its key.
+
+---
+
+#### Next: extract `TaskList`
+
+Now let's add one more layer.
+
+Currently `App` still knows quite a lot about how a task table is rendered:
+
+```text
+App
+ │
+ ├── <table>
+ │    ├── <thead>
+ │    └── <tbody>
+ │          └── tasks.map(...)
+ │                 └── TaskRow
+```
+
+I want to move **the whole table** into:
+
+```text
+TaskList.jsx
+```
+
+Then `App` should conceptually become:
+
+```text
+App
+ │
+ │ owns tasks
+ │
+ └── <TaskList ??? />
+```
+
+while:
+
+```text
+TaskList
+ │
+ │ receives tasks
+ │
+ ├── renders table/header
+ │
+ └── tasks.map(...)
+       │
+       └── <TaskRow task={...} />
+```
+
+So we're creating:
+
+```text
+App
+ │
+ │ tasks={???}
+ ▼
+TaskList
+ │
+ │ task={???}
+ ▼
+TaskRow
+```
+
+#### Your challenge
+
+Create:
+
+```text
+TaskList.jsx
+```
+
+and move this entire section out of `App`:
+
+```jsx
+<table className="task-table">
+  ...
+</table>
+```
+
+You'll need to answer three questions yourself:
+
+1. What prop should `App` pass to `TaskList`?
+2. How should `TaskList` receive/destructure that prop?
+3. Since `TaskList` now contains `<TaskRow>`, what does `TaskList.jsx` need to import?
+
+Afterward, `App` should no longer contain `.map()` at all.
+
+That's actually a useful architectural change:
+
+```text
+App
+knows:
+"What tasks exist?"
+
+
+TaskList
+knows:
+"How do I turn a collection of tasks into a table?"
+
+
+TaskRow
+knows:
+"How do I display one task?"
+```
+
+Try that extraction yourself.
+
+Once it works, **don't extract the form immediately**. We'll pause and mentally execute `App → TaskList → TaskRow`, because you've now created a three-level component/data-flow chain. Then we'll extract `AddTaskForm`, which will introduce the much more interesting reverse problem: **the child has the event, but the parent owns the state.**
