@@ -2566,3 +2566,63 @@ knows:
 Try that extraction yourself.
 
 Once it works, **don't extract the form immediately**. We'll pause and mentally execute `App → TaskList → TaskRow`, because you've now created a three-level component/data-flow chain. Then we'll extract `AddTaskForm`, which will introduce the much more interesting reverse problem: **the child has the event, but the parent owns the state.**
+
+## passing various kind of props
+
+`AddTaskForm.jsx`
+
+```js
+function AddTaskForm({name,setName,createdby,setCreatedby,addTask}) {
+    return (
+      <div>
+          <input placeholder="Task name"
+            value={name}
+            onChange={(event)=>setName(event.target.value)}
+          />
+      
+
+          <input placeholder="Created by"
+            value={createdby}
+            onChange={(event)=>setCreatedby(event.target.value)}
+          />
+
+          <button 
+            onClick={addTask}
+          >
+            Add Task
+          </button>
+      </div>
+    )
+}
+
+
+export default AddTaskForm
+```
+
+`App.jsx`
+
+```js
+...
+import AddTaskForm from './AddTaskForm.jsx';
+
+function App() {
+  ...
+  return (
+      <div>
+        <h1>Task Tracker</h1>
+
+        <AddTaskForm 
+          name={name}
+          setName={setName}
+          createdby={createdby}
+          setCreatedby={setCreatedby}
+          addTask={addTask}
+        />
+
+        <TaskList tasks={tasks} />
+      </div>
+  )
+}
+
+export default App
+```
