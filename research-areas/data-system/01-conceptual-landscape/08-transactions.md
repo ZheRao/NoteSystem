@@ -360,3 +360,139 @@ Visbility rules for observing a consistent snapshot
 
 
 Indexes and snapshot isolation
+- how do indexes work in a multiversion database?
+  - most common approach is that each index entry **points at one of the versions** of a row that matches the entry (either the oldest or the newest version)
+    - each row version may contain a reference to the next-oldest or next-newest version
+    - a query that uses the index must then iterate over the rows to find one 
+      - that is visible and 
+      - where the value matches what the query is looking for
+    - when GC removes old row versions that are no longer visible to any transaction, the corresponding index entries can also be removed
+  - many implementation details affect the **performance** of multiversion concurrency control
+    - e.g., PostgreSQL has optimizations for avoiding index updates if different versions of the same row can fit on the same page
+    - some other databases avoid storing full copies of modified rows and **store only differences between versions**, to save space
+  - another approach is used in CouchDB, Datomic, and LMDB, although they also use B-trees
+    - they use an **immutable** (copy-on-write) variant that does not overwrite pages of the tree when they are updated but instead creates a **new copy of each modified page**
+      - **parent pages**, up to the root of the tree, are **copied** and updated to point to the new versions of their child pages
+      - any **pages** that are **not affected** by a write do not need to be copied and can be **shared** with the new tree
+    -  with immutable B-trees, every write transaction (or batch of transactions) **creates a new B-tree root**, and a particular root is **a consistent snapshot** of the database at the point in time when it was created
+       -  there is no need to filter out rows based on transaction IDs because subsequent writes cannot modify an existing B-tree; they can only create new tree roots
+       -  this approach also requires a backgroud process for compaction and GC
+
+
+Snapshot isolation, repeatable read, and naming confusion
+- MVCC is a commonly used implementation technique for databases, and often it is used to implement snapshot isolation
+- however, different databases sometimes **use different terms to refer to the same thing**
+  - e.g., snapshot isolation is called "repeatable read" in PostgreSQL and "serializable" in Oracle
+- also, sometimes different systems use the **same term but with a different meaning**
+  - e.g., "repeatable read" means snapshot isolation in PostgreSQL, but it means an implementation of MVCC with weaker consistency than snapshot isolation in MySQL
+
+---
+### Preventing Lost Updates
+
+Motivation
+- **read-committed** and **snapshot isolation** levels has primarily focused on guarantees about what a read-only transaction can see in the presence of concurrent writes
+- what about **concurrent writes**?
+  - dirty writes is one particular type of write-write conflict that can occur
+  - several other interesting kinds of conflicts can occur between concurrently writing transactions, such as **lost update**
+
+Lost update
+- the problem occur if an application reads a value from the database, modifies it, and writes back the modified value (the read-modify-write cycle)
+- if two transactions do this concurrently, one of the modifications can be lost, because the second writes does not include the first modification
+- this pattern occurs in various scenarios
+  - incrementing a counter or updating an account balance (requires reading the current value, calculating the new value, and writing back the updated value)
+  - making a local change to a complex value
+    - e.g., adding an element to a list within a JSON document (requires parsing the document, making the change, and writing back the modified document)
+  - two users editing a wiki page at the same time, where each user saves their changes by sending the entire page contents to the server, overwriting whatever is currently in the database
+- a variety of solutions have been developed
+  - atomic write operations
+  - explicit locking
+  - automatically detecting lost updates
+  - conditional writes
+
+Atomic write operations
+- atomic update operations removes the need to implement read-modify-write cycles in application code
+  - they are usually the best solution if your code can be expressed in terms of these operations
+  - for example, the following instruction is concurrency-safe in most relational databases:  
+    ```SQL
+    UPDATE counters
+    SET value = value + 1
+    WHERE key = 'foo';
+    ```
+  - similarly, **document databases** such as MongoDB provide atomic operations for making local modifications to a part of a JSON document
+  - Redis provides atomic operations for modifying data structures such as priority queues
+- not all writes can easily be expressed in terms of atomic operations
+  - e.g., updates to a wiki page involve arbitrary text editing
+  - which can be handled using algorithms
+- atomic operations are usually implemented by **exclusively locking** the object on the object when it is read so that no other transaction can read it until the update has been applied
+  - another option is to simply force all atomic operations to be **executed on a single thread**
+- unfortunately, ORM frameworks make it easy to accidentally write code that performs unsafe read-modify-write cycles instead of using atomic operations provided by the database
+
+Explicit locking
+- another option for preventing lost updates is for the application to **explicitly lock objects** that are going to be updated
+  - then the application can perform a read-modify-write cycle, and if any other transaction tries to concurrently update or lock the same object, it is forced to wait until the first read-modify-write cycle has completed
+- consider a multiplayer game in which several players can move the same figure concurrently
+  - in this case, an atomic operation may not be sufficient, 
+    - because the application also needs to ensure that a player's move abides by the fules of the game, 
+    - which **involves some logic that you cannot sensibly implement as a database query**
+  - instead, you may use a lock to prevent two players from concurrently moving the same piece  
+    ```SQL
+    BEGIN TRANSACTION;
+
+    SELECT * FROM figures
+      WHERE name = 'robot' AND game_id = 222
+      FOR UPDATE;
+    
+    --Check whether move is valid, then update the position
+    --of the piece that was returned by the previous SELECT
+    UPDATE figures SET position = 'c4' WHERE id=1234;
+
+    COMMIT;
+    ```
+      - the `FOR UPDATE` clause indicates that the database should lock all rows returned by this query
+  - this works, but to get it right, you need to carefully think about your application logic
+    - it is easy to forget to add a necessary lock somewhere in this code and thus introduce a race condition
+- locking multiple objects carries a risk of **deadlock**, where two or more transactions are waiting for each other to release their locks
+  - many databases automatically detect deadlocks and abort one of the involved transactions so that the system can make progress
+  - you can handle this situation at the application level by retrying the aborted transaction
+
+Automatically detecting lost updates
+- atomic operations and locks are ways of preventing lost updates by **forcing** the read-modify-write cycles to happen **sequentially**
+- an alternative is to allow them to execute **in parallel** and, if the transaction manager detects a lost update, abort the transaction in question and force it to retry its read-modify-write cycle
+- an advantage of this approach is that databases can perform this check **efficiently** in conjunction **with snapshot isolation**
+  - PostgreSQL's repeatable read, Oracle's serializable, and SQL Server's snapshot isolation levels automatically detect when a lost update has occurred and abort the offending transaction
+  - however, MySQL/InnoDB's repeatable read isolation level does not detect lost updates
+- a big advantage of lost update detection is that it doesn't require application code to use any special database features
+  - you may forget to use a lock or an atomic operation and thus introduce a bug, but lost update detection happens automatically and is thus less error-prone
+  - however, you also have to retry aborted transactions at the application level
+
+Conditional writes (compare-and-set)
+- in databases that **don't provide transactions**, conditional write operation can prevent lost updates by allowing an update to happen only if the value has not changed since you last read it
+  - if the current value does not **match what you previously read**, the update has no effect, and the read-modify-write cycle must be retired
+- for example, to prevent two users concurrently updating the same wiki page, you might try something like  
+  ```SQL
+  -- This may or may not be safe, depending on the database implementation
+  UPDATE wiki_pages SET content='new content'
+    WHERE id=1234 AND content='old content';
+  ```
+  - if the content has changed and no longer matches old content, this update will have no effect
+- instead of **comparing the full content**, you could also use a **version number** column 
+  - you increment on every update and apply the update only if the current version number hasn't changed
+  - this approach is sometimes called **optimistic locking**
+- note that if another transaction has concurrently modified content, the new content may **not be visible** under the **MVCC visibility rules**
+  - many implementations of MVCC have an **exception** to the visibility rules for this scenario
+  - where values written by other transactions are visible to the evaluation of the `WHERE` clause of `UPDATE` and `DELETE` queries
+  - even though those writes are not otherwise visible in the snapshot
+
+Conflict resolution and replication
+- in **replicated databases**, preventing lost updates takes on another dimension
+  - because these databases have copies of the data on multiple nodes, and the data can potentially be modified concurrently on different nodes, additional steps need to be taken
+- locks and conditional write operations assume that there's a **single up-to-date copy** of the data
+  - however, databases with multi-leader or leaderless replication usually allow several writes to happen concurrently and replicate them asynchronously, so they cannot guarantee a single up-to-date copy of the data
+  - thus, techniques based on locks or conditional writes do not apply in this context
+- a common approach in such replicated database is to **allow** concurrent writes to create several **conflicting versions** of a value (also known as siblings)
+  - and to use application code or special data structures to **resolve and merge** these versions after the fact
+  - merging conflicting values can prevent lost updates if the updates are **commutative**
+    - i.e., you can apply them in a different order on different replicas and stil get the same result
+
+---
+### Write Skew and Phantoms
