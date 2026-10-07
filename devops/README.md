@@ -116,7 +116,7 @@ These documents explain:
       * [00-intro-and-structure](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/00-design.md)
       * [01-useCurrentUser.js-ReactHook-useCallback-DependencyArry](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/01-useCurrentUser-js.md)
       * [02-client.js-promise-ErrorHandling-async-await](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/02-client-js.md)
-      * [03-UserBar.jsx-ReactComponent-ControlledInput-OneWayDataFlow](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/03-userbar-component.md)
+      * [03-UserBar.jsx-ReactComponent-ControlledInput-OneWayDataFlow](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/03-userBar-component.md)
       * [04-ClientRow.jsx-useRef-useEffect-form-ConditionRendering](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/04-clientRow-component.md)
       * [05-ClientTable.jsx-CollectionRendering-ComponentComposition-Closures-Key](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/05-clientTable-component.md)
       * [06-AddClientForm.jsx](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/06-addClientForm-component.md)
