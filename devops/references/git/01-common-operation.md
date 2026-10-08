@@ -44,5 +44,18 @@ Discard local changes:
 git restore .
 ```
 
+**2.3 Erase all changes after last `git pull`**
+
+```bash
+# 1. Update your local references with the remote server
+git fetch origin
+
+# 2. Reset your current branch to match the remote branch exactly
+git reset --hard origin/<branch-name>
+
+# 3. Clean up any untracked or new local files/directories
+git clean -fd
+```
+
 
 
