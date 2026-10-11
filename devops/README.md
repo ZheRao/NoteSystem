@@ -34,6 +34,9 @@ They explain:
 * operational cautions
 * scaling implications
 
+### Philosophy
+* [Software Development Philosophy](./foundations/principles/dev/00-software-development-operating-philosophy.md)
+
 ### Foundations → Mechanisms
 
 Low-level mechanics and operational understanding.
