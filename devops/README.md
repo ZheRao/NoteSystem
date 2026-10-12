@@ -103,34 +103,7 @@ These documents explain:
 
 #### Beyond Data Infra/System
 
-* [00-intuition](./foundations//mechanisms/beyond-infra/00-intuition.md)
-* [01-frontend-and-serving-layer-communication](./foundations/mechanisms/beyond-infra/01-system-communication.md)
-* [02-web-application-development](./foundations/mechanisms/beyond-infra/02-web-development.md)
-* **Serving Layer**
-    * [01-SQLite](./foundations/mechanisms/beyond-infra/serving-layer/01-sqlite.md)
-    * [02-FastAPI-HighLevel](./foundations//mechanisms/beyond-infra/serving-layer/02-fastapi.md)
-    * [06-FastAPI-Details](./foundations/mechanisms/beyond-infra/serving-layer/06-fastapi-detail.md)
-    * [03-build-serving-store](./foundations/mechanisms/beyond-infra/serving-layer/03-build-serving-store.md)
-    * [04-serving-layer](./foundations/mechanisms/beyond-infra/serving-layer/04-serving-layer.md)
-    * [05-additional-notes](./foundations//mechanisms/beyond-infra/serving-layer/05-appendix-notes.md)
-    * [07-Transactions-Locking-Concurrency](./foundations/mechanisms/beyond-infra/serving-layer/07-transactions-locking-concurrency.md)
-* **Frontend**
-    * **Client CRUD React Walkthrough**
-      * [00-intro-and-structure](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/00-design.md)
-      * [01-useCurrentUser.js-ReactHook-useCallback-DependencyArry](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/01-useCurrentUser-js.md)
-      * [02-client.js-promise-ErrorHandling-async-await](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/02-client-js.md)
-      * [03-UserBar.jsx-ReactComponent-ControlledInput-OneWayDataFlow](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/03-userBar-component.md)
-      * [04-ClientRow.jsx-useRef-useEffect-form-ConditionRendering](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/04-clientRow-component.md)
-      * [05-ClientTable.jsx-CollectionRendering-ComponentComposition-Closures-Key](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/05-clientTable-component.md)
-      * [06-AddClientForm.jsx](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/06-addClientForm-component.md)
-      * [07-App.jsx](./foundations/mechanisms/beyond-infra/frontend/CRUD-walkthrough/07-App-jsx.md)
-    * [01-URL](./foundations/mechanisms/beyond-infra/frontend/01-url.md)
-    * [02-intro-&-demo-code](./foundations/mechanisms/beyond-infra/frontend/02-frontend-intro.md)
-    * [03-HTML-components](./foundations/mechanisms/beyond-infra/frontend/03-HTML-components.md)
-    * [04-React-sample-code](./foundations/mechanisms/beyond-infra/frontend/04-react-sample-code.md)
-    * [05-foundations-JavaScript-React](./foundations/mechanisms/beyond-infra/frontend/05-js-react-foundations.md)
-    * [06-React-Vite-hosting](./foundations/mechanisms/beyond-infra/frontend/06-vite-hosting.md)
-    * [07-additional-notes](./foundations/mechanisms/beyond-infra/frontend/07-appendix-notes.md)
+
 
 #### Vendor Web Design
 
