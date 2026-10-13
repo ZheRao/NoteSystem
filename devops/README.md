@@ -105,6 +105,8 @@ These documents explain:
 
 * **Core Mechanics**
   * [mistake-logs](./foundations/mechanisms/frontend/03-mistake-log.md)
+  * [complete-JS-tutorial](./foundations/mechanisms/frontend/06-js-react-foundations.md)
+  * [functions](./foundations/mechanisms/frontend/05-functions.md)
 * **Components**
   * [dialog](./foundations/mechanisms/frontend/02-dialog.md)
   * [form](./foundations/mechanisms/frontend/04-form.md)
