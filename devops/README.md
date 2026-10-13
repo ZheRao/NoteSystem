@@ -101,9 +101,15 @@ These documents explain:
 * [07-config](./foundations/mechanisms/spark/07-config.md)
 * [08-data-ops](./foundations/mechanisms/spark/08-data-ops.md)
 
-#### Beyond Data Infra/System
+#### Frontend System
 
-
+* **Core Mechanics**
+  * [mistake-logs](./foundations/mechanisms/frontend/03-mistake-log.md)
+* **Components**
+  * [dialog](./foundations/mechanisms/frontend/02-dialog.md)
+  * [form](./foundations/mechanisms/frontend/04-form.md)
+* **Conventions**
+  * [brackets](./foundations/mechanisms/frontend/01-brackets.md)
 
 #### Vendor Web Design
 
