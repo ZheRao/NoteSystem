@@ -110,6 +110,7 @@ These documents explain:
 * **Components**
   * [dialog](./foundations/mechanisms/frontend/02-dialog.md)
   * [form](./foundations/mechanisms/frontend/04-form.md)
+  * [useEffect]
 * **Conventions**
   * [brackets](./foundations/mechanisms/frontend/01-brackets.md)
 

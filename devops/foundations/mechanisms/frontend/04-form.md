@@ -94,3 +94,19 @@ Tier 2: know that it exists and that it blocks submit. The message styling and t
 - **Tier 1 (mechanical):** submit is one event with many triggers (including Enter); a button's default type is `submit`; `onSubmit` on the form plus `event.preventDefault()`; explicit `type` on every button.
 - **Tier 2 (purpose and failure modes):** `method` decides the default action (`get`/`post` navigate, `dialog` closes); the two dialog patterns and why you don't mix them; native validation blocks submit.
 - **Tier 3 (look up when needed):** `action`, `FormData` and `name` attributes, `requestSubmit()`, `type="reset"`, custom validation messages.
+
+# common bug
+
+## The same bug is hiding in your submit handlers
+
+```jsx
+const submitModify = (event) => {
+  if (request !== 'idle' || error !== null) return   // ← returns BEFORE preventDefault
+  event.preventDefault()
+  ...
+}
+```
+
+If that guard ever fires, the handler returns without cancelling the default, and the form reloads the page. That's the same reload, triggered from a different place. Right now the guard is mostly unreachable, because the inputs and buttons are disabled while pending. But "mostly unreachable" is exactly where reload bugs hide. For example, pressing Enter in the input while the error dialog is open could hit it.
+
+The rule: **`event.preventDefault()` is always the first line of a submit handler**, before any guard or early return. Apply it to `confirmDelete` too. It's worth adding as a bullet to the pitfalls section of your form note.
