@@ -105,7 +105,8 @@ These documents explain:
 
 * **Patterns and Lessons**
   * [mistake-logs](./foundations/mechanisms/frontend/03-mistake-log.md)
-  * [client-UI-patterns](./foundations/mechanisms/frontend/08-client-state-model-async-request-patterns.md)
+  * **Client UI Patterns/Lessons**
+    * [state-model-and-async-request](./foundations/mechanisms/frontend/08-client-state-model-async-request-patterns.md)
 * **Core Mechanics**
   * [complete-JS-tutorial](./foundations/mechanisms/frontend/06-js-react-foundations.md)
   * [functions](./foundations/mechanisms/frontend/05-functions.md)
