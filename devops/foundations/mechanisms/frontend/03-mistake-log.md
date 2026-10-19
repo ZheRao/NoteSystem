@@ -67,3 +67,23 @@ onClick={() => dialogRef.current.close()}          // wrap to delay + keep `this
 - For exactly one exit, make the `close` event the only path to exit (everything closes the dialog; nothing exits directly).
 
 **My mistake:** I assumed the dialog itself was closing twice, when it was the state transition repeating.
+
+Here's the entry, in the same format as the others:
+
+## Brace-less `if` swallowing the next statement
+
+**Correct**
+```js
+if (myGeneration !== requestGeneration.current) return   // guard has its own body
+if (refreshSucceeded) {
+  requestSucceed()
+} else {
+  setRequest('idle')
+}
+```
+- An `if` without braces takes **the next statement** as its body, even when that statement is a whole `if`/`else` block on the following line.
+- A comment where the body should be makes the line *look* complete. The parser ignores it.
+- A guard clause must end in `return` (or `throw`), or it isn't a guard.
+- Prettier exposes it by re-indenting the nesting, and ESLint's `curly` rule prevents it entirely.
+
+**My mistake:** I wrote a generation-check `if` with no `return`, so it became the body wrapper for the success/failure block. In the normal case (generations equal), `requestSucceed()` never ran, `request` stayed `'pending'`, and the Processing dialog reappeared after loading.
