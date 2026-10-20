@@ -496,3 +496,51 @@ Conflict resolution and replication
 
 ---
 ### Write Skew and Phantoms
+
+3rd category of race condition
+- **dirty writes** and **lost updates** are two kinds of race conditions that can occur when different transactions concurrently try to write to the same objects
+- there are other subtler examples of conflicts
+  - writing an application for doctors to **manage their on-call shifts** at a hospital
+    - the hospital usually tries to have several doctors on call at any time, but it absolutely **must have at least one**
+  - imagine Aaliyah and Bryce are the two on-call doctors for a particular shift
+    - both are feeling unwell, so they both decide to request leave
+    - unfortunately, they happen to click the button to go off call at approximately the same time
+    - the following diagram illustrates what happens  
+      ![alt text](images/0806.png)
+      - in each transaction, the application first checks that two or more doctors are currently on call
+      - if so, it assumes it's safe for one doctor to go off call
+      - since the database is using snapshot isolation, both checks return 2, so both transactions proceed to the next stage
+      - both transactions commit, and now no doctor is on call
+      - the requirement of having at least one doctor on call has been violated
+
+Characterizing **write skew**
+- write skew is neither a dirty write nor a lost update, because the two transactions are **updating two objects** (i.e., Aaliyah's and Bryce's on call records)
+- write skew can be thought of as a generalization of the lost-update problem
+  - write skew can occur if two transactions read the same objects and then update some of those objects
+- there are various ways of preventing lost updates, but with write skew, options are more restricted
+  - atomic single-object operations don't help, as multiple objects are involved
+  - the automatic detection of lost updates that is found in some implementation of snapshot isolation unfortunately doesn't help either
+    - write skew is not automatically detected in PostgreSQL's repeatable read, MySQL/InnoDB's repeatable read, Oracle's serializable, or SQL Server's snapshot isolation level
+    - automatically preventing write skew **requires true serializable isolation**
+  - some databases allow you to configure constraints, which are then enforced by the database
+    - however, to specify that at least one doctor must be on call, you would need a **constraint that involves multiple objects**
+    - most databases do not have built-in support for such constraints, although you may be able to implement them with **triggers or materialized views**
+  - if you don't use a serializable isolation leve, the **second-best option** in this case is probably to **explicitly lock the rows that the transaction depends on**
+    - in the doctors example, you could write something like the following  
+      ```SQL
+      BEGIN TRANSACTION;
+
+      SELECT * FROM doctors
+        WHERE on_call = true
+        AND shift_id = 1234 FOR UPDATE;  <!-- FOR UPDATE tells the database to lock all rows returned by this query -->
+
+      UPDATE doctors
+        SET on_call = false
+        WHERE name = 'Aaliyah'
+        AND shift_id = 1234;
+
+      COMMIT;
+      ```
+
+
+More examples of write skew
