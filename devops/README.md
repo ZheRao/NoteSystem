@@ -170,6 +170,7 @@ Focuses on:
 #### System General
 
 * [00-python-dev-environment](./foundations/principles/system-general/00-python-dev-environment.md)
+  * [new-python-backend-environment-setup](./foundations/principles/system-general/10-updated-python-backend-env-setup.md)
 * [01-unit-test](./foundations/principles/system-general/01-unit-test.md)
 * [02-packaging](./foundations/principles/system-general/02-packaging.md)
 * [03-package-resources](./foundations/principles/system-general/03-package-resources.md)
