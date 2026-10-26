@@ -14,6 +14,10 @@ string.strip()
 ```python
 string.find(value, start, end)        # returns index or -1
 string.replace(old, new, count)
+
+import re
+s = "..."
+result = re.sub(r'\s+', "_", s.strip()) # replace one or several consecutive white spaces with _
 ```
 
 **Prefix / Suffix**
