@@ -861,3 +861,215 @@ The normalized-key decision from earlier (computed in Python vs. in the database
 
 # 7. FK reference 
 
+Experiment G checks two things: whether SQLite actually enforces your foreign key in the connection mode you've chosen, and what a violation looks like when it does. The last cell checks what happens when a single connection forgets to enable enforcement.
+
+### Cell 0: schema with a parent and a dependent table
+
+```python
+DB_PATH = "experiment_g.db"
+if os.path.exists(DB_PATH):
+    os.remove(DB_PATH)
+
+setup = sqlite3.connect(DB_PATH, autocommit=False)
+setup.execute("""
+    CREATE TABLE clients (
+        id   INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        CONSTRAINT uq_clients_name UNIQUE (name)
+    )
+""")
+setup.execute("""
+    CREATE TABLE client_notes (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL,
+        note      TEXT NOT NULL,
+        CONSTRAINT fk_client_notes_client
+            FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT
+    )
+""")
+setup.execute("INSERT INTO clients (name) VALUES (?)", ("Farm A",))   # id 1, will be referenced
+setup.execute("INSERT INTO clients (name) VALUES (?)", ("Farm B",))   # id 2, unreferenced
+setup.execute("INSERT INTO client_notes (client_id, note) VALUES (?, ?)", (1, "Seeding plan"))
+setup.commit()
+setup.close()
+
+def fk_on(conn):
+    return conn.execute("PRAGMA foreign_keys").fetchone()[0]     # 1 = enforced, 0 = not
+
+def orphans(conn):
+    return conn.execute("PRAGMA foreign_key_check").fetchall()   # rows that violate an FK right now
+
+def show(conn, label):
+    clients = conn.execute("SELECT id, name FROM clients ORDER BY id").fetchall()
+    notes = conn.execute("SELECT id, client_id, note FROM client_notes ORDER BY id").fetchall()
+    print(f"{label}\n  clients: {clients}\n  notes:   {notes}\n  violations: {orphans(conn)}")
+```
+
+`ON DELETE RESTRICT` says: refuse to delete a client while any note references it. `PRAGMA foreign_key_check` asks SQLite to list every row that currently breaks a foreign key, whether or not enforcement is on. Both PRAGMAs are SQLite-specific; mark them so.
+
+### Cell 1: the default state
+
+> Prediction: in a fresh `autocommit=False` connection, is FK enforcement on or off? Is a transaction already open?
+
+```python
+conn = sqlite3.connect(DB_PATH, autocommit=False, timeout=1)
+print("in_transaction:", conn.in_transaction)
+print("foreign_keys:", fk_on(conn))
+```
+
+### Cell 2: delete a referenced client with enforcement in its default state
+
+> Prediction: does deleting Farm A succeed, even though a note references it?
+
+```python
+try:
+    conn.execute("DELETE FROM clients WHERE id = ?", (1,))
+    print("delete succeeded")
+except sqlite3.Error as err:
+    print(type(err).__name__, "|", err, "|", getattr(err, "sqlite_errorname", None))
+show(conn, "after delete attempt")
+conn.rollback()        # keep the data intact for the next cells
+```
+
+If the delete succeeds, look at the `violations` line: the note now points at a client that doesn't exist.
+
+### Cell 3: try to enable enforcement in this mode
+
+> Prediction: does the PRAGMA take effect? Use what Cell 1 showed about `in_transaction`.
+
+```python
+print("in_transaction before PRAGMA:", conn.in_transaction)
+conn.execute("PRAGMA foreign_keys = ON")
+print("foreign_keys after setting it:", fk_on(conn))
+conn.close()
+```
+
+If it reads back `0`, the PRAGMA was silently ignored, with no error. That's the trap.
+
+### Cell 4: enable it before any transaction exists
+
+In Python 3.12+, `autocommit` can be changed after connecting. So: connect with no transaction management, set the PRAGMA, then switch to `autocommit=False`.
+
+> Prediction: does the PRAGMA stick through the mode switch?
+
+```python
+enforced = sqlite3.connect(DB_PATH, autocommit=True, timeout=1)
+enforced.execute("PRAGMA foreign_keys = ON")
+print("foreign_keys (autocommit=True):", fk_on(enforced))
+
+enforced.autocommit = False
+print("foreign_keys after switching to autocommit=False:", fk_on(enforced))
+print("in_transaction:", enforced.in_transaction)
+```
+
+Whichever ordering works here is the connection setup your unit-of-work helper must use. Mark it clearly as SQLite-specific.
+
+### Cell 5: delete a referenced client, enforcement on
+
+> Prediction: which exception class, errorname and message? Compare with experiment E's unique violation.
+
+```python
+try:
+    enforced.execute("DELETE FROM clients WHERE id = ?", (1,))
+    print("delete succeeded")
+except sqlite3.Error as err:
+    print("type:", type(err).__name__)
+    print("message:", err)
+    print("errorname:", getattr(err, "sqlite_errorname", None), "| code:", getattr(err, "sqlite_errorcode", None))
+enforced.rollback()
+```
+
+### Cell 6: the other direction, a note for a nonexistent client
+
+> Prediction: is this error distinguishable from Cell 5's by its fields or message?
+
+```python
+try:
+    enforced.execute("INSERT INTO client_notes (client_id, note) VALUES (?, ?)", (999, "Orphan note"))
+    print("insert succeeded")
+except sqlite3.Error as err:
+    print("type:", type(err).__name__, "| message:", err, "| errorname:", getattr(err, "sqlite_errorname", None))
+enforced.rollback()
+```
+
+Put Cells 5 and 6 side by side. If the errors look identical, that's direct evidence for the earlier claim that the operation, not the error, decides whether this means "client is referenced" or "parent doesn't exist."
+
+### Cell 7: delete an unreferenced client
+
+> Prediction: does deleting Farm B succeed with enforcement on?
+
+```python
+enforced.execute("DELETE FROM clients WHERE id = ?", (2,))
+show(enforced, "after deleting Farm B (uncommitted)")
+enforced.rollback()
+```
+
+### Cell 8: one connection that forgot the PRAGMA
+
+> Predictions: can a connection without enforcement delete Farm A while the enforced connection is open? Afterwards, does the enforced connection detect the orphan automatically, or only if asked?
+
+```python
+careless = sqlite3.connect(DB_PATH, autocommit=False, timeout=1)    # no PRAGMA
+careless.execute("DELETE FROM clients WHERE id = ?", (1,))
+careless.commit()
+careless.close()
+
+show(enforced, "enforced connection, after careless delete")
+enforced.rollback()
+```
+
+### Cell 9: cleanup
+
+```python
+enforced.close()
+```
+
+## Questions to answer
+
+1. **Default and setup:** is enforcement on by default? Did the PRAGMA work inside `autocommit=False` mode, and which ordering made it stick? What does this mean for where the service's connection setup lives?
+2. **Error fields:** what class, errorname and code identify an FK violation? How do they differ from E's unique violation?
+3. **Context:** could you tell Cell 5's error apart from Cell 6's without knowing which operation ran? What does that confirm about the translation design?
+4. **Weakest link:** after Cell 8, is the invariant "every note references an existing client" still true? Did the enforced connection notice by itself? What does that imply about an invariant that each connection has to opt into?
+5. **Portability:** PostgreSQL and Azure SQL enforce foreign keys always, with no per-connection setting. Which parts of what you observed are SQLite-only, and which carry over?
+
+Question 4 is the one that turns this from a configuration detail into a design rule, so bring that answer back especially.
+
+# 7b. FK reference wrap up
+
+Your conclusions are mostly right, and one of your observations is more interesting than it first looks. Two points need correcting before they reach the design.
+
+## The PRAGMA isn't committed. It's ignored while a transaction is open
+
+`PRAGMA foreign_keys` isn't a data change that needs committing. It's a **setting on the connection**, and SQLite refuses to change it while a transaction is open, silently, with no error.
+
+That's why `autocommit` matters. In `autocommit=False` mode, the module keeps a transaction open at all times: `commit()` ends one transaction and immediately begins the next. So in that mode there's never a moment when the PRAGMA can take effect, and "execute, then commit" doesn't help, because the PRAGMA already ran inside a transaction.
+
+Cell 4 works because it sets the PRAGMA while no transaction exists (`autocommit=True`), *then* switches to `autocommit=False`. The setting survives because the connection keeps it.
+
+Verify this rather than taking my word for it: in a fresh `autocommit=False` connection, run the PRAGMA, call `commit()`, then read back `PRAGMA foreign_keys`. If it says `0`, the "commit makes it take effect" theory is ruled out. This matters because the unit-of-work helper's connection setup depends on getting the order right.
+
+## Your 1811 vs 787 finding: right observation, risky conclusion
+
+The codes differ, but I don't think that's because one is a delete and the other an insert. I believe it's because of **`ON DELETE RESTRICT`**. SQLite enforces RESTRICT with an internal trigger-like action, so the violation is reported as `SQLITE_CONSTRAINT_TRIGGER`. Without RESTRICT (the default, `NO ACTION`), I'd expect a referenced delete to report `SQLITE_CONSTRAINT_FOREIGNKEY` (787), just like the orphan insert.
+
+You can test this directly: recreate `client_notes` without the `ON DELETE RESTRICT` clause, rerun Cell 5, and see which code comes back.
+
+Two reasons not to rely on 1811 meaning "client is referenced":
+
+- **It reflects how SQLite implements the rule, not what the rule means.** Change the FK action and the code changes, while the business meaning stays the same.
+- **1811 is also the code for a user-defined trigger that aborts.** If you ever add a business-rule trigger (spec G-09 allows them "for additional rules"), it would produce the same code with a different meaning.
+
+So the translation function should map both 787 and 1811-with-an-FK-message to the neutral kind **foreign key**. The service then decides the meaning from the operation: during "delete client" it means `referenced`; during "insert note" it means "parent missing." That's the same design as before, now with evidence for why the operation must decide. **(Lesson candidate: an error code can reflect how the database implements a rule rather than what the rule means. Translate codes into neutral kinds, and let the operation supply the meaning.)**
+
+## The weakest-link rule, slightly broadened
+
+"Enable it on every new write connection" is close. I'd make it **every connection the application creates**, opened through one function, so no code path can forget. Reads can't violate a foreign key, but having one way to open a connection is simpler than tracking which ones need it.
+
+Two additions:
+
+- **Fail closed.** After setting the PRAGMA, read it back. If it isn't `1`, raise instead of continuing. A silently ignored setting is exactly how Cell 8 happened.
+- **Connections you don't control are careless connections too.** The `sqlite3` command-line tool and GUI browsers also default to enforcement off. Anyone who deletes rows through one of them can create orphans. `PRAGMA foreign_key_check` (for example at startup or in a test) is how you'd detect that afterwards.
+
+**(Lesson candidate: an invariant that each connection must opt into is only as strong as the weakest connection. Centralize connection creation, verify the setting, and fail closed.)**
+
+Your portability summary is right. Always-on enforcement in PostgreSQL and Azure SQL removes the per-connection trap; the constraint design and the error translation carry over.
