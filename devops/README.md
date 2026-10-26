@@ -108,6 +108,7 @@ These documents explain:
   * **Client UI Patterns/Lessons**
     * [state-model-and-async-request](./foundations/mechanisms/frontend/08-client-state-model-async-request-patterns.md)
     * [http-contract](./foundations/mechanisms/frontend/09-client-http-contract-patterns.md)
+    * [SQLite-transactions-integrity-patterns](./foundations/mechanisms/frontend/10-sqlite-transactions-integrity-patterns.md)
 * **Core Mechanics**
   * [complete-JS-tutorial](./foundations/mechanisms/frontend/06-js-react-foundations.md)
   * [functions](./foundations/mechanisms/frontend/05-functions.md)
