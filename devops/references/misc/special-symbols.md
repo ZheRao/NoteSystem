@@ -5,6 +5,7 @@
     - Double arrow: ⇒
 - up arrow: ↑
 - down arrow: ↓
+- middle dot: ·
 
 
 # Common signs
