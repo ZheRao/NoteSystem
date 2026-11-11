@@ -111,6 +111,7 @@ These documents explain:
     * [SQLite-transactions-integrity-patterns](./foundations/mechanisms/frontend/10-sqlite-transactions-integrity-patterns.md)
     * [database-integrity-pattern](./foundations/mechanisms/frontend/11-database-integrity-pattern.md)
     * [React-router-pattern](./foundations/mechanisms/frontend/12-react-router-pattern.md)
+    * [crop-plan-patterns-part-1](./foundations/mechanisms/frontend/14-cp-patterns-p1.md)
 * **Core Mechanics**
   * [complete-JS-tutorial](./foundations/mechanisms/frontend/06-js-react-foundations.md)
   * [functions](./foundations/mechanisms/frontend/05-functions.md)
@@ -118,7 +119,7 @@ These documents explain:
   * [dialog](./foundations/mechanisms/frontend/02-dialog.md)
   * [form](./foundations/mechanisms/frontend/04-form.md)
   * [useEffect](./foundations/mechanisms/frontend/07-useEffect.md)
-  * [React-router]()
+  * [React-router](./foundations/mechanisms/frontend/13-react-router.md)
 * **Conventions**
   * [brackets](./foundations/mechanisms/frontend/01-brackets.md)
 
