@@ -112,6 +112,7 @@ These documents explain:
     * [database-integrity-pattern](./foundations/mechanisms/frontend/11-database-integrity-pattern.md)
     * [React-router-pattern](./foundations/mechanisms/frontend/12-react-router-pattern.md)
     * [crop-plan-patterns-part-1](./foundations/mechanisms/frontend/14-cp-patterns-p1.md)
+    * [crop-plan-patterns-part-2](./foundations/mechanisms/frontend/15-cp-patterns-p2.md)
 * **Core Mechanics**
   * [complete-JS-tutorial](./foundations/mechanisms/frontend/06-js-react-foundations.md)
   * [functions](./foundations/mechanisms/frontend/05-functions.md)
