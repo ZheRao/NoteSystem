@@ -4196,7 +4196,9 @@ And I have a question: when Georges expressed concern about your weekends, was h
 
 That distinction matters, because it could tell us how much room you have to renegotiate the pace rather than silently absorbing every deadline yourself.
 
-# **BREAKING NEWS — NOVEMBER 19, 2026**
+# Accidentally accumulating essentail skills
+
+## **BREAKING NEWS — NOVEMBER 19, 2026**
 
 **GROWLYTICS ENGINEERING DEPARTMENT DISCOVERS IT HAS BEEN RUNNING AN INTERNAL STARTUP WITHOUT REALIZING IT.**
 
@@ -4803,3 +4805,489 @@ Although I do have one concern...
 **Linus, from across the Atlantic:** "**DON'T YOU DARE!**" 😭🤣🤣
 
 **Meeting adjourned. Engineering department officially off duty.** 😎
+
+
+## **NOVEMBER 20, 2026 — OPERATION CATALOG FETCH**
+
+**CTO Zhe:** "SOLDIERS! TODAY WE GO TO WAR!"
+
+**Developer Zhe:** "SIR! WHAT IS OUR OBJECTIVE?!"
+
+**CTO Zhe:** "REPLACE STATIC REFERENCE DATA WITH REAL API RESPONSES!"
+
+**QA Engineer Zhe:** "WHAT ABOUT ERROR RECOVERY?!"
+
+**CTO Zhe:** "WE TEST IT!"
+
+**Project Manager Zhe:** "WHAT ABOUT THE SCHEDULE?!"
+
+**CTO Zhe:** "WE ARE ALREADY BEHIND!"
+
+**HR Zhe:** "WHAT ABOUT THE WEEKEND?!"
+
+**CTO Zhe:** "..."
+
+**HR Zhe:** "SIR?"
+
+**CTO Zhe:** "WE SHALL DISCUSS THAT AFTER THE WAR!"
+
+**Linus Torvalds:** "THAT IS NOT HOW WEEKENDS WORK!" 😭🤣🤣
+
+---
+
+**CTO Zhe:** "I HAVE REVIEWED DEVELOPER ZHE'S PERFORMANCE!"
+
+**HR:** "And?"
+
+**CTO Zhe:** "OUTSTANDING!"
+
+**HR:** "Based on what?"
+
+**CTO Zhe:** "MY PROFESSIONAL ASSESSMENT!"
+
+**HR:** "YOU ARE DEVELOPER ZHE!"
+
+**CTO Zhe:** "AND I HAVE NEVER DISAGREED WITH MYSELF!"
+
+**QA Engineer Zhe:** "OBJECTION! WE DISAGREE CONSTANTLY!"
+
+**Project Manager Zhe:** "AND WE ARE FOUR DAYS BEHIND!"
+
+**CTO Zhe:** "THIS PERFORMANCE REVIEW IS BECOMING HOSTILE!" 😭🤣🤣
+
+---
+
+### **THE TORVALDS–DEAN FAMILY — THE BONUS REFUSAL**
+
+**Zhe:** "FATHERS! I HAVE DECIDED TO DECLINE MY FUTURE PERFORMANCE BONUS!"
+
+**Linus:** "Why?"
+
+**Zhe:** "BECAUSE I SET MY OWN MILESTONES!"
+
+**Jeff:** "Then have someone else approve the milestones."
+
+**Zhe:** "BUT THEY DON'T UNDERSTAND THE CODE!"
+
+**Jeff:** "They don't need to understand every implementation detail to evaluate business outcomes."
+
+**Zhe:** "BUT WHAT IF I CHEAT?!"
+
+**Linus:** "Are you planning to cheat?"
+
+**Zhe:** "ABSOLUTELY NOT!"
+
+**Linus:** "Then establish independent acceptance criteria."
+
+**Zhe:** "..."
+
+**Jeff:** "And document the evidence."
+
+**Zhe:** "..."
+
+**Linus:** "And accept the compensation you've earned."
+
+**Zhe:** "..."
+
+**Zhe:** "FATHERS, YOU HAVE DESTROYED MY MORAL DILEMMA WITH BASIC GOVERNANCE!"
+
+**Jeff:** "You're welcome."
+
+**Zhe:** "THEN I SHALL INVEST THE BONUS IN MY FUTURE!"
+
+**Linus:** "Excellent. Now how about taking a weekend off?"
+
+**Zhe:** "I RESIGN!"
+
+**Linus:** "THERE HE GOES AGAIN!" 😭🤣🤣
+
+---
+
+**CTO Zhe:** "SOLDIERS! WHAT IS OUR MISSION?!"
+
+**Developer Zhe:** "FETCH THE CATALOG!"
+
+**QA Engineer Zhe:** "VERIFY THE FAILURE MODES!"
+
+**Project Manager Zhe:** "CLOSE LAB 08!"
+
+**HR Zhe:** "AND TAKE THE WEEKEND OFF!"
+
+**CTO Zhe:** "..."
+
+**CTO Zhe:** "THREE OUT OF FOUR! EXCELLENT ALIGNMENT!" 😎🤣
+
+## **THE GROWLYTICS PERFORMANCE REVIEW COMMITTEE 🤣**
+
+**Gerry:** "Zhe, we're introducing a new incentive program!"
+
+**Zhe:** "WONDERFUL!"
+
+**Gerry:** "You could earn an additional 20%!"
+
+**Zhe:** "I MUST DECLINE!"
+
+**Gerry:** "Why?"
+
+**Zhe:** "BECAUSE I SET THE MILESTONES!"
+
+**Gerry:** "We can approve them."
+
+**Zhe:** "BUT I ESTIMATE THE WORK!"
+
+**Gerry:** "That's part of your job."
+
+**Zhe:** "BUT I ALSO IMPLEMENT THE WORK!"
+
+**Gerry:** "Yes..."
+
+**Zhe:** "AND THEN I REVIEW THE WORK!"
+
+**Gerry:** "..."
+
+**Zhe:** "AND IF I GET A BONUS, I'LL WORK EVEN HARDER!"
+
+**Gerry:** "Zhe, you already work seventy hours a week."
+
+**Zhe:** "EXACTLY!"
+
+**Gerry:** "..."
+
+**Gerry:** "Ben, what do we do with an employee who refuses additional money because he's afraid he'll work too hard?"
+
+**Ben:** "I DON'T KNOW! THIS WASN'T COVERED IN BUSINESS SCHOOL!" 😭🤣🤣
+
+**Georges:** "Perhaps we should incentivize him to take weekends off."
+
+**Gerry:** "Excellent idea! Five percent for every weekend he doesn't work!"
+
+**Zhe:** "..."
+
+**Zhe:** "I RESIGN FROM THE INCENTIVE PROGRAM!"
+
+**Ben:** "HE'S RESIGNING FROM NOT WORKING NOW!" 😭🤣🤣
+
+## **THE GROWLYTICS EXECUTIVE MEETING — TWO PARALLEL UNIVERSES**
+
+**Gerry:** "I'm really pleased with Strata's progress."
+
+**Georges:** "The interface is coming together nicely. I can imagine centralized definitions across our systems."
+
+**Ben:** "Zhe has been doing a great job communicating progress."
+
+**Gerry:** "We should think about how to recognize everyone's contributions."
+
+**Georges:** "And I wish he'd take weekends off."
+
+*Meanwhile, inside Zhe's head...*
+
+**CTO Zhe:** "EMERGENCY MEETING!"
+
+**Developer Zhe:** "WHAT HAPPENED?!"
+
+**Project Manager Zhe:** "WE ARE FOUR DAYS BEHIND!"
+
+**QA Engineer Zhe:** "THE CATALOG IS STILL STATIC!"
+
+**CTO Zhe:** "THE PARTNERS ARE LOSING PATIENCE!"
+
+**Developer Zhe:** "HOW DO WE KNOW?!"
+
+**CTO Zhe:** "WE DON'T!"
+
+**Project Manager Zhe:** "THAT MAKES IT WORSE!"
+
+**HR Zhe:** "SHOULD WE ASK THEM?!"
+
+**CTO Zhe:** "ABSOLUTELY NOT! WHAT IF THEY CONFIRM IT?!"
+
+**Developer Zhe:** "THEN WE MUST WORK SEVENTY HOURS!"
+
+**QA Engineer Zhe:** "EIGHTY TO BE SAFE!"
+
+**HR Zhe:** "I RESIGN!"
+
+*Back in Gerry's office...*
+
+**Gerry:** "Perhaps we should give him a bonus."
+
+😭🤣🤣🤣
+
+---
+
+### **LINUS — EMERGENCY INTERVENTION**
+
+**Linus:** "Son, why are you working seventy hours?"
+
+**Zhe:** "BECAUSE I UNDERESTIMATED THE WORK!"
+
+**Linus:** "Then improve your estimates."
+
+**Zhe:** "BUT I MADE A PROMISE!"
+
+**Linus:** "Then communicate the revised timeline."
+
+**Zhe:** "BUT WHAT IF THEY LOSE CONFIDENCE?!"
+
+**Jeff:** "Then demonstrate progress, explain uncertainty, and show how the new information changes the plan."
+
+**Zhe:** "BUT WHAT IF THEY FIRE ME?!"
+
+**Linus:** "Son, what have they actually said?"
+
+**Zhe:** "THEY LIKE THE PLATFORM!"
+
+**Jeff:** "And?"
+
+**Zhe:** "THEY'RE EXCITED ABOUT ITS FUTURE!"
+
+**Linus:** "And?"
+
+**Zhe:** "THEY WANT ME TO TAKE WEEKENDS OFF!"
+
+**Linus:** "..."
+
+**Linus:** "SON, YOU'RE RESPONDING TO POSITIVE STAKEHOLDER FEEDBACK WITH AN EMERGENCY CRUNCH SCHEDULE!"
+
+**Zhe:** "YES!"
+
+**Linus:** "WHY?!"
+
+**Zhe:** "BECAUSE I CARE!"
+
+**Jeff:** "That's admirable. But caring and forecasting accurately are separate skills."
+
+**Zhe:** "..."
+
+**Linus:** "And apparently so are caring and sleeping."
+
+😭🤣🤣
+
+# **🚨 BREAKING NEWS — NOVEMBER 20, 2026, 9:53 PM** — **LAB 08 COMPLETE**
+
+**GROWLYTICS ENGINEERING DEPARTMENT ANNOUNCES THE SUCCESSFUL COMPLETION OF ITS SECOND DOMAIN. ENTIRE EXECUTIVE LEADERSHIP RESIGNS IMMEDIATELY.** 😭🤣🤣🤣
+
+**CTO Zhe:** "GENTLEMEN! IT HAS BEEN AN HONOR!"
+
+**Developer Zhe:** "SIR! THE CROP-PLAN CONFIGURATION SYSTEM IS COMPLETE!"
+
+**QA Engineer Zhe:** "BACKEND TESTS! DATABASE TESTS! FRONTEND API TESTS! END-TO-END VERIFICATION!"
+
+**Project Manager Zhe:** "FINAL SCHEDULE DELAY: FIVE DAYS!"
+
+**CTO Zhe:** "ACCEPTABLE! WE HAVE CONTAINED THE DAMAGE!"
+
+**HR Zhe:** "AND NOW?"
+
+**CTO Zhe:** "I HEREBY RESIGN AS TECHNICAL LEAD, VICE PRESIDENT, AND CHIEF TECHNOLOGY OFFICER!"
+
+**Developer Zhe:** "SIR! WHO WILL LEAD THE NEXT CONFIGURATION SYSTEM?!"
+
+**CTO Zhe:** "THAT IS NO LONGER MY CONCERN!"
+
+**HR Zhe:** "WHO WILL MANAGE THE ENGINEERING DEPARTMENT?!"
+
+**CTO Zhe:** "GOOD LUCK, GENTLEMEN!"
+
+**Developer Zhe:** "BUT SIR, YOU ARE THE ENTIRE ENGINEERING DEPARTMENT!"
+
+**CTO Zhe:** "..."
+
+**CTO Zhe:** "THEN I WISH MYSELF THE VERY BEST!" 😎🤣🤣
+
+---
+
+### **THE TORVALDS–DEAN FAMILY — GRADUATION CEREMONY 🎓**
+
+**Jeff Dean:** "Congratulations, son. You've completed your second end-to-end application domain."
+
+**Zhe:** "THANK YOU, FATHER!"
+
+**Linus:** "And what did you learn?"
+
+**Zhe:** "THAT SOFTWARE IS HARD!"
+
+**Linus:** "Good."
+
+**Zhe:** "THAT ESTIMATES ARE HARD!"
+
+**Jeff:** "Very good."
+
+**Zhe:** "THAT FRONTEND TESTING IS NOT ACTUALLY MARTIAN!"
+
+**Linus:** "Excellent."
+
+**Zhe:** "AND THAT I SHOULD NEVER PROMISE THREE DAYS FOR SOMETHING I HAVEN'T BUILT BEFORE!"
+
+**Jeff:** "Now we're getting somewhere."
+
+**Linus:** "So what will you do this weekend?"
+
+**Zhe:** "..."
+
+**Linus:** "SON."
+
+**Zhe:** "..."
+
+**Zhe:** "I WAS THINKING ABOUT THE DEBT SCHEDULE CONFIGURATION SYSTEM—"
+
+**Linus:** "**NOOOOOOOOO!**"
+
+**Jeff:** "Technically, the next domain should be easier to estimate."
+
+**Linus:** "JEFF! YOU ARE NOT HELPING!"
+
+**Zhe:** "FATHER JEFF UNDERSTANDS THE ENGINEERING ROADMAP!" 😭🤣🤣
+
+---
+
+### **GROWLYTICS HUMAN RESOURCES — NOTICE OF RESIGNATION**
+
+**Applicant:** Zhe
+
+**Positions:** CTO, VP of Engineering, Technical Lead, Software Developer, QA Engineer, Project Manager
+
+**Reason:** Successfully completed Lab 08 and wishes to escape before Lab 09.
+
+**Decision:** **REJECTED.**
+
+**Reason for rejection:** All authorized personnel capable of processing the resignation have also resigned.
+
+**Appeal process:** Contact CTO Zhe.
+
+**CTO Zhe:** "I RESIGN FROM THE APPEALS COMMITTEE!"
+
+**HR Zhe:** "APPLICATION REJECTED DUE TO MISSING APPROVER!"
+
+😭🤣🤣🤣
+
+
+## **BREAKING NEWS — NOVEMBER 20, 2026**
+
+**GROWLYTICS CTO RETURNS FROM RESIGNATION FOR APPROXIMATELY 47 SECONDS BEFORE DISCOVERING THE CALENDAR.**
+
+**CTO Zhe:** "GENTLEMEN! I HAVE DECIDED TO STAY!"
+
+**Developer Zhe:** "HOORAY!"
+
+**QA Engineer Zhe:** "WELCOME BACK, SIR!"
+
+**Project Manager Zhe:** "EXCELLENT! LET'S REVIEW THE ROADMAP!"
+
+**CTO Zhe:** "HOW MANY CONFIGURATION SYSTEMS REMAIN?!"
+
+**Project Manager Zhe:** "THREE, SIR!"
+
+**CTO Zhe:** "HOW MANY DAYS?!"
+
+**Project Manager Zhe:** "FORTY!"
+
+**CTO Zhe:** "FORTY WORKING DAYS?!"
+
+**Project Manager Zhe:** "FORTY CALENDAR DAYS!"
+
+**CTO Zhe:** "..."
+
+**Project Manager Zhe:** "INCLUDING WEEKENDS!"
+
+**CTO Zhe:** "..."
+
+**Project Manager Zhe:** "AND CHRISTMAS!"
+
+**CTO Zhe:** "..."
+
+**Project Manager Zhe:** "AND NEW YEAR'S EVE!"
+
+**CTO Zhe:** "**I ARDENTLY RESIGN!**" 😭🤣🤣🤣
+
+---
+
+**Linus:** "Son, who approved this schedule?"
+
+**Zhe:** "I DID!"
+
+**Linus:** "Who estimated the work?"
+
+**Zhe:** "I DID!"
+
+**Linus:** "Who allocated the contingency?"
+
+**Zhe:** "..."
+
+**Jeff:** "Was contingency allocated?"
+
+**Zhe:** "NO!"
+
+**Linus:** "WHO IS RESPONSIBLE FOR THIS?!"
+
+**Zhe:** "I DEMAND THE IMMEDIATE RESIGNATION OF MANAGEMENT!"
+
+**Linus:** "YOU ARE MANAGEMENT!"
+
+**Zhe:** "THEN MY RESIGNATION IS APPROVED!" 😭🤣🤣
+
+---
+
+### **EMERGENCY BOARD MEETING**
+
+**Gerry:** "Zhe, congratulations on finishing crop-plan!"
+
+**Zhe:** "THANK YOU!"
+
+**Georges:** "The progress is excellent!"
+
+**Zhe:** "THANK YOU!"
+
+**Ben:** "Please take some weekends off."
+
+**Zhe:** "THANK YOU!"
+
+**Gerry:** "How are we looking for the remaining configurations?"
+
+**Zhe:** "..."
+
+**Gerry:** "Zhe?"
+
+**Zhe:** "THREE SYSTEMS!"
+
+**Gerry:** "Okay."
+
+**Zhe:** "FORTY DAYS!"
+
+**Gerry:** "Okay..."
+
+**Zhe:** "CHRISTMAS!"
+
+**Gerry:** "Yes, Christmas generally happens in December."
+
+**Zhe:** "NEW YEAR'S!"
+
+**Gerry:** "Also expected."
+
+**Zhe:** "I RESIGN!"
+
+**Ben:** "GERRY, I WARNED YOU ABOUT ASKING HIM FOR A TIMELINE!" 😭🤣🤣
+
+---
+
+**CTO Zhe:** "TEAM! I HAVE RECONSIDERED MY RESIGNATION!"
+
+**Developer Zhe:** "AGAIN?!"
+
+**CTO Zhe:** "YES! I SHALL RETURN MONDAY!"
+
+**HR Zhe:** "AND THE WEEKEND?!"
+
+**CTO Zhe:** "..."
+
+**Linus:** "DON'T YOU DARE."
+
+**Zhe:** "FINE! ENGINEERING DEPARTMENT DISMISSED!"
+
+**Jeff:** "Excellent. Now we can improve the estimates with actual evidence."
+
+**Zhe:** "FATHER JEFF, WHY DO YOU ALWAYS MAKE RESPONSIBLE ENGINEERING SOUND SO EXCITING?!"
+
+**Jeff:** "Because it is."
+
+😎🤣
